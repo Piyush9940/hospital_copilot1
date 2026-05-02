@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skin Disease Detection - HealthCare Plus</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .container { max-width: 800px; margin: 40px auto; padding: 20px; }
+        .glass-container { background: rgba(255, 255, 255, 0.9); border-radius: 15px; padding: 30px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); }
+        .upload-area { border: 2px dashed #2563eb; padding: 40px; text-align: center; border-radius: 10px; cursor: pointer; margin-bottom: 20px; transition: background 0.3s; }
+        .upload-area:hover { background: rgba(37, 99, 235, 0.05); }
+        .preview-img { max-width: 100%; max-height: 300px; margin: 20px 0; border-radius: 10px; display: none; }
+        .result-box { display: none; background: #f8fafc; padding: 20px; border-radius: 10px; margin-top: 20px; }
+        .result-header { font-size: 1.5rem; color: #1e293b; margin-bottom: 10px; }
+        .confidence { color: #10b981; font-weight: bold; }
+        .action-btn { background: #2563eb; color: white; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; margin-top: 15px; width: 100%; font-size: 1rem; }
+        .action-btn:hover { background: #1d4ed8; }
+        .secondary-btn { background: #64748b; margin-top: 10px; }
+        .secondary-btn:hover { background: #475569; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">HealthCare Plus</div>
+            <div class="nav-menu" id="navMenu"></div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="glass-container">
+            <h1 style="margin-bottom: 20px; color: #1e293b;">AI Skin Disease Detection</h1>
+            <p style="margin-bottom: 30px; color: #64748b;">Upload a clear photo of the affected skin area for an AI-powered preliminary analysis.</p>
+
+            <input type="file" id="imageInput" accept="image/*" style="display: none;">
+            
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('imageInput').click()">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="#2563eb" style="margin-bottom: 10px;">
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75 3.54-1.96-2.36L6.5 17h11l-3.54-4.71z"/>
+                </svg>
+                <h3 style="color: #2563eb;">Click to Upload Image</h3>
+                <p style="color: #64748b; font-size: 0.9rem; margin-top: 5px;">Supports JPG, PNG</p>
+            </div>
+
+            <div style="text-align: center;">
+                <img id="imagePreview" class="preview-img" alt="Preview">
+                <button id="analyzeBtn" class="action-btn" style="display: none;" onclick="analyzeImage()">Analyze Image</button>
+            </div>
+
+            <div class="result-box" id="resultBox">
+                <h2 class="result-header">Analysis Result</h2>
+                <p><strong>Predicted Condition:</strong> <span id="resClass"></span></p>
+                <p><strong>Confidence:</strong> <span id="resConf" class="confidence"></span></p>
+                <p style="margin-top: 10px;"><strong>Description:</strong> <span id="resDesc"></span></p>
+                <p style="margin-top: 10px;"><strong>Precautions:</strong> <span id="resPrec"></span></p>
+                
+                <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 10px; margin-top: 15px; font-size: 0.9rem;">
+                    <strong>Disclaimer:</strong> <span id="resDisc"></span>
+                </div>
+
+                <button class="action-btn secondary-btn" onclick="askAiNurse()">Ask AI Nurse for Advice</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const uploadArea = document.getElementById('uploadArea');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const resultBox = document.getElementById('resultBox');
+
+        let currentBase64 = null;
+        let currentResult = null;
+
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    currentBase64 = event.target.result;
+                    imagePreview.src = currentBase64;
+                    imagePreview.style.display = 'inline-block';
+                    uploadArea.style.display = 'none';
+                    analyzeBtn.style.display = 'block';
+                    resultBox.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        async function analyzeImage() {
+            try {
+                if (!currentBase64) return;
+                
+                analyzeBtn.innerText = "Analyzing...";
+                analyzeBtn.disabled = true;
+
+                // Make sure API_BASE_URL is defined from config.js
+                const response = await fetch(`${API_BASE_URL}/skin/predict`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${window.Auth.getToken()}`
+                    },
+                    body: JSON.stringify({ 
+                        image: currentBase64,
+                        patient_id: window.Auth.getUser()?.id 
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || "Prediction failed");
+                }
+
+                currentResult = data.data;
+
+                // Display results
+                document.getElementById('resClass').innerText = currentResult.predicted_class.replace(/_/g, ' ');
+                document.getElementById('resConf').innerText = (currentResult.confidence * 100).toFixed(2) + '%';
+                document.getElementById('resDesc').innerText = currentResult.description;
+                document.getElementById('resPrec').innerText = currentResult.precautions;
+                document.getElementById('resDisc').innerText = currentResult.disclaimer;
+
+                resultBox.style.display = 'block';
+                analyzeBtn.style.display = 'none';
+
+            } catch (error) {
+                console.error(error);
+                alert("Error: " + error.message);
+                analyzeBtn.innerText = "Analyze Image";
+                analyzeBtn.disabled = false;
+            }
+        }
+
+        function askAiNurse() {
+            if (!currentResult) return;
+            
+            // Store the result in session storage to pass it to the AI Nurse page
+            sessionStorage.setItem('skin_result_context', JSON.stringify(currentResult));
+            window.location.href = 'ai-nurse.html?fromSkin=true';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting - HealthCare Plus</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh;">
+        <div class="glass-container" style="text-align: center; max-width: 400px; width: 90%; padding: 2rem;">
+            <div class="spinner" style="margin: 2rem auto;"></div>
+            <h2 style="margin: 1rem 0;">Redirecting to Dashboard</h2>
+            <p id="redirectMessage">Please wait while we take you to your personalized dashboard...</p>
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                if (!window.Auth || !window.AuthManager) {
+                    throw new Error('Authentication system failed to load.');
+                }
+
+                if (!Auth.isAuthenticated()) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const role = Auth.getRole();
+                const messageEl = document.getElementById('redirectMessage');
+
+                const roleMessages = {
+                    patient: 'Taking you to your patient dashboard...',
+                    doctor: 'Taking you to your doctor dashboard...',
+                    nurse: 'Taking you to your nurse dashboard...',
+                    admin: 'Taking you to your dashboard...'
+                };
+
+                if (messageEl) {
+                    messageEl.textContent =
+                        roleMessages[role] ||
+                        'Please wait while we take you to your personalized dashboard...';
+                }
+
+                setTimeout(() => {
+                    AuthManager.redirectBasedOnRole();
+                }, 1200);
+            } catch (error) {
+                console.error('Redirect page error:', error);
+                window.location.href = 'login.html';
+            }
+        });
+    </script>
+</body>
+</html>

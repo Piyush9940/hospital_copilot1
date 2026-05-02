@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - HealthCare Plus</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/auth.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card glass-container">
+            <div class="auth-header">
+                <div class="logo-container">
+                    <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+                        <circle cx="30" cy="30" r="28" stroke="url(#gradient)" stroke-width="4"/>
+                        <path d="M20 30L27 37L40 24" stroke="url(#gradient)" stroke-width="4" stroke-linecap="round"/>
+                        <defs>
+                            <linearGradient id="gradient" x1="0" y1="0" x2="60" y2="60">
+                                <stop offset="0%" stop-color="#2563eb"/>
+                                <stop offset="100%" stop-color="#10b981"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <h1 class="auth-title" data-i18n="auth.welcome">Welcome Back</h1>
+                <p class="auth-subtitle" data-i18n="auth.subtitle">Sign in to continue to your dashboard</p>
+            </div>
+
+            <div class="role-selector">
+                <button class="role-btn active" data-role="patient">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                    <span data-i18n="auth.patient">Patient</span>
+                </button>
+                <button class="role-btn" data-role="doctor">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 8h-2v3h-3v2h3v3h2v-3h3v-2h-3V8zM4 8v2h2V8H4zm0 6v2h2v-2H4zm6-6v2h2V8h-2zm0 6v2h2v-2h-2z"/>
+                    </svg>
+                    <span data-i18n="auth.doctor">Doctor</span>
+                </button>
+                <button class="role-btn" data-role="nurse">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2L2 7v8c0 5 10 8 10 8s10-3 10-8V7l-10-5z"/>
+                    </svg>
+                    <span data-i18n="auth.nurse">Nurse</span>
+                </button>
+            </div>
+
+            <form id="loginForm" class="auth-form">
+                <div class="form-group floating-label">
+                    <input type="email" id="email" class="form-input" required>
+                    <label for="email" data-i18n="auth.email">Email Address</label>
+                    <div class="input-icon">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="form-group floating-label">
+                    <input type="password" id="password" class="form-input" required>
+                    <label for="password" data-i18n="auth.password">Password</label>
+                    <div class="input-icon password-toggle" onclick="togglePassword()">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                            <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="remember">
+                        <span class="checkmark"></span>
+                        <span data-i18n="auth.remember">Remember me</span>
+                    </label>
+                    <a href="#" class="forgot-link" data-i18n="auth.forgot">Forgot Password?</a>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    <span data-i18n="auth.signin">Sign In</span>
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                    </svg>
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <p><span data-i18n="auth.noaccount">Don't have an account?</span> <a href="register.html" data-i18n="auth.signup">Sign Up</a></p>
+                <div class="divider">
+                    <span>OR</span>
+                </div>
+                <button class="btn btn-outline btn-block" onclick="demoLogin()">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10 0C4.477 0 0 4.477 0 10s4.477 10 10 10 10-4.477 10-10S15.523 0 10 0zm0 2a8 8 0 110 16 8 8 0 010-16z"/>
+                    </svg>
+                    Demo Access
+                </button>
+                <div class="divider">
+                    <span>OR</span>
+                </div>
+                <button type="button" class="btn btn-outline btn-block" onclick="startFaceLogin()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/>
+                    </svg>
+                    <span data-i18n="auth.facelogin">Face Login</span>
+                </button>
+                <div id="video-container" style="display:none; text-align:center; margin-top:10px;">
+                    <video id="video-feed" width="300" height="225" autoplay muted style="border-radius:10px;"></video>
+                    <p id="face-login-status" style="margin-top:5px; font-size:12px; color: #666;"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/localization.js?v=2"></script>
+    <script src="../js/config.js?v=2"></script>
+    <script src="../js/auth.js?v=2"></script>
+<script>
+    if (!window.AuthManager) {
+        console.error("AuthManager is not loaded. Check ../js/auth.js path.");
+    }
+
+    document.querySelectorAll('.role-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    function togglePassword() {
+        const passwordInput = document.getElementById('password');
+        passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password';
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        try {
+            if (!window.AuthManager) {
+                throw new Error("AuthManager is not loaded. Please refresh the page.");
+            }
+
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const role = document.querySelector('.role-btn.active').dataset.role;
+
+            if (!email || !password) {
+                throw new Error("Email and password are required");
+            }
+            
+            if (typeof window.LoadingOverlay !== 'undefined') window.LoadingOverlay.show();
+            // Use custom login call to handle the new backend two-step process
+            const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.message || "Login failed");
+            }
+            
+            if (typeof window.LoadingOverlay !== 'undefined') window.LoadingOverlay.hide();
+            
+            if (data.requiresFace) {
+                // Trigger face capture
+                if (typeof window.Toast !== 'undefined') window.Toast.show("Password correct. Proceeding to face verification...", "info");
+                window.currentEmail = email;
+                window.currentPassword = password;
+                window.currentRole = role;
+                startFaceLogin(true);
+            } else if (data.success) {
+                window.Auth.setSession(data.data.token, data.data.user, role);
+                Toast.show("Login successful!", "success");
+                setTimeout(() => window.AuthManager.redirectBasedOnRole(), 700);
+            }
+        } catch (error) {
+            if (typeof window.LoadingOverlay !== 'undefined') window.LoadingOverlay.hide();
+            console.error("Login submit error:", error);
+            if (typeof window.Toast !== 'undefined') window.Toast.show(error.message || "Login failed", "error");
+        }
+    });
+
+    function demoLogin() {
+        const demoCredentials = {
+            patient: { email: 'patient@demo.com', password: 'demo123' },
+            doctor: { email: 'doctor@demo.com', password: 'demo123' },
+            nurse: { email: 'nurse@demo.com', password: 'demo123' }
+        };
+
+        const role = document.querySelector('.role-btn.active').dataset.role;
+        const creds = demoCredentials[role];
+
+        document.getElementById('email').value = creds.email;
+        document.getElementById('password').value = creds.password;
+
+        window.AuthManager.login(creds.email, creds.password, role);
+    }
+
+    document.querySelectorAll('.floating-label input').forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentElement.classList.add('focused');
+        });
+
+        input.addEventListener('blur', function() {
+            if (!this.value) {
+                this.parentElement.classList.remove('focused');
+            }
+        });
+
+        if (input.value) {
+            input.parentElement.classList.add('focused');
+        }
+    });
+
+    async function startFaceLogin(isTwoStep = false) {
+        const videoContainer = document.getElementById('video-container');
+        const videoElement = document.getElementById('video-feed');
+        const statusText = document.getElementById('face-login-status');
+        const role = document.querySelector('.role-btn.active').dataset.role;
+
+        videoContainer.style.display = 'block';
+        statusText.textContent = 'Initializing camera...';
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            videoElement.srcObject = stream;
+            statusText.textContent = 'Please look at the camera for 3 seconds...';
+            
+            setTimeout(async () => {
+                statusText.textContent = 'Capturing...';
+                const canvas = document.createElement('canvas');
+                canvas.width = videoElement.videoWidth;
+                canvas.height = videoElement.videoHeight;
+                canvas.getContext('2d').drawImage(videoElement, 0, 0);
+                const faceImageBase64 = canvas.toDataURL('image/jpeg');
+                
+                stream.getTracks().forEach(track => track.stop());
+                videoContainer.style.display = 'none';
+
+                try {
+                    if (typeof window.LoadingOverlay !== 'undefined') window.LoadingOverlay.show();
+                    
+                    let endpoint = "/auth/login";
+                    let payload = {};
+                    
+                    if (isTwoStep) {
+                        payload = {
+                            email: window.currentEmail,
+                            password: window.currentPassword,
+                            faceImageBase64
+                        };
+                    } else {
+                        // Just face login if the backend allows
+                        endpoint = "/auth/face-login";
+                        payload = { faceImageBase64, role };
+                    }
+                    
+                    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await response.json();
+                    
+                    if (!response.ok || !data.success) {
+                        throw new Error(data.message || "Face login failed");
+                    }
+                    
+                    window.Auth.setSession(data.data.token, data.data.user, role);
+                    if (typeof window.Toast !== 'undefined') window.Toast.show("Face login successful!", "success");
+                    setTimeout(() => window.AuthManager.redirectBasedOnRole(), 700);
+                    
+                } catch (error) {
+                    console.error("Face login error:", error);
+                    if (typeof window.Toast !== 'undefined') window.Toast.show(error.message || "Face login failed", "error");
+                } finally {
+                    if (typeof window.LoadingOverlay !== 'undefined') window.LoadingOverlay.hide();
+                }
+            }, 3000);
+            
+        } catch (e) {
+            console.error("Camera error:", e);
+            statusText.textContent = 'Failed to access camera.';
+        }
+    }
+</script>
+</body>
+</html>

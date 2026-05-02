@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Approvals - HealthCare Plus</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .approval-form { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px; max-width: 600px; margin-left: auto; margin-right: auto; }
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; margin-bottom: 5px; font-weight: 500; color: #374151; }
+        .form-input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
+        .btn-submit { padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.3s; width: 100%; }
+        .request-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">HealthCare Plus</div>
+            <div class="nav-menu"></div>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+    <main class="dashboard-container">
+        <!-- Managed by page-builder.js -->
+    </main>
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/page-builder.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.requireRole && requireRole(['doctor'])) {
+                await PageBuilder.buildPage({
+                    title: 'Chat Approvals',
+                    subtitle: 'Manage patient communication requests',
+                    allowedRoles: ['doctor'],
+                    renderFunction: () => `
+                        <div class="approval-form">
+                            <h3>Search Requests by Appointment ID</h3>
+                            <p style="color: #6b7280; font-size: 14px; margin-bottom: 15px;">Enter an appointment ID to view its associated chat requests.</p>
+                            <form id="searchForm" onsubmit="searchRequests(event)">
+                                <div class="form-group">
+                                    <input type="number" id="appointmentId" class="form-input" placeholder="e.g. 102" required>
+                                </div>
+                                <button type="submit" class="btn-submit">Search</button>
+                            </form>
+                        </div>
+                        <div id="resultsArea"></div>
+                    `
+                });
+            }
+        });
+
+        async function searchRequests(e) {
+            e.preventDefault();
+            const aptId = document.getElementById('appointmentId').value;
+            const resultsArea = document.getElementById('resultsArea');
+            resultsArea.innerHTML = '<p style="text-align: center;">Searching...</p>';
+
+            try {
+                const res = await API.get(`/chat-permission/appointment/${aptId}`);
+                const permissions = Array.isArray(res) ? res : (Array.isArray(res.data) ? res.data : []);
+                
+                if (permissions.length === 0) {
+                    resultsArea.innerHTML = '<div class="empty-state" style="padding: 30px; text-align: center;"><h3>No Requests Found</h3><p>There are no chat permission requests for this appointment.</p></div>';
+                    return;
+                }
+
+                let html = '<h3>Requests for Appointment #' + aptId + '</h3>';
+                permissions.forEach(p => {
+                    html += `
+                        <div class="request-card">
+                            <div>
+                                <strong>Patient ID:</strong> ${p.patient_id || p.patientId} <br>
+                                <strong>Status:</strong> <span style="text-transform: uppercase; font-size: 12px; font-weight: bold; color: ${p.status === 'approved' ? 'green' : (p.status === 'rejected' ? 'red' : 'orange')}">${p.status || 'pending'}</span>
+                            </div>
+                            ${(p.status === 'pending' || p.status === 'PENDING') ? `
+                            <div>
+                                <button class="btn btn-primary" onclick="updateStatus(${p.id}, 'approve')" style="background: #059669; border-color: #059669;">Approve</button>
+                                <button class="btn btn-outline" onclick="updateStatus(${p.id}, 'reject')" style="color: #dc2626; border-color: #dc2626;">Reject</button>
+                            </div>` : ''}
+                        </div>
+                    `;
+                });
+                resultsArea.innerHTML = html;
+
+            } catch(err) {
+                console.error(err);
+                resultsArea.innerHTML = '<div class="empty-state" style="padding: 30px; text-align: center;"><h3>Error</h3><p>Could not fetch requests. Make sure the ID is correct.</p></div>';
+            }
+        }
+
+        async function updateStatus(id, action) {
+            try {
+                await API.put(`/chat-permission/${action}/${id}`);
+                if(window.Toast) Toast.show('Request ' + action + 'd!', 'success');
+                else alert('Request ' + action + 'd!');
+                // Re-trigger search to refresh
+                document.getElementById('searchForm').dispatchEvent(new Event('submit'));
+            } catch(e) {
+                if(window.Toast) Toast.show('Failed to update request', 'error');
+                else alert('Failed to update request');
+            }
+        }
+
+        function toggleMobileMenu() {
+            document.querySelector('.nav-menu')?.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>

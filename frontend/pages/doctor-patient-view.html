@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient View - HealthCare Plus</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .patient-header { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .patient-header h2 { margin: 0 0 10px 0; color: #1f2937; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .card h3 { margin: 0 0 15px 0; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; }
+        .item-row { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #f3f4f6; padding-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">HealthCare Plus</div>
+            <div class="nav-menu"></div>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+    <main class="dashboard-container">
+        <!-- Managed by page-builder.js -->
+    </main>
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/page-builder.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.requireRole && requireRole(['doctor', 'nurse'])) {
+                await PageBuilder.buildPage({
+                    title: 'Patient Overview',
+                    subtitle: 'Detailed medical history and vitals',
+                    allowedRoles: ['doctor', 'nurse'],
+                    renderFunction: () => '<div class="empty-state" style="padding: 50px; text-align: center;"><h2>Loading...</h2></div>'
+                });
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const patientId = urlParams.get('patientId');
+
+                if (!patientId) {
+                    document.querySelector('main').innerHTML = '<div class="page-container"><div class="empty-state" style="padding: 50px; text-align: center;"><h2>Error</h2><p>No Patient ID provided in URL.</p></div></div>';
+                    return;
+                }
+
+                try {
+                    const [vitalsRes, reportsRes] = await Promise.all([
+                        API.get(`/vitals/patient/${patientId}`).catch(() => []),
+                        API.get(`/reports/patient/${patientId}`).catch(() => [])
+                    ]);
+                    
+                    const vitals = Array.isArray(vitalsRes) ? vitalsRes : (Array.isArray(vitalsRes?.data) ? vitalsRes.data : []);
+                    const reports = Array.isArray(reportsRes) ? reportsRes : (Array.isArray(reportsRes?.data) ? reportsRes.data : []);
+                    
+                    let html = `
+                        <div class="page-container">
+                            <div class="patient-header">
+                                <h2>Patient Details (ID: ${patientId})</h2>
+                            </div>
+                            <div class="grid-2">
+                                <div class="card">
+                                    <h3>Recent Vitals</h3>
+                                    ${vitals.length === 0 ? '<p>No vitals recorded.</p>' : vitals.slice(0, 5).map(v => `
+                                        <div class="item-row">
+                                            <span>${new Date(v.created_at || v.createdAt || Date.now()).toLocaleDateString()}</span>
+                                            <span><strong>BP:</strong> ${v.blood_pressure || v.bloodPressureSystolic+'/'+v.bloodPressureDiastolic || '-'} | <strong>HR:</strong> ${v.heart_rate || v.heartRate || '-'}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                <div class="card">
+                                    <h3>Medical Reports</h3>
+                                    ${reports.length === 0 ? '<p>No reports uploaded.</p>' : reports.map(r => `
+                                        <div class="item-row">
+                                            <span>${r.diagnosis || 'Report'}</span>
+                                            <a href="report-view.html?id=${r.id}" class="btn btn-outline" style="padding: 2px 8px; font-size: 12px;">View</a>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.querySelector('main').innerHTML = html;
+
+                } catch(e) {
+                    console.error('Failed to load patient data', e);
+                    document.querySelector('main').innerHTML = '<div class="page-container"><div class="empty-state" style="padding: 50px; text-align: center;"><h2>Error</h2><p>Failed to load patient details.</p></div></div>';
+                }
+            }
+        });
+
+        function toggleMobileMenu() {
+            document.querySelector('.nav-menu')?.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>

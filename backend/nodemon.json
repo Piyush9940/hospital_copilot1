@@ -1,0 +1,11 @@
+{
+  "ignore": [
+    "database/*.db",
+    "database/*.db-wal",
+    "database/*.db-shm",
+    "database/*.sqlite",
+    "uploads/*",
+    "logs/*",
+    "*.log"
+  ]
+}

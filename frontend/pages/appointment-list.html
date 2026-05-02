@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Doctor - HealthCare Plus</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/appointment.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">HealthCare Plus</div>
+            <div class="nav-menu" id="navMenu"></div>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+        </div>
+    </nav>
+
+    <main class="page-container">
+        <div class="glass-container">
+            <div class="page-header">
+                <h1>Find Your Doctor</h1>
+                <p>Book an appointment with our specialists</p>
+            </div>
+
+            <div class="search-section">
+                <div class="search-bar">
+                    <input
+                        type="text"
+                        class="search-input"
+                        placeholder="Search by name or specialization..."
+                        id="searchInput"
+                    >
+                    <button class="search-btn" type="button">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="filters">
+                    <select class="filter-select" id="specializationFilter">
+                        <option value="">All Specializations</option>
+                        <option value="cardiologist">Cardiologist</option>
+                        <option value="neurologist">Neurologist</option>
+                        <option value="pediatrician">Pediatrician</option>
+                        <option value="dermatologist">Dermatologist</option>
+                        <option value="orthopedic">Orthopedic</option>
+                    </select>
+
+                    <select class="filter-select" id="availabilityFilter">
+                        <option value="">Any Availability</option>
+                        <option value="today">Today</option>
+                        <option value="tomorrow">Tomorrow</option>
+                        <option value="this week">This Week</option>
+                    </select>
+
+                    <select class="filter-select" id="feeFilter">
+                        <option value="">Any Fee</option>
+                        <option value="0-500">₹0 - ₹500</option>
+                        <option value="501-1000">₹501 - ₹1000</option>
+                        <option value="1001-2000">₹1001 - ₹2000</option>
+                        <option value="2001+">₹2000+</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="doctors-grid" id="doctorsGrid">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <p>Loading doctors...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/appointment-list.js"></script>
+</body>
+</html>

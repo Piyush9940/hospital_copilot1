@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>MediRecords | Smart Health Dashboard</title>
+    <!-- Google Fonts & Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(145deg, #f0f4fc 0%, #e9eff8 100%);
+            min-height: 100vh;
+        }
+
+        /* glassmorphism modern navbar */
+        .navbar {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(37, 99, 235, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+        }
+
+        .nav-container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-brand {
+            font-size: 1.7rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1e3a8a, #0d9488);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 1.5rem;
+            color: #1f2937;
+            font-weight: 500;
+        }
+
+        .nav-menu span {
+            cursor: default;
+            padding: 0.4rem 0;
+        }
+
+        /* main container */
+        .reports-wrapper {
+            max-width: 1440px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        /* header area */
+        .reports-header {
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 32px;
+            padding: 2rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            backdrop-filter: blur(2px);
+            border: 1px solid rgba(255,255,255,0.5);
+            transition: all 0.2s;
+        }
+
+        .header-title h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(145deg, #0f2b5c, #0b6e62);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .header-title p {
+            color: #5a6e8a;
+            font-weight: 500;
+            margin-top: 0.3rem;
+        }
+
+        .reports-stats {
+            display: flex;
+            gap: 1.2rem;
+        }
+
+        .stat-bubble {
+            background: white;
+            backdrop-filter: blur(4px);
+            padding: 0.9rem 1.4rem;
+            border-radius: 28px;
+            text-align: center;
+            box-shadow: 0 5px 12px rgba(0,0,0,0.03);
+            transition: all 0.25s ease;
+            border: 1px solid #eef2ff;
+            min-width: 110px;
+        }
+
+        .stat-bubble:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 15px 30px -12px rgba(37,99,235,0.2);
+            border-color: #b9d0ff;
+        }
+
+        .stat-bubble .number {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(145deg, #2563eb, #0f766e);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .upload-btn {
+            background: linear-gradient(105deg, #1e3a8a, #0f766e);
+            border: none;
+            padding: 0.9rem 2rem;
+            border-radius: 48px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: 0 8px 18px rgba(15,118,110,0.25);
+        }
+
+        .upload-btn:hover {
+            transform: scale(1.02);
+            background: linear-gradient(105deg, #2563eb, #0f766e);
+            box-shadow: 0 12px 22px rgba(37,99,235,0.35);
+        }
+
+        /* chart card */
+        .chart-container {
+            background: white;
+            border-radius: 28px;
+            padding: 1.8rem;
+            margin-bottom: 2.2rem;
+            box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.06);
+            border: 1px solid #eef2ff;
+            transition: all 0.2s;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+            flex-wrap: wrap;
+        }
+
+        /* reports grid */
+        .reports-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 1.8rem;
+        }
+
+        .report-card {
+            background: #ffffffdd;
+            backdrop-filter: blur(4px);
+            border-radius: 28px;
+            padding: 1.6rem;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.05);
+            transition: all 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            border: 1px solid rgba(203, 213, 225, 0.5);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .report-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, #2b6ef0, #14b8a6);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .report-card:hover::after {
+            opacity: 1;
+        }
+
+        .report-card:hover {
+            transform: translateY(-8px);
+            background: white;
+            border-color: #cbdffc;
+            box-shadow: 0 30px 40px -18px rgba(0, 0, 0, 0.25);
+        }
+
+        .report-icon-wrapper {
+            width: 58px;
+            height: 58px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            background: #eef2ff;
+        }
+
+        .report-type-badge {
+            display: inline-block;
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            margin-bottom: 0.8rem;
+        }
+
+        .type-blood { background: #ffe2e2; color: #b91c1c; }
+        .type-xray { background: #dbeafe; color: #1e3a8a; }
+        .type-ecg { background: #dcfce7; color: #166534; }
+        .type-prescription { background: #fef9c3; color: #854d0e; }
+        .type-general { background: #f1f5f9; color: #334155; }
+
+        .report-card h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.6rem;
+            color: #0a2540;
+        }
+
+        .report-meta {
+            display: flex;
+            justify-content: space-between;
+            color: #4b5563;
+            font-size: 0.8rem;
+            margin-bottom: 0.8rem;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+        }
+
+        .report-actions-row {
+            display: flex;
+            gap: 0.7rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-mini {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-view { background: #eef2ff; color: #1e3a8a; }
+        .btn-download { background: #dcfce7; color: #166534; }
+        .btn-share { background: #f3e8ff; color: #6b21a5; }
+
+        .btn-mini:hover {
+            transform: translateY(-2px);
+            filter: brightness(0.96);
+        }
+
+        /* modal modern */
+        .upload-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .upload-modal.open {
+            display: flex;
+        }
+
+        .modal-content-box {
+            background: white;
+            border-radius: 40px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 520px;
+            animation: scaleIn 0.25s ease-out;
+            box-shadow: 0 40px 60px -20px black;
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.92); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .drop-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 28px;
+            padding: 2.2rem 1rem;
+            text-align: center;
+            transition: 0.2s;
+            background: #fafcff;
+            cursor: pointer;
+        }
+
+        .drop-zone.dragover {
+            border-color: #0f766e;
+            background: #e6f7f5;
+        }
+
+        .styled-input, .styled-textarea {
+            width: 100%;
+            padding: 0.9rem 1rem;
+            border-radius: 24px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+
+        .styled-input:focus, .styled-textarea:focus {
+            outline: none;
+            border-color: #0f766e;
+            box-shadow: 0 0 0 3px rgba(15,118,110,0.2);
+        }
+
+        .form-field {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-field label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 0.4rem;
+            color: #1e293b;
+        }
+
+        /* floating toast */
+        .toast-notify {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            background: #1f2937;
+            backdrop-filter: blur(12px);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 60px;
+            font-weight: 500;
+            z-index: 1100;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            animation: slideUpFade 0.3s ease;
+        }
+
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 720px) {
+            .reports-wrapper { padding: 0 1rem; }
+            .reports-header { flex-direction: column; align-items: stretch; text-align: center; }
+            .reports-stats { justify-content: center; }
+            .stat-bubble { min-width: 90px; padding: 0.6rem 1rem; }
+            .report-card h3 { font-size: 1rem; }
+        }
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem;
+            background: white;
+            border-radius: 40px;
+            color: #6c757d;
+        }
+        i.fa, i.far, i.fas {
+            margin-right: 4px;
+        }
+        .status-pending {
+            background: #fef3c7;
+            color: #b45309;
+            padding: 0.2rem 0.6rem;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+        .status-completed {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 0.2rem 0.6rem;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand"><i class="fas fa-notes-medical"></i> MediRecords</div>
+            <div class="nav-menu">
+                <span><i class="fas fa-chart-line"></i> Health Analytics</span>
+                <span><i class="fas fa-user-md"></i> My Reports</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="reports-wrapper">
+        <div class="reports-header">
+            <div class="header-title">
+                <h1><i class="fas fa-folder-medical"></i> Smart Medical Reports</h1>
+                <p>AI-powered insights & secure health records</p>
+            </div>
+            <div class="reports-stats">
+                <div class="stat-bubble"><div class="number" id="totalReports">0</div><div class="label">Total Records</div></div>
+                <div class="stat-bubble"><div class="number" id="recentReports">0</div><div class="label">This Month</div></div>
+                <div class="stat-bubble"><div class="number" id="pendingReports">0</div><div class="label"><i class="fas fa-clock"></i> Pending review</div></div>
+            </div>
+            <button class="upload-btn" onclick="openUploadModal()"><i class="fas fa-cloud-upload-alt"></i> Upload Report</button>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3><i class="fas fa-chart-simple"></i> Yearly diagnostic trends</h3>
+                <span style="background:#eef2ff; padding:0.3rem 0.8rem; border-radius:40px; font-size:0.75rem;"><i class="fas fa-calendar-alt"></i> 2024</span>
+            </div>
+            <canvas id="reportsChart" height="90" style="max-height: 280px; width:100%"></canvas>
+        </div>
+
+        <div class="reports-grid" id="reportsGrid"></div>
+    </div>
+
+    <div class="upload-modal" id="uploadModal">
+        <div class="modal-content-box">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                <h2><i class="fas fa-plus-circle"></i> Upload medical record</h2>
+                <button onclick="closeUploadModal()" style="background: none; border: none; font-size: 1.8rem; cursor: pointer;">&times;</button>
+            </div>
+            <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                <i class="fas fa-cloud-upload-alt" style="font-size: 2.5rem; color:#2563eb;"></i>
+                <p style="margin: 0.5rem 0 0; font-weight:500;">Drag & drop or click to browse</p>
+                <p style="font-size:0.75rem; color:#6c757d;">PDF, JPG, PNG (max 12MB)</p>
+            </div>
+            <input type="file" id="fileInput" style="display: none;" accept=".pdf,.jpg,.jpeg,.png" multiple>
+            <div class="form-field">
+                <label><i class="fas fa-tag"></i> Category</label>
+                <select class="styled-input" id="reportType">
+                    <option>Blood Test</option>
+                    <option>X-Ray</option>
+                    <option>ECG</option>
+                    <option>Prescription</option>
+                    <option>General</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label><i class="fas fa-pen-alt"></i> Clinical notes (optional)</label>
+                <textarea class="styled-textarea" id="reportNotes" rows="2" placeholder="e.g., fasting lipid profile, routine check..."></textarea>
+            </div>
+            <button class="upload-btn" onclick="uploadNewReport()" style="width:100%; justify-content:center;"><i class="fas fa-check-circle"></i> Upload & process</button>
+        </div>
+    </div>
+
+    <script>
+        // ----- enhanced dynamic manager with local-storage persistence & rich data -----
+        class ReportsManagerPro {
+            constructor() {
+                this.reports = [];
+                this.chartInstance = null;
+                this.loadFromStorage();
+                this.initChart();
+                this.renderDashboard();
+                this.setupDragAndDrop();
+            }
+
+            loadFromStorage() {
+                const stored = localStorage.getItem('mediReportsDB');
+                if (stored) {
+                    this.reports = JSON.parse(stored);
+                } else {
+                    // enriched demo data
+                    this.reports = [
+                        { id: 101, name: 'Complete Blood Count (CBC)', type: 'blood', date: '2024-01-20', doctor: 'Dr. Sarah Johnson', size: '2.4 MB', status: 'completed', notes: 'All values normal' },
+                        { id: 102, name: 'Chest X-Ray', type: 'xray', date: '2024-01-15', doctor: 'Dr. Michael Chen', size: '5.1 MB', status: 'completed', notes: 'No abnormalities detected' },
+                        { id: 103, name: 'ECG Stress Test', type: 'ecg', date: '2024-01-10', doctor: 'Dr. Sarah Johnson', size: '1.8 MB', status: 'completed', notes: 'Sinus rhythm' },
+                        { id: 104, name: 'Prescription - Antihypertensive', type: 'prescription', date: '2024-01-05', doctor: 'Dr. Rajesh Kumar', size: '0.5 MB', status: 'completed', notes: '' },
+                        { id: 105, name: 'Lipid Profile', type: 'blood', date: '2023-12-28', doctor: 'Dr. Sarah Johnson', size: '3.2 MB', status: 'completed', notes: 'Cholesterol slightly elevated' },
+                        { id: 106, name: 'MRI Lumbar Spine', type: 'xray', date: '2023-12-15', doctor: 'Dr. Michael Chen', size: '8.7 MB', status: 'pending', notes: 'Awaiting radiologist review' },
+                        { id: 107, name: 'Annual Physical Screening', type: 'general', date: '2024-02-10', doctor: 'Dr. Emily White', size: '1.2 MB', status: 'completed', notes: 'Vitals optimal' }
+                    ];
+                    this.saveToStorage();
+                }
+            }
+
+            saveToStorage() {
+                localStorage.setItem('mediReportsDB', JSON.stringify(this.reports));
+            }
+
+            renderDashboard() {
+                this.renderReportsGrid();
+                this.updateStats();
+                this.updateChartData();
+            }
+
+            renderReportsGrid() {
+                const grid = document.getElementById('reportsGrid');
+                const typeIcons = {
+                    blood: { icon: '<i class="fas fa-tint"></i>', bg: '#fee2e2', class: 'type-blood', label: 'Blood Test' },
+                    xray: { icon: '<i class="fas fa-x-ray"></i>', bg: '#dbeafe', class: 'type-xray', label: 'X-Ray' },
+                    ecg: { icon: '<i class="fas fa-heartbeat"></i>', bg: '#dcfce7', class: 'type-ecg', label: 'ECG' },
+                    prescription: { icon: '<i class="fas fa-prescription-bottle"></i>', bg: '#fef9c3', class: 'type-prescription', label: 'Prescription' },
+                    general: { icon: '<i class="fas fa-file-alt"></i>', bg: '#f1f5f9', class: 'type-general', label: 'General' }
+                };
+                if (!this.reports.length) {
+                    grid.innerHTML = `<div class="empty-state"><i class="fas fa-folder-open" style="font-size: 3rem;"></i><h3>No reports yet</h3><p>Upload your first medical document</p></div>`;
+                    return;
+                }
+                grid.innerHTML = this.reports.map(report => {
+                    const t = report.type.toLowerCase().replace(' ', '-');
+                    const meta = typeIcons[t] || typeIcons.general;
+                    const statusClass = report.status === 'pending' ? 'status-pending' : 'status-completed';
+                    const statusText = report.status === 'pending' ? '<i class="fas fa-hourglass-half"></i> Pending' : '<i class="fas fa-check-circle"></i> Completed';
+                    return `
+                        <div class="report-card" data-id="${report.id}">
+                            <div class="report-icon-wrapper" style="background: ${meta.bg};">${meta.icon}</div>
+                            <span class="report-type-badge ${meta.class}">${meta.label}</span>
+                            <h3>${this.escapeHtml(report.name)}</h3>
+                            <div class="report-meta"><span><i class="fas fa-user-md"></i> ${report.doctor}</span><span><i class="far fa-calendar-alt"></i> ${report.date}</span></div>
+                            <div class="report-meta"><span><i class="fas fa-database"></i> ${report.size}</span><span class="${statusClass}">${statusText}</span></div>
+                            ${report.notes ? `<div style="font-size:0.75rem; color:#4b5563; margin-top:6px;"><i class="fas fa-sticky-note"></i> ${this.escapeHtml(report.notes)}</div>` : ''}
+                            <div class="report-actions-row">
+                                <button class="btn-mini btn-view" data-action="view" data-id="${report.id}"><i class="fas fa-eye"></i> Preview</button>
+                                <button class="btn-mini btn-download" data-action="download" data-id="${report.id}"><i class="fas fa-download"></i> PDF</button>
+                                <button class="btn-mini btn-share" data-action="share" data-id="${report.id}"><i class="fas fa-share-alt"></i> Share</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                // attach event listeners dynamically for buttons
+                document.querySelectorAll('.btn-view').forEach(btn => btn.addEventListener('click', (e) => { e.stopPropagation(); this.viewReport(btn.dataset.id); }));
+                document.querySelectorAll('.btn-download').forEach(btn => btn.addEventListener('click', (e) => { e.stopPropagation(); this.downloadReport(btn.dataset.id); }));
+                document.querySelectorAll('.btn-share').forEach(btn => btn.addEventListener('click', (e) => { e.stopPropagation(); this.shareReport(btn.dataset.id); }));
+                document.querySelectorAll('.report-card').forEach(card => {
+                    card.addEventListener('click', (e) => { if(e.target.closest('.btn-mini')) return; this.viewReport(card.dataset.id); });
+                });
+            }
+
+            escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+            updateStats() {
+                document.getElementById('totalReports').innerText = this.reports.length;
+                const now = new Date();
+                const thisMonthCount = this.reports.filter(r => {
+                    const d = new Date(r.date);
+                    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                }).length;
+                document.getElementById('recentReports').innerText = thisMonthCount;
+                const pending = this.reports.filter(r => r.status === 'pending').length;
+                document.getElementById('pendingReports').innerText = pending;
+            }
+
+            initChart() {
+                const ctx = document.getElementById('reportsChart').getContext('2d');
+                this.chartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        datasets: [
+                            { label: 'Blood Tests', data: [0,0,0,0,0,0,0,0,0,0,0,0], backgroundColor: '#ef4444', borderRadius: 12 },
+                            { label: 'X-Rays / MRI', data: [0,0,0,0,0,0,0,0,0,0,0,0], backgroundColor: '#3b82f6', borderRadius: 12 },
+                            { label: 'ECG / Heart', data: [0,0,0,0,0,0,0,0,0,0,0,0], backgroundColor: '#10b981', borderRadius: 12 }
+                        ] },
+                    options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, precision:0 } } } }
+                });
+                this.updateChartData();
+            }
+
+            updateChartData() {
+                const monthlyCounts = { blood: Array(12).fill(0), xray: Array(12).fill(0), ecg: Array(12).fill(0) };
+                this.reports.forEach(r => {
+                    const date = new Date(r.date);
+                    if (!isNaN(date.getTime())) {
+                        const month = date.getMonth();
+                        if (r.type === 'blood') monthlyCounts.blood[month]++;
+                        else if (r.type === 'xray') monthlyCounts.xray[month]++;
+                        else if (r.type === 'ecg') monthlyCounts.ecg[month]++;
+                    }
+                });
+                if (this.chistInstance) {
+                    this.chartInstance.data.datasets[0].data = monthlyCounts.blood;
+                    this.chartInstance.data.datasets[1].data = monthlyCounts.xray;
+                    this.chartInstance.data.datasets[2].data = monthlyCounts.ecg;
+                    this.chartInstance.update();
+                }
+            }
+
+            addReport(reportObj) {
+                this.reports.unshift(reportObj);
+                this.saveToStorage();
+                this.renderDashboard();
+                this.showToast(`✨ ${reportObj.name} uploaded successfully`, '#0f766e');
+            }
+
+            uploadNewReport(selectedType, notesVal) {
+                const typeMap = { 'Blood Test':'blood', 'X-Ray':'xray', 'ECG':'ecg', 'Prescription':'prescription', 'General':'general' };
+                const rawType = selectedType;
+                const reportTypeKey = typeMap[rawType] || 'general';
+                const newId = Date.now();
+                const today = new Date().toISOString().slice(0,10);
+                const newReport = {
+                    id: newId,
+                    name: `${rawType} Report - ${today}`,
+                    type: reportTypeKey,
+                    date: today,
+                    doctor: 'Self Uploaded',
+                    size: '1.2 MB',
+                    status: 'pending',
+                    notes: notesVal || 'Awaiting verification'
+                };
+                this.addReport(newReport);
+            }
+
+            viewReport(id) { this.showToast(`🔍 Opening report #${id} (simulated preview)`, '#2563eb'); }
+            downloadReport(id) { this.showToast(`📥 Downloading report #${id}`, '#10b981'); }
+            shareReport(id) { this.showToast(`🔗 Secure share link generated for report #${id}`, '#8b5cf6'); }
+
+            showToast(msg, bgColor) {
+                let toast = document.createElement('div');
+                toast.className = 'toast-notify';
+                toast.style.background = bgColor;
+                toast.innerHTML = `<i class="fas fa-info-circle"></i> ${msg}`;
+                document.body.appendChild(toast);
+                setTimeout(() => { toast.remove(); }, 2800);
+            }
+
+            setupDragAndDrop() {
+                const dropZone = document.getElementById('dropZone');
+                dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+                dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault(); dropZone.classList.remove('dragover');
+                    const files = e.dataTransfer.files;
+                    if(files.length) this.showToast(`${files.length} file(s) ready, complete the form`, '#0f766e');
+                });
+                document.getElementById('fileInput').addEventListener('change', (e) => {
+                    if(e.target.files.length) this.showToast(`${e.target.files.length} file(s) selected, choose category`, '#3b82f6');
+                });
+            }
+        }
+
+        let proManager = new ReportsManagerPro();
+        window.openUploadModal = () => { document.getElementById('uploadModal').classList.add('open'); };
+        window.closeUploadModal = () => { document.getElementById('uploadModal').classList.remove('open'); };
+        window.uploadNewReport = () => {
+            const type = document.getElementById('reportType').value;
+            const notes = document.getElementById('reportNotes').value;
+            if(!type) return;
+            proManager.uploadNewReport(type, notes);
+            document.getElementById('reportNotes').value = '';
+            closeUploadModal();
+        };
+        document.getElementById('uploadModal').addEventListener('click', (e) => { if(e.target === document.getElementById('uploadModal')) closeUploadModal(); });
+        window.viewReport = (id) => proManager.viewReport(id);
+        window.downloadReport = (id) => proManager.downloadReport(id);
+        window.shareReport = (id) => proManager.shareReport(id);
+    </script>
+</body>
+</html>

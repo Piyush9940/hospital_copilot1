@@ -1,0 +1,15 @@
+node_modules/
+.env
+*.sqlite
+*.db
+uploads/
+backend/uploads/
+
+*.keras
+*.h5
+*.pkl
+*.bin
+ai-service/data/vector_db/
+ai-service/data/medical_docs/
+__pycache__/
+*.pyc

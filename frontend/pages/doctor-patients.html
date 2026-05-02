@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>My Patients | HealthCare Plus - Modern Medical Dashboard</title>
+    <!-- Google Fonts & Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Chart.js CDN (lightweight, but not overused) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f0f4f9;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+
+        /* Modern Glassmorphism Navbar */
+        .navbar {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+            border-bottom: 1px solid rgba(37, 99, 235, 0.12);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .nav-container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 0.9rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .nav-brand {
+            font-size: 1.7rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1E3A8A, #10B981);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .nav-brand:before {
+            content: "\f0f8";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 600;
+            background: linear-gradient(135deg, #2563eb, #10b981);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-size: 1.6rem;
+        }
+        .nav-menu {
+            display: flex;
+            gap: 1.8rem;
+            align-items: center;
+        }
+        .nav-menu a {
+            text-decoration: none;
+            font-weight: 500;
+            color: #334155;
+            transition: 0.2s;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .nav-menu a i { font-size: 1rem; }
+        .nav-menu a:hover, .nav-menu a.active { color: #2563eb; }
+
+        /* main wrapper */
+        .patients-wrapper {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1.8rem;
+        }
+
+        /* header gradient with animation */
+        .patients-header {
+            background: white;
+            border-radius: 32px;
+            padding: 1.8rem 2rem;
+            box-shadow: 0 15px 35px -12px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+            transition: all 0.2s;
+            border: 1px solid rgba(37,99,235,0.08);
+        }
+        .patients-header h1 {
+            font-size: 1.9rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #0f172a;
+        }
+        .patients-header h1 i {
+            background: linear-gradient(145deg, #2563eb, #059669);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-size: 2rem;
+        }
+
+        /* enhanced stats cards */
+        .patients-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-top: 1.8rem;
+        }
+        .patients-stat-card {
+            background: linear-gradient(115deg, #ffffff 0%, #fafcff 100%);
+            padding: 1.6rem 1rem;
+            border-radius: 28px;
+            text-align: center;
+            transition: all 0.25s ease;
+            cursor: pointer;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.02);
+            border: 1px solid rgba(203, 213, 225, 0.4);
+            backdrop-filter: blur(2px);
+        }
+        .patients-stat-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 30px -12px rgba(37,99,235,0.2);
+            border-color: #a5c9ff;
+        }
+        .patients-stat-card .value {
+            font-size: 2.7rem;
+            font-weight: 800;
+            background: linear-gradient(145deg, #1e3a8a, #0d9488);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            line-height: 1.2;
+        }
+        .patients-stat-card .label {
+            color: #475569;
+            font-weight: 500;
+            margin-top: 8px;
+            letter-spacing: -0.2px;
+            font-size: 0.9rem;
+        }
+        .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 6px;
+            display: inline-block;
+            background: #eef2ff;
+            padding: 8px;
+            border-radius: 50%;
+            color: #2563eb;
+        }
+
+        /* filter bar with glass */
+        .filter-section {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(4px);
+            border-radius: 32px;
+            padding: 1.2rem 1.8rem;
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.02);
+            border: 1px solid rgba(255,255,240,0.6);
+        }
+        .search-box {
+            flex: 1;
+            min-width: 260px;
+            position: relative;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 0.9rem 1rem 0.9rem 2.8rem;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 44px;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            background: white;
+            transition: all 0.2s;
+        }
+        .search-box input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59,130,246,0.15);
+        }
+        .search-box .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+        .filter-select {
+            padding: 0 1.2rem;
+            height: 50px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 44px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            background: white;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: 'Inter', sans-serif;
+            color: #1e293b;
+        }
+        .filter-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        /* cards grid premium */
+        .patients-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 1.8rem;
+        }
+        .patient-card {
+            background: #ffffff;
+            border-radius: 32px;
+            padding: 1.6rem;
+            transition: all 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            cursor: pointer;
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            box-shadow: 0 12px 28px -8px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        .patient-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(135deg, #2563eb, #10b981);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .patient-card:hover::before {
+            opacity: 1;
+        }
+        .patient-card:hover {
+            transform: translateY(-10px) scale(1.01);
+            box-shadow: 0 28px 40px -16px rgba(37,99,235,0.25);
+            border-color: #bfdbfe;
+        }
+        .patient-card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+        }
+        .patient-avatar-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(125deg, #2563eb, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.6rem;
+            font-weight: 600;
+            box-shadow: 0 8px 14px rgba(37,99,235,0.2);
+        }
+        .patient-card-header h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        .patient-card-header p {
+            color: #5b6e8c;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .condition-tag {
+            display: inline-block;
+            padding: 0.32rem 1rem;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            backdrop-filter: blur(2px);
+        }
+        .tag-critical { background: #ffe4e4; color: #b91c1c; box-shadow: inset 0 0 0 1px #fecaca; }
+        .tag-chronic { background: #fffbeb; color: #b45309; box-shadow: inset 0 0 0 1px #fed7aa; }
+        .tag-stable { background: #e0f2fe; color: #0369a1; box-shadow: inset 0 0 0 1px #bae6fd; }
+
+        .patient-details-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.8rem;
+            margin: 1.2rem 0;
+        }
+        .detail-chip {
+            background: #f8fafc;
+            padding: 0.6rem 0.3rem;
+            border-radius: 20px;
+            text-align: center;
+            transition: 0.1s;
+        }
+        .chip-label {
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: #5c6f8c;
+            letter-spacing: 0.3px;
+        }
+        .chip-value {
+            font-weight: 700;
+            color: #0f172a;
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+        .last-visit-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.6rem 1rem;
+            background: #f1f5f9;
+            border-radius: 28px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #1e40af;
+            margin-top: 0.5rem;
+        }
+        .last-visit-badge i {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        /* empty state */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            background: white;
+            border-radius: 2rem;
+            color: #5b6e8c;
+        }
+
+        @media (max-width: 720px) {
+            .patients-stats-grid { grid-template-columns: repeat(2,1fr); gap: 1rem; }
+            .patients-wrapper { padding: 0 1.2rem; }
+            .filter-section { flex-direction: column; align-items: stretch; }
+            .search-box { width: 100%; }
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(13px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+        .patient-card { animation: fadeUp 0.4s ease backwards; animation-delay: calc(0.03s * var(--i, 0)); }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <circle cx="16" cy="16" r="14" stroke="url(#navGradient)" stroke-width="2"/>
+                    <path d="M10 16L14 20L22 12" stroke="url(#navGradient)" stroke-width="2" stroke-linecap="round"/>
+                    <defs>
+                        <linearGradient id="navGradient" x1="0" y1="0" x2="32" y2="32">
+                            <stop offset="0%" stop-color="#2563eb"/>
+                            <stop offset="100%" stop-color="#10b981"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                HealthCare Plus
+            </div>
+            <div class="nav-menu">
+                <a href="doctor-dashboard2.html" class="nav-link">Dashboard</a>
+                <a href="doctor-appointments.html" class="nav-link">Appointments</a>
+                <a href="doctor-patients.html" class="nav-link active">Patients</a>
+                <a href="doctor-chat-approval.html" class="nav-link">Chat Requests</a>
+                <a href="doctor-reports.html" class="nav-link">Reports</a>
+                <a href="doctor-profile.html" class="nav-link">Profile</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="patients-wrapper">
+        <!-- Header stats + modern micro-interactions -->
+        <div class="patients-header">
+            <h1><i class="fas fa-heartbeat"></i> My Patients</h1>
+            <div class="patients-stats-grid">
+                <div class="patients-stat-card" onclick="resetFilters()">
+                    <div class="stat-icon"><i class="fas fa-user-friends"></i></div>
+                    <div class="value" id="totalPatientsCount">0</div>
+                    <div class="label">Total Patients</div>
+                </div>
+                <div class="patients-stat-card" onclick="filterByCondition('chronic')">
+                    <div class="stat-icon"><i class="fas fa-pills"></i></div>
+                    <div class="value" id="activePatientsCount">0</div>
+                    <div class="label">Active Treatment</div>
+                </div>
+                <div class="patients-stat-card" onclick="filterByCondition('critical')">
+                    <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="value" id="criticalPatientsCount">0</div>
+                    <div class="label">Critical Cases</div>
+                </div>
+                <div class="patients-stat-card">
+                    <div class="stat-icon"><i class="fas fa-calendar-week"></i></div>
+                    <div class="value" id="newPatientsCount">0</div>
+                    <div class="label">New This Month</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- smooth filters -->
+        <div class="filter-section">
+            <div class="search-box">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="searchInput" placeholder="Search by name, condition or ID..." onkeyup="debouncedSearch()">
+            </div>
+            <select class="filter-select" id="conditionFilter" onchange="filterByCondition(this.value)">
+                <option value="all">📋 All Conditions</option>
+                <option value="critical">⚠️ Critical</option>
+                <option value="chronic">🔄 Chronic</option>
+                <option value="stable">✅ Stable</option>
+            </select>
+            <select class="filter-select" id="sortSelect" onchange="sortPatients(this.value)">
+                <option value="recent">🕒 Most Recent</option>
+                <option value="name">🔤 Name A-Z</option>
+                <option value="critical-first">⚠️ Critical First</option>
+            </select>
+        </div>
+
+        <div class="patients-grid" id="patientsGrid"></div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        class EnhancedPatientsManager {
+            constructor() {
+                this.patients = [];
+                this.filtered = [];
+                this.searchTimer = null;
+                this.init();
+            }
+
+            async init() {
+                if (window.requireRole && !requireRole(['doctor', 'nurse'])) return;
+                await this.loadBackendData();
+                this.updateStatsAndRender();
+            }
+
+            async loadBackendData() {
+                try {
+                    const doctorRes = await API.get('/doctor/me');
+                    const doctorProfile = doctorRes?.doctor || doctorRes?.data?.doctor || doctorRes?.data || doctorRes;
+                    const doctorId = doctorProfile?.id || doctorProfile?.doctorId || doctorProfile?._id;
+
+                    let patientsData = [];
+                    if (doctorId) {
+                        const aptRes = await API.get(`/appointments/doctor/${doctorId}`);
+                        const appointments = aptRes?.appointments || aptRes?.data?.appointments || aptRes?.data || aptRes || [];
+                        
+                        const seen = new Map();
+                        appointments.forEach(apt => {
+                            const pId = apt.patient_id || apt.patientId || apt.patient?.id || Math.random().toString(36);
+                            if (!seen.has(pId)) {
+                                seen.set(pId, {
+                                    id: pId,
+                                    name: apt.patient_name || apt.patientName || apt.patient?.name || 'Patient',
+                                    age: apt.patient?.age || '--',
+                                    gender: apt.patient?.gender || 'Not specified',
+                                    bloodGroup: apt.patient?.bloodGroup || '--',
+                                    condition: apt.symptoms || apt.reason || 'General Consultation',
+                                    status: apt.appointment_status === 'requested' ? 'critical' : (apt.appointment_status === 'confirmed' ? 'chronic' : 'stable'),
+                                    lastVisit: apt.appointment_date || apt.date || 'Recent',
+                                    upcomingAppt: apt.appointment_status === 'confirmed' ? apt.appointment_date : null,
+                                    lastVisitDays: 5
+                                });
+                            }
+                        });
+                        patientsData = Array.from(seen.values());
+                    }
+
+                    this.patients = patientsData.length ? patientsData : [
+                        { id: 101, name: 'Sample Patient', age: 45, gender: 'Male', bloodGroup: 'O+', condition: 'Hypertension', status: 'stable', lastVisit: '2025-01-20', upcomingAppt: null, lastVisitDays: 6 }
+                    ];
+
+                    this.newMonthCount = this.patients.length;
+                    this.filtered = [...this.patients];
+                } catch(e) {
+                    console.error('Failed to load patients', e);
+                    this.patients = [];
+                    this.filtered = [];
+                }
+            }
+
+            updateStats() {
+                const total = this.patients.length;
+                const activeChronic = this.patients.filter(p => p.status === 'chronic').length;
+                const critical = this.patients.filter(p => p.status === 'critical').length;
+                document.getElementById('totalPatientsCount').innerText = total;
+                document.getElementById('activePatientsCount').innerText = activeChronic;
+                document.getElementById('criticalPatientsCount').innerText = critical;
+                document.getElementById('newPatientsCount').innerText = this.newMonthCount || 8;
+            }
+
+            renderCards(patientsArray) {
+                const grid = document.getElementById('patientsGrid');
+                if (!patientsArray.length) {
+                    grid.innerHTML = `<div class="empty-state"><i class="fas fa-user-slash" style="font-size: 3rem; opacity:0.5"></i><p style="margin-top:1rem">No patients match the filters.</p></div>`;
+                    return;
+                }
+                grid.innerHTML = patientsArray.map((p, idx) => {
+                    const statusClass = p.status === 'critical' ? 'tag-critical' : (p.status === 'chronic' ? 'tag-chronic' : 'tag-stable');
+                    const statusLabel = p.status.charAt(0).toUpperCase() + p.status.slice(1);
+                    const upcomingHtml = p.upcomingAppt ? `<span style="margin-left: auto;"><i class="far fa-calendar-check"></i> ${p.upcomingAppt}</span>` : `<span style="margin-left: auto;"><i class="fas fa-clock"></i> TBD</span>`;
+                    return `
+                        <div class="patient-card" style="animation-delay: ${Math.min(idx * 0.02, 0.3)}s;" data-id="${p.id}" onclick="viewPatientDetails(${p.id})">
+                            <div class="patient-card-header">
+                                <div class="patient-avatar-circle">${p.name.charAt(0)}</div>
+                                <div>
+                                    <h3>${p.name}</h3>
+                                    <p><i class="fas fa-id-badge"></i> #PT-${p.id}</p>
+                                </div>
+                                <span class="condition-tag ${statusClass}" style="margin-left: auto;">${statusLabel}</span>
+                            </div>
+                            <div class="patient-details-row">
+                                <div class="detail-chip"><div class="chip-label"><i class="fas fa-calendar-alt"></i> Age</div><div class="chip-value">${p.age} yrs</div></div>
+                                <div class="detail-chip"><div class="chip-label"><i class="fas fa-tint"></i> Blood</div><div class="chip-value">${p.bloodGroup}</div></div>
+                                <div class="detail-chip"><div class="chip-label"><i class="fas fa-venus-mars"></i> Gender</div><div class="chip-value">${p.gender}</div></div>
+                                <div class="detail-chip"><div class="chip-label"><i class="fas fa-stethoscope"></i> Condition</div><div class="chip-value">${p.condition}</div></div>
+                            </div>
+                            <div class="last-visit-badge">
+                                <i class="fas fa-history"></i>
+                                <span>Last visit: ${p.lastVisit}</span>
+                                ${upcomingHtml}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            filterAndRender() {
+                let query = document.getElementById('searchInput')?.value.toLowerCase() || "";
+                let condFilter = document.getElementById('conditionFilter')?.value || "all";
+                let temp = this.patients.filter(p => {
+                    const matchesSearch = p.name.toLowerCase().includes(query) || 
+                                          p.condition.toLowerCase().includes(query) || 
+                                          p.id.toString().includes(query);
+                    const matchesCond = (condFilter === 'all') || (p.status === condFilter);
+                    return matchesSearch && matchesCond;
+                });
+                // apply sort method that is currently selected
+                const sortVal = document.getElementById('sortSelect')?.value || "recent";
+                if (sortVal === 'name') temp.sort((a,b) => a.name.localeCompare(b.name));
+                else if (sortVal === 'critical-first') {
+                    const priority = { critical: 0, chronic: 1, stable: 2 };
+                    temp.sort((a,b) => priority[a.status] - priority[b.status]);
+                } else {
+                    temp.sort((a,b) => new Date(b.lastVisit) - new Date(a.lastVisit));
+                }
+                this.filtered = temp;
+                this.renderCards(this.filtered);
+            }
+
+            searchPatientsDebounced() {
+                if (this.searchTimer) clearTimeout(this.searchTimer);
+                this.searchTimer = setTimeout(() => {
+                    this.filterAndRender();
+                }, 280);
+            }
+
+            sortPatients(criteria) {
+                this.filterAndRender();
+            }
+
+            filterByCondition(condition) {
+                this.filterAndRender();
+            }
+            
+            resetFiltersAndRender() {
+                const searchBox = document.getElementById('searchInput');
+                if (searchBox) searchBox.value = '';
+                const condSelect = document.getElementById('conditionFilter');
+                if (condSelect) condSelect.value = 'all';
+                const sortSelect = document.getElementById('sortSelect');
+                if (sortSelect) sortSelect.value = 'recent';
+                this.filtered = [...this.patients];
+                this.filterAndRender();
+            }
+
+            viewPatientDetails(id) {
+                window.location.href = `doctor-patient-view.html?patientId=${id}`;
+            }
+        }
+
+        const manager = new EnhancedPatientsManager();
+        
+        // global functions for inline events
+        function debouncedSearch() { manager.searchPatientsDebounced(); }
+        function filterByCondition(condition) { manager.filterByCondition(condition); }
+        function sortPatients(criteria) { manager.sortPatients(criteria); }
+        function viewPatientDetails(id) { manager.viewPatientDetails(id); }
+        function resetFilters() { manager.resetFiltersAndRender(); }
+
+        // initial stats & render
+        manager.init();
+        
+        // attach additional listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            // ensure all interactions
+        });
+    </script>
+</body>
+</html>

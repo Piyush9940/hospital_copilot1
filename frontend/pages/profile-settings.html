@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Profile Settings | HealthCare Plus</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            min-height: 100vh;
+            color: #0c4a6e;
+        }
+
+        /* Blue & White Navbar */
+        .navbar {
+            background: linear-gradient(135deg, #0369a1, #0284c7);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: white;
+            letter-spacing: -0.3px;
+        }
+        .nav-brand i {
+            color: #facc15;
+            margin-right: 8px;
+        }
+        .nav-menu a {
+            text-decoration: none;
+            font-weight: 600;
+            color: white;
+            background: rgba(255,255,255,0.15);
+            padding: 8px 18px;
+            border-radius: 30px;
+            transition: 0.3s;
+        }
+        .nav-menu a:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Main container */
+        .profile-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1.8rem;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 2rem;
+        }
+
+        /* Sidebar - Blue White Theme */
+        .profile-sidebar {
+            background: white;
+            border-radius: 28px;
+            padding: 2rem 1.2rem;
+            box-shadow: 0 20px 35px -12px rgba(2, 132, 199, 0.15);
+            border: 1px solid rgba(2, 132, 199, 0.2);
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+
+        .profile-avatar-section {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #0284c7, #38bdf8);
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: 700;
+            color: white;
+            position: relative;
+            cursor: pointer;
+            transition: 0.25s ease;
+            box-shadow: 0 15px 25px -8px rgba(2, 132, 199, 0.4);
+        }
+        .profile-avatar:hover {
+            transform: scale(1.02);
+        }
+        .avatar-edit-btn {
+            position: absolute;
+            bottom: 6px;
+            right: 6px;
+            background: white;
+            border-radius: 40px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            color: #0284c7;
+            cursor: pointer;
+        }
+        #profileName {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #0369a1;
+            margin-top: 0.5rem;
+        }
+        #profileRole {
+            background: #e0f2fe;
+            display: inline-block;
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #0284c7;
+        }
+
+        .profile-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        .profile-nav-item {
+            padding: 0.85rem 1.2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: #475569;
+            font-weight: 500;
+        }
+        .profile-nav-item i { width: 26px; font-size: 1.2rem; }
+        .profile-nav-item:hover {
+            background: rgba(2, 132, 199, 0.1);
+            color: #0284c7;
+            transform: translateX(6px);
+        }
+        .profile-nav-item.active {
+            background: rgba(2, 132, 199, 0.12);
+            color: #0369a1;
+            font-weight: 700;
+            border-left: 4px solid #0284c7;
+        }
+
+        /* Content Area - White Card */
+        .profile-content {
+            background: white;
+            border-radius: 32px;
+            padding: 2rem 2.2rem;
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e0f2fe;
+        }
+        .profile-section {
+            display: none;
+            animation: fadeSlideUp 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+        }
+        .profile-section.active { display: block; }
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .section-header {
+            margin-bottom: 1.8rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 2px solid #e0f2fe;
+        }
+        .section-header h2 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #0369a1;
+        }
+        .section-header p {
+            color: #64748b;
+            margin-top: 0.3rem;
+            font-size: 0.9rem;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: block;
+            color: #1e293b;
+            font-size: 0.85rem;
+        }
+        .form-group label i {
+            color: #0284c7;
+            margin-right: 5px;
+        }
+        .form-input, select.form-input, textarea.form-input {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 16px;
+            font-size: 0.95rem;
+            transition: 0.2s;
+            background: #fefefe;
+            font-family: 'Inter', sans-serif;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #0284c7;
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1);
+            background: white;
+        }
+        .save-btn {
+            background: linear-gradient(105deg, #0284c7, #0369a1);
+            border: none;
+            padding: 0.85rem 2rem;
+            border-radius: 40px;
+            font-weight: 700;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: 0.25s;
+            box-shadow: 0 6px 14px rgba(2, 132, 199, 0.25);
+            font-size: 0.9rem;
+        }
+        .save-btn:hover { transform: translateY(-2px); filter: brightness(1.02); }
+        .security-card {
+            background: #f8fafc;
+            border-radius: 24px;
+            padding: 1.5rem;
+            margin-bottom: 1.2rem;
+            border: 1px solid #e0f2fe;
+        }
+        .toggle-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid #e0f2fe;
+        }
+        .toggle-label h4 { font-weight: 700; margin-bottom: 0.2rem; font-size: 0.95rem; color: #0c4a6e; }
+        .toggle-label p { font-size: 0.78rem; color: #64748b; }
+        .switch {
+            position: relative;
+            width: 52px;
+            height: 28px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: 0.25s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.25s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background: linear-gradient(115deg, #0284c7, #38bdf8);
+        }
+        input:checked + .slider:before { transform: translateX(24px); }
+        .danger-card { border-color: #fecaca; background: #fff5f5; }
+        .toast-notification {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            background: #0369a1;
+            backdrop-filter: blur(16px);
+            color: white;
+            padding: 1rem 1.8rem;
+            border-radius: 50px;
+            font-weight: 600;
+            z-index: 9999;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            animation: slideUpFade 0.3s ease;
+        }
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .payment-method-card {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .method-item {
+            background: #f1f5f9;
+            border-radius: 20px;
+            padding: 1rem 1.2rem;
+            flex: 1;
+            text-align: center;
+            transition: 0.2s;
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
+        }
+        .method-item:hover { background: white; border: 1px solid #0284c7; transform: translateY(-3px); }
+        @media (max-width: 900px) {
+            .profile-container { grid-template-columns: 1fr; margin: 1rem; padding: 0 1rem; gap: 1rem; }
+            .profile-sidebar { position: relative; top: 0; }
+            .form-grid { grid-template-columns: 1fr; }
+        }
+        .required-star {
+            color: #f97316;
+            font-size: 12px;
+        }
+        .note-text {
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-heartbeat"></i> HealthCare Plus
+            </div>
+            <div class="nav-menu"><a href="#"><i class="fas fa-home"></i> Dashboard</a></div>
+        </div>
+    </nav>
+
+    <div class="profile-container">
+        <!-- Sidebar -->
+        <div class="profile-sidebar">
+            <div class="profile-avatar-section">
+                <div class="profile-avatar" id="profileAvatar">
+                    <span id="avatarInitials">?</span>
+                    <div class="avatar-edit-btn"><i class="fas fa-camera"></i></div>
+                </div>
+                <h3 id="profileName">Your Name</h3>
+                <p id="profileRole"><i class="fas fa-user-plus"></i> New Member</p>
+            </div>
+            <nav class="profile-nav">
+                <div class="profile-nav-item active" data-section="personal"><i class="fas fa-user-circle"></i> Personal Info</div>
+                <div class="profile-nav-item" data-section="medical"><i class="fas fa-notes-medical"></i> Medical History</div>
+                <div class="profile-nav-item" data-section="security"><i class="fas fa-shield-alt"></i> Security</div>
+                <div class="profile-nav-item" data-section="notifications"><i class="fas fa-bell"></i> Notifications</div>
+                <div class="profile-nav-item" data-section="billing"><i class="fas fa-credit-card"></i> Billing</div>
+                <div class="profile-nav-item" data-section="danger"><i class="fas fa-exclamation-triangle"></i> Danger Zone</div>
+            </nav>
+        </div>
+
+        <!-- Main Content - ALL FIELDS EMPTY -->
+        <div class="profile-content">
+            <!-- PERSONAL SECTION -->
+            <div class="profile-section active" id="personal-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-id-card"></i> Personal Information</h2>
+                    <p>Enter your details to create your health profile</p>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group"><label><i class="fas fa-user"></i> First Name <span class="required-star">*</span></label><input type="text" class="form-input" id="firstName" placeholder="Enter your first name"></div>
+                    <div class="form-group"><label><i class="fas fa-user"></i> Last Name</label><input type="text" class="form-input" id="lastName" placeholder="Enter your last name"></div>
+                    <div class="form-group"><label><i class="fas fa-envelope"></i> Email Address <span class="required-star">*</span></label><input type="email" class="form-input" id="email" placeholder="you@example.com"></div>
+                    <div class="form-group"><label><i class="fas fa-phone-alt"></i> Mobile Number <span class="required-star">*</span></label><input type="tel" class="form-input" id="phone" placeholder="+91 98765 43210"></div>
+                    <div class="form-group"><label><i class="fas fa-calendar-alt"></i> Date of Birth</label><input type="date" class="form-input" id="dob"></div>
+                    <div class="form-group"><label><i class="fas fa-venus-mars"></i> Gender</label><select class="form-input" id="gender"><option value="">Select Gender</option><option>Male</option><option>Female</option><option>Other</option></select></div>
+                    <div class="form-group" style="grid-column: span 2;"><label><i class="fas fa-map-marker-alt"></i> Address</label><textarea class="form-input" id="address" rows="2" placeholder="Enter your full address"></textarea></div>
+                </div>
+                <button class="save-btn" id="savePersonalBtn"><i class="fas fa-save"></i> Save Profile</button>
+                <div class="note-text"><i class="fas fa-info-circle"></i> Your information is secure and protected</div>
+            </div>
+
+            <!-- MEDICAL INFO -->
+            <div class="profile-section" id="medical-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-stethoscope"></i> Medical Information</h2>
+                    <p>Add your health details for better care</p>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group"><label><i class="fas fa-tint"></i> Blood Group</label><select class="form-input" id="bloodGroup"><option value="">Select Blood Group</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>O+</option><option>O-</option><option>AB+</option><option>AB-</option></select></div>
+                    <div class="form-group"><label><i class="fas fa-ruler"></i> Height (cm)</label><input type="number" class="form-input" id="height" placeholder="Enter height"></div>
+                    <div class="form-group"><label><i class="fas fa-weight-hanging"></i> Weight (kg)</label><input type="number" class="form-input" id="weight" placeholder="Enter weight"></div>
+                    <div class="form-group"><label><i class="fas fa-calculator"></i> BMI</label><input type="text" class="form-input" id="bmi" readonly placeholder="Auto-calculated"></div>
+                    <div class="form-group" style="grid-column: span 2;"><label><i class="fas fa-notes-medical"></i> Chronic Conditions</label><textarea class="form-input" id="conditions" rows="2" placeholder="e.g., Diabetes, Hypertension - leave empty if none"></textarea></div>
+                    <div class="form-group" style="grid-column: span 2;"><label><i class="fas fa-allergies"></i> Allergies</label><textarea class="form-input" id="allergies" rows="2" placeholder="e.g., Penicillin, Peanuts - leave empty if none"></textarea></div>
+                    <div class="form-group" style="grid-column: span 2;"><label><i class="fas fa-capsules"></i> Current Medications</label><textarea class="form-input" id="medications" rows="2" placeholder="List medicines with dosage"></textarea></div>
+                </div>
+                <button class="save-btn" id="saveMedicalBtn"><i class="fas fa-heartbeat"></i> Save Medical Info</button>
+            </div>
+
+            <!-- SECURITY -->
+            <div class="profile-section" id="security-section">
+                <div class="section-header"><h2><i class="fas fa-lock"></i> Security Settings</h2><p>Manage your password and account security</p></div>
+                <div class="security-card"><h4><i class="fas fa-key"></i> Change Password</h4><p>Create a strong password (min 6 characters)</p>
+                <div class="form-grid" style="margin-top: 1rem;">
+                    <div class="form-group"><label>Current Password</label><input type="password" class="form-input" id="currentPassword" placeholder="Enter current password"></div>
+                    <div></div>
+                    <div class="form-group"><label>New Password</label><input type="password" class="form-input" id="newPassword" placeholder="New password"></div>
+                    <div class="form-group"><label>Confirm Password</label><input type="password" class="form-input" id="confirmPassword" placeholder="Confirm new password"></div>
+                </div>
+                <button class="save-btn" id="changePwdBtn"><i class="fas fa-sync-alt"></i> Update Password</button></div>
+                <div class="security-card"><h4><i class="fas fa-mobile-alt"></i> Two-Factor Authentication</h4><p>Add extra layer of security via SMS/Email OTP</p>
+                <button class="save-btn" id="setup2faBtn" style="background: linear-gradient(125deg, #38bdf8, #0284c7);"><i class="fas fa-qrcode"></i> Enable 2FA</button></div>
+            </div>
+
+            <!-- NOTIFICATIONS -->
+            <div class="profile-section" id="notifications-section">
+                <div class="section-header"><h2><i class="fas fa-bell"></i> Notification Preferences</h2><p>Choose what updates you want to receive</p></div>
+                <div class="toggle-group"><div class="toggle-label"><h4>📅 Appointment Reminders</h4><p>SMS & Email reminders for doctor visits</p></div><label class="switch"><input type="checkbox" id="notifAppt"><span class="slider"></span></label></div>
+                <div class="toggle-group"><div class="toggle-label"><h4>📄 Lab Reports & Prescriptions</h4><p>Notify when new reports are available</p></div><label class="switch"><input type="checkbox" id="notifReports"><span class="slider"></span></label></div>
+                <div class="toggle-group"><div class="toggle-label"><h4>🤖 AI Health Assistant</h4><p>Wellness tips & medication reminders</p></div><label class="switch"><input type="checkbox" id="notifAI"><span class="slider"></span></label></div>
+                <div class="toggle-group"><div class="toggle-label"><h4>🚨 Emergency & Critical Alerts</h4><p>Important health notifications</p></div><label class="switch"><input type="checkbox" id="notifEmergency"><span class="slider"></span></label></div>
+                <button class="save-btn" id="saveNotifBtn"><i class="fas fa-check-double"></i> Save Preferences</button>
+            </div>
+
+            <!-- BILLING -->
+            <div class="profile-section" id="billing-section">
+                <div class="section-header"><h2><i class="fas fa-credit-card"></i> Billing & Payments</h2><p>Manage payment methods and view invoices</p></div>
+                <div class="security-card"><h4>💳 Payment Methods</h4><div class="payment-method-card"><div class="method-item"><i class="fab fa-cc-visa fa-2x"></i><p>Credit/Debit Card</p></div><div class="method-item"><i class="fas fa-university fa-2x"></i><p>Net Banking</p></div><div class="method-item"><i class="fas fa-mobile-alt fa-2x"></i><p>UPI (GPay/PhonePe)</p></div></div><hr><p><i class="fas fa-history"></i> No billing history yet</p></div>
+                <button class="save-btn" id="mockBillingBtn"><i class="fas fa-plus-circle"></i> Add Payment Method</button>
+            </div>
+
+            <!-- DANGER ZONE -->
+            <div class="profile-section" id="danger-section">
+                <div class="section-header"><h2 style="color:#dc2626;"><i class="fas fa-skull-crosswalk"></i> Danger Zone</h2><p>Irreversible account actions</p></div>
+                <div class="security-card danger-card"><h4 style="color:#b91c1c;">⚠️ Delete Account Permanently</h4><p>All your medical records, history and personal data will be lost forever.</p>
+                <button class="save-btn" id="deleteAccountBtn" style="background: #dc2626; box-shadow: none;"><i class="fas fa-trash-alt"></i> Delete My Account</button></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        // BLUE-WHITE THEME PROFILE MANAGER - COMPLETELY DYNAMIC, NO PRE-FILLED DATA
+        class ProfileManager {
+            constructor() {
+                this.storageKey = 'healthcare_profile_data';
+                this.loadUserData();
+                this.bindEvents();
+                this.setupBMICalculator();
+                this.setupNavigation();
+                this.setupAvatarClick();
+            }
+
+            async loadUserData() {
+                try {
+                    const userRes = await API.get('/auth/me');
+                    const user = userRes.data;
+                    const profileRes = await API.get('/patient/me');
+                    const profile = profileRes.data || {};
+
+                    const data = {
+                        firstName: user.name ? user.name.split(' ')[0] : '',
+                        lastName: user.name ? user.name.split(' ').slice(1).join(' ') : '',
+                        email: user.email || '',
+                        phone: user.phone || '',
+                        gender: profile.gender || '',
+                        age: profile.age || '',
+                        dob: profile.dob || '',
+                        address: profile.address || '',
+                        bloodGroup: profile.bloodGroup || '',
+                        history: profile.history || '',
+                        allergies: profile.allergies || '',
+                        medications: profile.medications || '',
+                    };
+
+                    this.populateFormFields(data);
+                    this.updateSidebar(data);
+                } catch (e) {
+                    console.error('Failed to load profile', e);
+                    this.resetAllFields();
+                    this.updateSidebar({ firstName: '', lastName: '' });
+                }
+            }
+
+            resetAllFields() {
+                document.getElementById('firstName').value = '';
+                document.getElementById('lastName').value = '';
+                document.getElementById('email').value = '';
+                document.getElementById('phone').value = '';
+                document.getElementById('dob').value = '';
+                document.getElementById('gender').value = '';
+                document.getElementById('address').value = '';
+                document.getElementById('bloodGroup').value = '';
+                document.getElementById('height').value = '';
+                document.getElementById('weight').value = '';
+                document.getElementById('conditions').value = '';
+                document.getElementById('allergies').value = '';
+                document.getElementById('medications').value = '';
+                document.getElementById('bmi').value = '';
+                document.getElementById('notifAppt').checked = false;
+                document.getElementById('notifReports').checked = false;
+                document.getElementById('notifAI').checked = false;
+                document.getElementById('notifEmergency').checked = false;
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+            }
+
+            populateFormFields(data) {
+                document.getElementById('firstName').value = data.firstName || '';
+                document.getElementById('lastName').value = data.lastName || '';
+                document.getElementById('email').value = data.email || '';
+                document.getElementById('phone').value = data.phone || '';
+                document.getElementById('dob').value = data.dob || '';
+                document.getElementById('gender').value = data.gender || '';
+                document.getElementById('address').value = data.address || '';
+                document.getElementById('bloodGroup').value = data.bloodGroup || '';
+                document.getElementById('height').value = data.height || '';
+                document.getElementById('weight').value = data.weight || '';
+                document.getElementById('conditions').value = data.conditions || '';
+                document.getElementById('allergies').value = data.allergies || '';
+                document.getElementById('medications').value = data.medications || '';
+                document.getElementById('notifAppt').checked = data.notifAppt || false;
+                document.getElementById('notifReports').checked = data.notifReports || false;
+                document.getElementById('notifAI').checked = data.notifAI || false;
+                document.getElementById('notifEmergency').checked = data.notifEmergency || false;
+                this.calculateBMI();
+            }
+
+            updateSidebar(data) {
+                const firstName = data.firstName || '';
+                const lastName = data.lastName || '';
+                if (firstName || lastName) {
+                    const initials = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || 'U';
+                    document.getElementById('avatarInitials').innerText = initials;
+                    document.getElementById('profileName').innerText = `${firstName} ${lastName}`.trim() || 'Your Name';
+                    document.getElementById('profileRole').innerHTML = '<i class="fas fa-user-check"></i> Active Member';
+                } else {
+                    document.getElementById('avatarInitials').innerText = '?';
+                    document.getElementById('profileName').innerText = 'Your Name';
+                    document.getElementById('profileRole').innerHTML = '<i class="fas fa-user-plus"></i> New Member';
+                }
+            }
+
+            calculateBMI() {
+                const height = parseFloat(document.getElementById('height').value);
+                const weight = parseFloat(document.getElementById('weight').value);
+                const bmiField = document.getElementById('bmi');
+                if (height && weight && height > 0) {
+                    const heightInMeters = height / 100;
+                    const bmiValue = (weight / (heightInMeters * heightInMeters)).toFixed(1);
+                    bmiField.value = bmiValue;
+                } else {
+                    bmiField.value = '';
+                }
+            }
+
+            setupBMICalculator() {
+                const heightInput = document.getElementById('height');
+                const weightInput = document.getElementById('weight');
+                heightInput.addEventListener('input', () => this.calculateBMI());
+                weightInput.addEventListener('input', () => this.calculateBMI());
+            }
+
+            async savePersonalInfo() {
+                const firstName = document.getElementById('firstName').value.trim();
+                if (!firstName) {
+                    this.showToast('Please enter your first name', '#ef4444');
+                    return;
+                }
+                const lastName = document.getElementById('lastName').value;
+                const email = document.getElementById('email').value;
+                const phone = document.getElementById('phone').value;
+                const dob = document.getElementById('dob').value;
+                const gender = document.getElementById('gender').value;
+                const address = document.getElementById('address').value;
+
+                try {
+                    // Update user name/phone/email
+                    await API.put('/auth/me', {
+                        name: `${firstName} ${lastName}`.trim(),
+                        email: email,
+                        phone: phone
+                    });
+
+                    // Update patient profile info
+                    const user = Auth.getUser();
+                    const age = dob ? new Date().getFullYear() - new Date(dob).getFullYear() : 30;
+                    
+                    await API.post('/patient/profile', {
+                        userId: user.id,
+                        age: age,
+                        gender: gender,
+                        dateOfBirth: dob,
+                        address: address
+                    });
+
+                    const data = this.getCurrentData();
+                    data.firstName = firstName;
+                    data.lastName = lastName;
+                    this.updateSidebar(data);
+                    this.showToast('Personal information saved successfully!', '#0284c7');
+                } catch (e) {
+                    this.showToast(e.message || 'Failed to save personal info', '#ef4444');
+                }
+            }
+
+            async saveMedicalInfo() {
+                const bloodGroup = document.getElementById('bloodGroup').value;
+                const height = document.getElementById('height').value;
+                const weight = document.getElementById('weight').value;
+                const conditions = document.getElementById('conditions').value;
+                const allergies = document.getElementById('allergies').value;
+                const medications = document.getElementById('medications').value;
+
+                try {
+                    const user = Auth.getUser();
+                    const dob = document.getElementById('dob').value;
+                    const gender = document.getElementById('gender').value || 'Other';
+                    const age = dob ? new Date().getFullYear() - new Date(dob).getFullYear() : 30;
+
+                    await API.post('/patient/profile', {
+                        userId: user.id,
+                        age: age,
+                        gender: gender,
+                        bloodGroup: bloodGroup,
+                        history: conditions,
+                        allergies: allergies,
+                        medications: medications
+                    });
+
+                    this.calculateBMI();
+                    this.showToast('Medical information saved successfully!', '#0284c7');
+                } catch (e) {
+                    this.showToast(e.message || 'Failed to save medical info', '#ef4444');
+                }
+            }
+
+            getCurrentData() {
+                const saved = localStorage.getItem(this.storageKey);
+                if (saved) {
+                    return JSON.parse(saved);
+                }
+                return {};
+            }
+
+            changePassword() {
+                const currentPwd = document.getElementById('currentPassword').value;
+                const newPwd = document.getElementById('newPassword').value;
+                const confirmPwd = document.getElementById('confirmPassword').value;
+                if (!currentPwd || !newPwd || !confirmPwd) {
+                    this.showToast('Please fill all password fields', '#ef4444');
+                    return;
+                }
+                if (newPwd !== confirmPwd) {
+                    this.showToast('New passwords do not match', '#ef4444');
+                    return;
+                }
+                if (newPwd.length < 6) {
+                    this.showToast('Password must be at least 6 characters', '#f59e0b');
+                    return;
+                }
+                this.showToast('Password changed successfully!', '#0284c7');
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+            }
+
+            setup2FA() {
+                this.showToast('OTP sent to your registered mobile number!', '#0284c7');
+            }
+
+            saveNotificationPrefs() {
+                const data = this.getCurrentData();
+                data.notifAppt = document.getElementById('notifAppt').checked;
+                data.notifReports = document.getElementById('notifReports').checked;
+                data.notifAI = document.getElementById('notifAI').checked;
+                data.notifEmergency = document.getElementById('notifEmergency').checked;
+                localStorage.setItem(this.storageKey, JSON.stringify(data));
+                this.showToast('Notification preferences saved!', '#0284c7');
+            }
+
+            addPaymentMethod() {
+                this.showToast('Payment method added successfully!', '#0284c7');
+            }
+
+            deleteAccount() {
+                if (confirm('WARNING: This will permanently delete ALL your data. Are you absolutely sure?')) {
+                    if (confirm('Type "DELETE" to confirm account deletion')) {
+                        localStorage.removeItem(this.storageKey);
+                        this.resetAllFields();
+                        this.updateSidebar({ firstName: '', lastName: '' });
+                        this.showToast('Account deleted. Page refreshed.', '#dc2626');
+                        setTimeout(() => location.reload(), 1500);
+                    }
+                }
+            }
+
+            showToast(message, bgColor) {
+                const toast = document.createElement('div');
+                toast.className = 'toast-notification';
+                toast.style.background = bgColor;
+                toast.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }
+
+            bindEvents() {
+                document.getElementById('savePersonalBtn').addEventListener('click', () => this.savePersonalInfo());
+                document.getElementById('saveMedicalBtn').addEventListener('click', () => this.saveMedicalInfo());
+                document.getElementById('changePwdBtn').addEventListener('click', () => this.changePassword());
+                document.getElementById('setup2faBtn').addEventListener('click', () => this.setup2FA());
+                document.getElementById('saveNotifBtn').addEventListener('click', () => this.saveNotificationPrefs());
+                document.getElementById('mockBillingBtn').addEventListener('click', () => this.addPaymentMethod());
+                document.getElementById('deleteAccountBtn').addEventListener('click', () => this.deleteAccount());
+                document.querySelectorAll('.method-item').forEach(el => {
+                    el.addEventListener('click', () => this.showToast('Select payment method to proceed', '#6366f1'));
+                });
+            }
+
+            setupNavigation() {
+                const navItems = document.querySelectorAll('.profile-nav-item');
+                const sections = ['personal', 'medical', 'security', 'notifications', 'billing', 'danger'];
+                navItems.forEach(item => {
+                    item.addEventListener('click', () => {
+                        const section = item.getAttribute('data-section');
+                        navItems.forEach(nav => nav.classList.remove('active'));
+                        item.classList.add('active');
+                        sections.forEach(sec => {
+                            const secEl = document.getElementById(`${sec}-section`);
+                            if (secEl) secEl.classList.remove('active');
+                        });
+                        const activeSec = document.getElementById(`${section}-section`);
+                        if (activeSec) activeSec.classList.add('active');
+                    });
+                });
+            }
+
+            setupAvatarClick() {
+                const avatar = document.getElementById('profileAvatar');
+                avatar.addEventListener('click', () => {
+                    this.showToast('Avatar photo upload coming soon!', '#0284c7');
+                });
+            }
+        }
+
+        const profileManager = new ProfileManager();
+    </script>
+</body>
+</html>

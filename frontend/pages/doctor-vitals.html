@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>CareGuard | Patient Vitals + Main Dashboard</title>
+    <!-- Google Fonts + Font Awesome 6 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(145deg, #eef2ff 0%, #e9eef5 100%);
+            min-height: 100vh;
+        }
+
+        /* Glass morphism navbar */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0.9rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.65rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1e2b6e, #2563eb);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .nav-brand i {
+            background: linear-gradient(145deg, #3b82f6, #1e40af);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: #2563eb;
+            font-size: 1.9rem;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* Dashboard navigation button - MAIN DASHBOARD (navigates to separate dashboard) */
+        .main-dashboard-nav-btn {
+            background: linear-gradient(105deg, #0f2b3d, #1e4a76);
+            border: none;
+            padding: 0.7rem 1.8rem;
+            border-radius: 44px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            cursor: pointer;
+            transition: 0.25s;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-dashboard-nav-btn:hover {
+            transform: translateY(-3px);
+            background: linear-gradient(105deg, #0a1e2c, #143b5e);
+            box-shadow: 0 12px 22px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Clinical dashboard toggle button */
+        .clinical-dashboard-btn {
+            background: linear-gradient(105deg, #1e293b, #0f172a);
+            border: none;
+            padding: 0.7rem 1.8rem;
+            border-radius: 44px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            cursor: pointer;
+            transition: 0.25s;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+        }
+
+        .clinical-dashboard-btn:hover {
+            transform: translateY(-3px);
+            background: linear-gradient(105deg, #0f172a, #020617);
+            box-shadow: 0 12px 22px rgba(0, 0, 0, 0.15);
+        }
+
+        /* wrapper */
+        .app-wrapper {
+            max-width: 1600px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        /* MAIN DASHBOARD PANEL (full page style - replaces vitals view when navigated) */
+        .main-dashboard-view {
+            background: white;
+            border-radius: 36px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.08);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .main-dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+            border-bottom: 2px solid #eef2ff;
+            padding-bottom: 1rem;
+        }
+
+        .stats-grid-main {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .stat-card-main {
+            background: linear-gradient(135deg, #f8fafc, #ffffff);
+            border-radius: 28px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.02);
+            border: 1px solid #eef2ff;
+            transition: all 0.2s;
+        }
+
+        .stat-card-main:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.05);
+        }
+
+        .stat-icon {
+            font-size: 2.2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .stat-value-main {
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: #1e293b;
+        }
+
+        .return-to-vitals-btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.5rem;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .return-to-vitals-btn:hover {
+            background: #1d4ed8;
+            transform: scale(1.02);
+        }
+
+        /* vitals monitor section (visible by default) */
+        .vitals-section {
+            transition: opacity 0.3s;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .vitals-header-bar {
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(12px);
+            border-radius: 44px;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.02);
+        }
+
+        .vitals-dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.8rem;
+            margin-bottom: 2rem;
+        }
+
+        .vital-monitor-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(4px);
+            border-radius: 32px;
+            padding: 1.5rem;
+            box-shadow: 0 18px 35px rgba(0, 0, 0, 0.03);
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+
+        .vital-monitor-card:hover {
+            transform: translateY(-6px);
+            background: white;
+            box-shadow: 0 25px 40px rgba(0, 0, 0, 0.08);
+        }
+
+        .critical-card {
+            border-left: 6px solid #ef4444;
+            background: #fffafb;
+            animation: gentleShake 0.4s ease;
+        }
+
+        @keyframes gentleShake {
+            0%,100%{ transform: translateX(0);}
+            25%{ transform: translateX(-2px);}
+            75%{ transform: translateX(2px);}
+        }
+
+        .vital-value-display {
+            font-size: 3rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin: 0.3rem 0;
+        }
+
+        .vital-trend {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #f1f5f9;
+            padding: 0.2rem 0.9rem;
+            border-radius: 60px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 0.7rem;
+        }
+
+        .chart-glass {
+            background: white;
+            border-radius: 32px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.04);
+        }
+
+        .chart-tabs {
+            display: flex;
+            gap: 0.7rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-tab {
+            padding: 0.45rem 1.5rem;
+            border-radius: 60px;
+            border: 1.5px solid #e2e8f0;
+            background: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .chart-tab.active {
+            background: #1e293b;
+            color: white;
+            border-color: #1e293b;
+        }
+
+        .alerts-modern {
+            background: white;
+            border-radius: 32px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 12px 28px rgba(0,0,0,0.04);
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: #fef2f2;
+            border-radius: 24px;
+            margin-bottom: 0.8rem;
+            border-left: 5px solid #ef4444;
+        }
+
+        .patients-vitals-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+        }
+
+        .patients-vitals-table th {
+            background: #f1f5f9;
+            padding: 1.2rem 1rem;
+            font-weight: 700;
+        }
+
+        .patients-vitals-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #eef2ff;
+        }
+
+        .critical-highlight {
+            background: #fee2e2;
+            color: #b91c1c;
+            font-weight: 800;
+            padding: 0.2rem 0.8rem;
+            border-radius: 60px;
+            display: inline-block;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0.25rem 1rem;
+            border-radius: 100px;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+
+        .pulse-circle {
+            width: 12px;
+            height: 12px;
+            background: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulseAnim 1.5s infinite;
+        }
+
+        @keyframes pulseAnim {
+            0% { box-shadow: 0 0 0 0 rgba(16,185,129,0.6); }
+            70% { box-shadow: 0 0 0 8px rgba(16,185,129,0); }
+            100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+        }
+
+        @media (max-width: 1100px) {
+            .vitals-dashboard-grid { grid-template-columns: repeat(2,1fr);}
+        }
+        @media (max-width: 700px) {
+            .vitals-dashboard-grid { grid-template-columns: 1fr;}
+            .app-wrapper { padding: 0 1rem; }
+            .nav-buttons { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-heart-pulse"></i>
+                <span>CareGuard<span style="font-weight:500;"> Vitals</span></span>
+            </div>
+            <div class="nav-buttons">
+                <!-- Button 1: Navigate to MAIN DASHBOARD (separate full dashboard view) -->
+                <button id="mainDashboardNavBtn" class="main-dashboard-nav-btn">
+                    <i class="fas fa-chalkboard-user"></i> Main Dashboard
+                </button>
+                <!-- Button 2: Toggle Clinical Analytics Panel (in-page analytics) -->
+                <button id="clinicalDashboardToggleBtn" class="clinical-dashboard-btn">
+                    <i class="fas fa-chart-line"></i> Clinical Analytics
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="app-wrapper">
+        <!-- MAIN DASHBOARD VIEW (full page, replaces vitals when navigated) -->
+        <div id="mainDashboardView" class="main-dashboard-view hidden">
+            <div class="main-dashboard-header">
+                <div>
+                    <i class="fas fa-chalkboard-user fa-2x" style="color:#2563eb;"></i>
+                    <h2 style="display:inline-block; margin-left:12px;">Hospital Executive Dashboard</h2>
+                </div>
+                <button id="backToVitalsBtn" class="return-to-vitals-btn">
+                    <i class="fas fa-arrow-left"></i> Back to Vitals Monitor
+                </button>
+            </div>
+            <div id="mainDashboardStats" class="stats-grid-main">
+                <!-- dynamic stats from JS -->
+            </div>
+            <div style="margin-top: 1rem; background: #f9fafb; border-radius: 28px; padding: 1.5rem;">
+                <h3><i class="fas fa-chart-simple"></i> Key Indicators Overview</h3>
+                <canvas id="mainDashboardChart" height="200" style="max-height:280px; width:100%; margin-top: 1rem;"></canvas>
+            </div>
+            <div style="margin-top: 2rem; background: #f9fafb; border-radius: 28px; padding: 1.5rem;">
+                <h3><i class="fas fa-hospital-user"></i> Patient Summary & Critical Cases</h3>
+                <div id="criticalCasesList" style="margin-top: 1rem;"></div>
+            </div>
+        </div>
+
+        <!-- VITALS MONITOR SECTION (default visible) -->
+        <div id="vitalsSection" class="vitals-section">
+            <div class="vitals-header-bar">
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <h2 style="font-weight:700;"><i class="fas fa-waveform"></i> Intelliview Monitor</h2>
+                    <select id="patientSelect" style="padding:0.7rem 1.5rem; border-radius: 44px; border:2px solid #eef2ff; font-weight:500;">
+                        <option value="P001">👤 John Smith (P001)</option>
+                        <option value="P002">👩‍⚕️ Sarah Johnson (P002)</option>
+                        <option value="P003">🧔 Michael Brown (P003)</option>
+                        <option value="P004">👴 Robert Wilson (P004)</option>
+                        <option value="all">📋 All Patients Overview</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 12px; background: #d9f0e1; padding: 0.4rem 1.2rem; border-radius: 80px;">
+                    <span class="pulse-circle"></span>
+                    <span><i class="fas fa-microchip"></i> LiveStream AI</span>
+                </div>
+            </div>
+
+            <div class="vitals-dashboard-grid" id="vitalCards"></div>
+
+            <div class="chart-glass">
+                <div class="chart-tabs">
+                    <button class="chart-tab active" data-period="24h">📈 24 Hours</button>
+                    <button class="chart-tab" data-period="7d">📅 7 Days</button>
+                    <button class="chart-tab" data-period="30d">🌙 30 Days</button>
+                </div>
+                <canvas id="vitalsTrendChart" height="110"></canvas>
+            </div>
+
+            <div class="alerts-modern">
+                <h3 style="margin-bottom:1.2rem;"><i class="fas fa-exclamation-triangle" style="color:#ef4444;"></i> Critical & Warning Alerts</h3>
+                <div id="criticalAlerts"></div>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table class="patients-vitals-table">
+                    <thead><tr><th>Patient</th><th>BP (mmHg)</th><th>Heart Rate</th><th>SpO₂</th><th>Temp (°F)</th><th>Status</th><th>Last Updated</th></tr></thead>
+                    <tbody id="vitalsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ---------- PATIENT DATABASE ----------
+        const patientMaster = {
+            P001: { name: "John Smith", bp: "118/76", hr: 74, spo2: 98, temp: 98.4, status: "Stable", critical: false, trendData: { hr: [72,74,73,75,74,76,74], spo2: [98,97,98,98,99,98,98], sbp: [118,119,117,118,120,118,119] } },
+            P002: { name: "Sarah Johnson", bp: "122/80", hr: 68, spo2: 99, temp: 98.1, status: "Normal", critical: false, trendData: { hr: [67,68,69,68,70,68,69], spo2: [99,98,99,99,100,99,99], sbp: [121,122,120,122,123,121,122] } },
+            P003: { name: "Michael Brown", bp: "136/88", hr: 85, spo2: 96, temp: 99.2, status: "Elevated", critical: false, trendData: { hr: [82,84,85,86,84,85,86], spo2: [97,96,96,95,96,96,95], sbp: [132,134,136,137,135,136,138] } },
+            P004: { name: "Robert Wilson", bp: "162/98", hr: 98, spo2: 91, temp: 100.8, status: "Critical", critical: true, trendData: { hr: [94,96,98,99,97,98,100], spo2: [93,92,91,90,91,91,90], sbp: [158,160,162,163,161,162,164] } }
+        };
+        let allPatientsList = Object.values(patientMaster);
+        let currentPatientId = "P001";
+        let vitalsChart = null;
+        let currentPeriod = "24h";
+        let mainDashboardChartInstance = null;
+        let liveInterval = null;
+
+        function getPatientById(id) { return patientMaster[id] || patientMaster["P001"]; }
+
+        // Helper: update main dashboard content dynamically
+        function updateMainDashboard() {
+            const total = allPatientsList.length;
+            const criticalCount = allPatientsList.filter(p => p.critical || p.hr > 92 || p.spo2 < 94 || parseInt(p.bp.split('/')[0]) > 155).length;
+            const avgHr = Math.round(allPatientsList.reduce((a,b)=>a+b.hr,0)/total);
+            const avgSpo2 = Math.round(allPatientsList.reduce((a,b)=>a+b.spo2,0)/total);
+            const avgBpSys = Math.round(allPatientsList.map(p=>parseInt(p.bp.split('/')[0])).reduce((a,b)=>a+b,0)/total);
+            document.getElementById('mainDashboardStats').innerHTML = `
+                <div class="stat-card-main"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-value-main">${total}</div><div>Total Patients</div></div>
+                <div class="stat-card-main"><div class="stat-icon"><i class="fas fa-exclamation-triangle" style="color:#ef4444;"></i></div><div class="stat-value-main" style="color:#b91c1c;">${criticalCount}</div><div>Critical Cases</div></div>
+                <div class="stat-card-main"><div class="stat-icon"><i class="fas fa-heartbeat"></i></div><div class="stat-value-main">${avgHr} <span style="font-size:1rem;">bpm</span></div><div>Avg Heart Rate</div></div>
+                <div class="stat-card-main"><div class="stat-icon"><i class="fas fa-lungs"></i></div><div class="stat-value-main">${avgSpo2}%</div><div>Avg SpO₂</div></div>
+                <div class="stat-card-main"><div class="stat-icon"><i class="fas fa-tachometer-alt"></i></div><div class="stat-value-main">${avgBpSys}<span style="font-size:1rem;"> mmHg</span></div><div>Avg Systolic BP</div></div>
+            `;
+            // Critical cases list
+            const criticalPatients = allPatientsList.filter(p => p.critical || p.hr > 92 || p.spo2 < 94 || parseInt(p.bp.split('/')[0]) > 155);
+            const criticalHtml = criticalPatients.length === 0 ? '<div style="padding:1rem; background:#e6f7ec; border-radius:24px;">✅ No critical patients at this moment</div>' :
+                criticalPatients.map(p => `<div style="display:flex; justify-content:space-between; align-items:center; background:#fff5f5; border-radius:20px; padding:0.8rem 1rem; margin-bottom:0.7rem;">
+                    <span><strong>${p.name}</strong> - ${p.status}</span><span class="badge-critical" style="background:#fee2e2; padding:0.2rem 0.8rem; border-radius:40px;">⚠️ Alert</span>
+                </div>`).join('');
+            document.getElementById('criticalCasesList').innerHTML = criticalHtml;
+
+            // Update main chart (bar chart: heart rates)
+            if (mainDashboardChartInstance) mainDashboardChartInstance.destroy();
+            const ctx = document.getElementById('mainDashboardChart').getContext('2d');
+            mainDashboardChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: allPatientsList.map(p=>p.name), datasets: [{ label: 'Heart Rate (BPM)', data: allPatientsList.map(p=>p.hr), backgroundColor: '#3b82f6', borderRadius: 12, barPercentage: 0.6 }] },
+                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top' } } }
+            });
+        }
+
+        // Vitals rendering: cards + table + alerts (same as before)
+        function renderVitalCards() {
+            const container = document.getElementById('vitalCards');
+            if (!container) return;
+            if (currentPatientId === 'all') {
+                let avgHr = Math.round(allPatientsList.reduce((s,p)=>s+p.hr,0)/allPatientsList.length);
+                let avgSp = Math.round(allPatientsList.reduce((s,p)=>s+p.spo2,0)/allPatientsList.length);
+                let avgSys = Math.round(allPatientsList.map(p=>parseInt(p.bp.split('/')[0])).reduce((a,b)=>a+b,0)/allPatientsList.length);
+                let avgDia = Math.round(allPatientsList.map(p=>parseInt(p.bp.split('/')[1])).reduce((a,b)=>a+b,0)/allPatientsList.length);
+                let avgTemp = (allPatientsList.reduce((s,p)=>s+p.temp,0)/allPatientsList.length).toFixed(1);
+                const aggr = [
+                    { name: 'BLOOD PRESSURE', value: `${avgSys}/${avgDia}`, unit: 'mmHg', color: '#3b82f6', trendType: 'stable', icon: '➡️', criticalFlag: avgSys>150 },
+                    { name: 'HEART RATE', value: avgHr, unit: 'BPM', color: '#ef4444', trendType: avgHr>88?'up':'stable', icon: avgHr>88?'⬆️':'➡️', criticalFlag: avgHr>95 },
+                    { name: 'SpO₂', value: avgSp, unit: '%', color: '#10b981', trendType: avgSp<94?'down':'stable', icon: avgSp<94?'⬇️':'➡️', criticalFlag: avgSp<93 },
+                    { name: 'TEMPERATURE', value: avgTemp, unit: '°F', color: '#f59e0b', trendType: parseFloat(avgTemp)>99.5?'up':'stable', icon: parseFloat(avgTemp)>100?'⬆️':'➡️', criticalFlag: parseFloat(avgTemp)>100.2 }
+                ];
+                buildCardsHTML(aggr, container);
+                attachMiniSparklines(aggr);
+                return;
+            }
+            const p = getPatientById(currentPatientId);
+            const vitalsArr = [
+                { name: 'BLOOD PRESSURE', value: p.bp, unit: 'mmHg', color: '#3b82f6', trendType: 'stable', icon: '➡️', criticalFlag: parseInt(p.bp.split('/')[0]) > 150 },
+                { name: 'HEART RATE', value: p.hr, unit: 'BPM', color: '#ef4444', trendType: p.hr>88?'up':'stable', icon: p.hr>88?'⬆️':'➡️', criticalFlag: p.hr > 95 },
+                { name: 'SpO₂', value: p.spo2, unit: '%', color: '#10b981', trendType: p.spo2<94?'down':'stable', icon: p.spo2<94?'⬇️':'➡️', criticalFlag: p.spo2 < 93 },
+                { name: 'TEMPERATURE', value: p.temp.toFixed(1), unit: '°F', color: '#f59e0b', trendType: p.temp>100?'up':'stable', icon: p.temp>100?'⬆️':'➡️', criticalFlag: p.temp > 100.3 }
+            ];
+            buildCardsHTML(vitalsArr, container);
+            attachMiniSparklines(vitalsArr);
+        }
+
+        function buildCardsHTML(vitals, container) {
+            container.innerHTML = vitals.map(v => `<div class="vital-monitor-card ${v.criticalFlag ? 'critical-card' : ''}">
+                <div class="vital-card-header"><span class="vital-name">${v.name}</span><span style="color: ${v.color};">●</span></div>
+                <div class="vital-value-display" style="color:${v.color};">${v.value}</div>
+                <div class="vital-unit-display" style="font-size:0.8rem;">${v.unit}</div>
+                <div class="vital-trend trend-${v.trendType}"><span>${v.icon}</span> ${v.trendType === 'up' ? 'Rising' : (v.trendType === 'down' ? 'Declining' : 'Stable')}</div>
+                <div class="vital-mini-chart"><canvas id="spark_${v.name.replace(/\s/g,'')}" height="60"></canvas></div>
+            </div>`).join('');
+        }
+
+        function attachMiniSparklines(vitalsArr) {
+            setTimeout(() => {
+                vitalsArr.forEach(v => {
+                    const canvasId = `spark_${v.name.replace(/\s/g,'')}`;
+                    const canvas = document.getElementById(canvasId);
+                    if (!canvas) return;
+                    let data = [72,73,71,74,72,73,72];
+                    if (v.name === 'SpO₂') data = [98,97,98,96,98,97,98];
+                    if (v.name === 'BLOOD PRESSURE') data = [118,119,117,120,118,119,117];
+                    if (v.name === 'TEMPERATURE') data = [98.4,98.5,98.6,98.7,98.5,98.4,98.6];
+                    new Chart(canvas.getContext('2d'), {
+                        type: 'line', data: { labels: Array(7).fill(''), datasets: [{ data: data, borderColor: v.color, borderWidth: 2.5, pointRadius: 0, tension: 0.3 }] },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false } } }
+                    });
+                });
+            }, 20);
+        }
+
+        function renderTableAndAlerts() {
+            const tbody = document.getElementById('vitalsTableBody');
+            const rows = allPatientsList.map(p => {
+                let bpCritical = parseInt(p.bp.split('/')[0]) > 150;
+                let hrCritical = p.hr > 90;
+                let spo2Critical = p.spo2 < 94;
+                let tempCritical = p.temp > 100;
+                let statusColor = p.status === 'Critical' ? '#ef4444' : (p.status === 'Elevated' ? '#f59e0b' : '#10b981');
+                return `<tr><td><strong>${p.name}</strong></td>
+                    <td><span class="${bpCritical ? 'critical-highlight' : ''}">${p.bp}</span></td>
+                    <td><span class="${hrCritical ? 'critical-highlight' : ''}">${p.hr}</span></td>
+                    <td><span class="${spo2Critical ? 'critical-highlight' : ''}">${p.spo2}%</span></td>
+                    <td><span class="${tempCritical ? 'critical-highlight' : ''}">${p.temp}°F</span></td>
+                    <td><span class="status-badge" style="background:${statusColor}20; color:${statusColor};">● ${p.status}</span></td>
+                    <td><i class="far fa-clock"></i> just now</td>
+                </tr>`;
+            }).join('');
+            tbody.innerHTML = rows;
+            const criticalPatients = allPatientsList.filter(p => p.critical || p.hr > 92 || p.spo2 < 94 || parseInt(p.bp.split('/')[0]) > 155 || p.temp > 100.2);
+            const alertDiv = document.getElementById('criticalAlerts');
+            if (criticalPatients.length === 0) alertDiv.innerHTML = '<div style="padding:1rem; background:#e6f7ec; border-radius:24px;">✅ All vitals stable</div>';
+            else alertDiv.innerHTML = criticalPatients.map(p => `<div class="alert-item"><span>🚨</span><div style="flex:1;"><strong>${p.name}</strong> – ${p.spo2<94?`SpO₂ ${p.spo2}%`:(p.hr>92?`HR ${p.hr}`:(parseInt(p.bp.split('/')[0])>150?`BP ${p.bp}`:`Temp ${p.temp}°F`))}</div><span><i class="fas fa-bell"></i> now</span></div>`).join('');
+        }
+
+        function updateMainChart() {
+            if (!vitalsChart) return;
+            let labels = [], hrArr = [], spo2Arr = [], sbpArr = [];
+            if (currentPatientId === 'all') {
+                const fakeLabels = currentPeriod === '24h' ? ['00:00','04:00','08:00','12:00','16:00','20:00','24:00'] : (currentPeriod === '7d' ? ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] : ['Week1','Week2','Week3','Week4']);
+                labels = fakeLabels;
+                for(let i=0;i<labels.length;i++) { hrArr.push(70+Math.floor(Math.random()*12)); spo2Arr.push(95+Math.floor(Math.random()*4)); sbpArr.push(115+Math.floor(Math.random()*20)); }
+            } else {
+                const p = getPatientById(currentPatientId);
+                if (currentPeriod === '24h') { labels = ['00:00','04:00','08:00','12:00','16:00','20:00','24:00']; hrArr = p.trendData.hr; spo2Arr = p.trendData.spo2; sbpArr = p.trendData.sbp; }
+                else if (currentPeriod === '7d') { labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']; hrArr = [74,73,75,76,78,77,76]; spo2Arr = [98,97,98,96,97,96,97]; sbpArr = [120,119,121,122,124,123,122]; }
+                else { labels = ['Week1','Week2','Week3','Week4']; hrArr = [74,76,79,78]; spo2Arr = [98,97,96,96]; sbpArr = [118,121,124,123]; }
+            }
+            vitalsChart.data.labels = labels;
+            vitalsChart.data.datasets[0].data = hrArr;
+            vitalsChart.data.datasets[1].data = spo2Arr;
+            vitalsChart.data.datasets[2].data = sbpArr;
+            vitalsChart.update();
+        }
+
+        function initVitalsChart() {
+            const ctx = document.getElementById('vitalsTrendChart').getContext('2d');
+            vitalsChart = new Chart(ctx, {
+                type: 'line', data: { labels: [], datasets: [
+                    { label: '❤️ Heart Rate', data: [], borderColor: '#ef4444', tension: 0.3, fill: false },
+                    { label: '🫁 SpO₂ (%)', data: [], borderColor: '#10b981', tension: 0.3 },
+                    { label: '💙 Systolic BP', data: [], borderColor: '#3b82f6', tension: 0.3 }
+                ] }, options: { responsive: true, maintainAspectRatio: true }
+            });
+            updateMainChart();
+        }
+
+        function liveSimulation() {
+            allPatientsList.forEach(p => {
+                if (Math.random() > 0.6) {
+                    p.hr = Math.min(135, Math.max(55, p.hr + (Math.random() * 2 - 1)));
+                    p.spo2 = Math.min(100, Math.max(86, p.spo2 + (Math.random() * 1 - 0.6)));
+                    p.temp = +(p.temp + (Math.random() * 0.1 - 0.05)).toFixed(1);
+                    let sys = parseInt(p.bp.split('/')[0]) + (Math.random() > 0.7 ? Math.floor(Math.random() * 3 - 1) : 0);
+                    let dia = parseInt(p.bp.split('/')[1]) + (Math.random() > 0.7 ? Math.floor(Math.random() * 2 - 1) : 0);
+                    p.bp = `${Math.min(190,Math.max(90,sys))}/${Math.min(115,Math.max(50,dia))}`;
+                    p.status = (p.hr>92 || p.spo2<93 || parseInt(p.bp.split('/')[0])>155 || p.temp>100.2) ? 'Critical' : (p.hr>85 || p.spo2<95 ? 'Elevated' : 'Stable');
+                    p.critical = p.status === 'Critical';
+                }
+            });
+            renderVitalCards();
+            renderTableAndAlerts();
+            updateMainChart();
+            if (!document.getElementById('mainDashboardView').classList.contains('hidden')) updateMainDashboard();
+        }
+
+        // Navigation Logic
+        const mainDashboardView = document.getElementById('mainDashboardView');
+        const vitalsSection = document.getElementById('vitalsSection');
+        const mainNavBtn = document.getElementById('mainDashboardNavBtn');
+        const backBtn = document.getElementById('backToVitalsBtn');
+        const clinicalToggleBtn = document.getElementById('clinicalDashboardToggleBtn');
+        let clinicalPanelVisible = false;
+
+        // Clinical analytics toggle (simple alert just for demo + show/hide extra panel? we keep it as per original but we integrate)
+        clinicalToggleBtn.addEventListener('click', () => {
+            if (!clinicalPanelVisible) {
+                alert("📊 Clinical Analytics Panel: Quick insights - Currently showing realtime vitals metrics. Upgrade to view predictive analytics.");
+                clinicalPanelVisible = true;
+            } else {
+                alert("Analytics panel minimized.");
+                clinicalPanelVisible = false;
+            }
+        });
+
+        mainNavBtn.addEventListener('click', () => {
+            mainDashboardView.classList.remove('hidden');
+            vitalsSection.classList.add('hidden');
+            updateMainDashboard();
+        });
+        backBtn.addEventListener('click', () => {
+            mainDashboardView.classList.add('hidden');
+            vitalsSection.classList.remove('hidden');
+        });
+        document.getElementById('patientSelect').addEventListener('change', (e) => { currentPatientId = e.target.value; renderVitalCards(); updateMainChart(); renderTableAndAlerts(); });
+        document.querySelectorAll('.chart-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                document.querySelectorAll('.chart-tab').forEach(t=>t.classList.remove('active'));
+                tab.classList.add('active');
+                currentPeriod = tab.getAttribute('data-period');
+                updateMainChart();
+            });
+        });
+
+        renderVitalCards();
+        renderTableAndAlerts();
+        initVitalsChart();
+        liveInterval = setInterval(() => liveSimulation(), 5000);
+    </script>
+</body>
+</html>

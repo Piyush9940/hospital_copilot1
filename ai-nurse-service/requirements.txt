@@ -1,0 +1,90 @@
+# =========================
+# 🚀 FastAPI Core
+# =========================
+fastapi
+uvicorn
+python-dotenv
+
+# =========================
+# 🧠 LLM Providers
+# =========================
+openai
+groq
+google-generativeai
+
+# =========================
+# 🔗 HTTP / Networking
+# =========================
+requests
+httpx
+
+# =========================
+# 📚 LangChain + RAG
+# =========================
+langchain
+langchain-core
+langchain-community
+langchain-chroma
+langchain-huggingface
+
+# =========================
+# 🧠 Embeddings & Vector DB
+# =========================
+sentence-transformers
+chromadb
+
+# =========================
+# 📄 Document Processing
+# =========================
+pypdf
+PyMuPDF
+beautifulsoup4
+
+# =========================
+# 🧮 Data Handling
+# =========================
+numpy
+pandas
+
+# =========================
+# 🎙️ Voice (Speech)
+# =========================
+SpeechRecognition
+pydub
+edge-tts
+
+# =========================
+# 🌐 Translation
+# =========================
+mtranslate
+
+# =========================
+# 🧾 Token / LLM Utils
+# =========================
+tiktoken
+
+# =========================
+# 🛠️ Utilities
+# =========================
+pydantic
+rich
+typing-extensions
+
+# =========================
+# ⚙️ Optional (Better performance/logging)
+# =========================
+orjson
+loguru
+
+# =========================
+# 👤 Face & Image
+# =========================
+insightface
+onnxruntime
+python-multipart
+
+# =========================
+# 🩺 Skin Disease (ML)
+# =========================
+tensorflow
+keras

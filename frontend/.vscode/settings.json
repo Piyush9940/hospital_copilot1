@@ -1,0 +1,11 @@
+{
+  "liveServer.settings.root": "/frontend",
+  "liveServer.settings.port": 5500,
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "files.associations": {
+    "*.html": "html",
+    "*.js": "javascript",
+    "*.css": "css"
+  }
+}

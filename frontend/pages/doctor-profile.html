@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Profile - HealthCare Plus</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .profile-form {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .btn-save {
+            width: 100%;
+            padding: 12px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-save:hover {
+            background: #1d4ed8;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">HealthCare Plus</div>
+            <div class="nav-menu"></div>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+    <main class="dashboard-container">
+        <!-- Managed by page-builder.js -->
+    </main>
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/page-builder.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.requireRole && requireRole(['doctor'])) {
+                await PageBuilder.buildPage({
+                    title: 'Doctor Profile',
+                    subtitle: 'Manage your professional details and availability',
+                    allowedRoles: ['doctor'],
+                    renderFunction: (data) => `
+                        <div class="profile-form">
+                            <form id="profileForm" onsubmit="saveProfile(event)">
+                                <div class="form-group">
+                                    <label class="form-label">Full Name</label>
+                                    <input type="text" id="name" class="form-input" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Phone</label>
+                                    <input type="text" id="phone" class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Specialization</label>
+                                    <input type="text" id="specialization" class="form-input" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Years of Experience</label>
+                                    <input type="number" id="experience" class="form-input" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Qualifications</label>
+                                    <input type="text" id="qualification" class="form-input" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Consultation Fee ($)</label>
+                                    <input type="number" id="fee" class="form-input" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Hospital/Clinic Name</label>
+                                    <input type="text" id="hospital" class="form-input" required>
+                                </div>
+                                <button type="submit" class="btn-save">Save Profile</button>
+                            </form>
+                        </div>
+                    `
+                });
+
+                // Fetch data
+                try {
+                    const [userRes, docRes] = await Promise.all([
+                        API.get('/auth/me'),
+                        API.get('/doctor/me').catch(() => ({ data: {} })) // Might 404 if profile not created yet
+                    ]);
+
+                    document.getElementById('name').value = userRes.data?.name || '';
+                    document.getElementById('phone').value = userRes.data?.phone || '';
+
+                    const doc = docRes.data || {};
+                    document.getElementById('specialization').value = doc.specialization || '';
+                    document.getElementById('experience').value = doc.experience || '';
+                    document.getElementById('qualification').value = doc.qualification || '';
+                    document.getElementById('fee').value = doc.appointmentFee || doc.appointment_fee || '';
+                    document.getElementById('hospital').value = doc.hospitalName || doc.hospital_name || '';
+                } catch (e) {
+                    console.error('Failed to load profile data', e);
+                }
+            }
+        });
+
+        async function saveProfile(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const originalText = btn.textContent;
+            btn.textContent = 'Saving...';
+            btn.disabled = true;
+
+            try {
+                // Update basic user info
+                await API.put('/auth/me', {
+                    name: document.getElementById('name').value,
+                    phone: document.getElementById('phone').value
+                });
+
+                // The doctor profile endpoint uses POST to /doctor/profile
+                await API.post('/doctor/profile', {
+                    userId: window.Auth.getUser().id,
+                    specialization: document.getElementById('specialization').value,
+                    experience: parseInt(document.getElementById('experience').value),
+                    qualification: document.getElementById('qualification').value,
+                    appointmentFee: parseFloat(document.getElementById('fee').value),
+                    hospitalName: document.getElementById('hospital').value
+                });
+
+                if (window.Toast) Toast.show('Profile updated successfully!', 'success');
+                else alert('Profile updated successfully!');
+            } catch (error) {
+                console.error(error);
+                if (window.Toast) Toast.show('Failed to update profile', 'error');
+                else alert('Failed to update profile');
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function toggleMobileMenu() {
+            document.querySelector('.nav-menu')?.classList.toggle('active');
+        }
+    </script>
+</body>
+
+</html>

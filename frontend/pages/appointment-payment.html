@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>SecurePay | HealthCare Plus - Complete Payment</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(145deg, #eef2ff 0%, #dbeafe 100%);
+            min-height: 100vh;
+            padding: 1.5rem;
+            animation: bgFade 0.8s ease-out;
+        }
+
+        @keyframes bgFade {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            border-radius: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-brand {
+            font-size: 1.7rem;
+            font-weight: 800;
+            background: linear-gradient(125deg, #1e3a8a, #0d9488);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .payment-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            animation: slideUp 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .payment-card {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 2rem;
+            padding: 2rem;
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        .payment-header {
+            text-align: center;
+            margin-bottom: 1.8rem;
+        }
+
+        .icon-wrapper {
+            background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+            width: 85px;
+            height: 85px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            animation: pulseGlow 2s infinite;
+        }
+
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 0 0 rgba(37,99,235,0.3); }
+            70% { box-shadow: 0 0 0 15px rgba(37,99,235,0); }
+            100% { box-shadow: 0 0 0 0 rgba(37,99,235,0); }
+        }
+
+        .icon-wrapper i { font-size: 3rem; color: #2563eb; }
+        .payment-header h1 { font-size: 2rem; font-weight: 800; background: linear-gradient(115deg, #1e3a8a, #0d9488); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+        .payment-timer {
+            background: linear-gradient(115deg, #fef9e3, #fffbeb);
+            border-radius: 60px;
+            padding: 0.7rem 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 1.8rem;
+            font-weight: 600;
+            color: #b45309;
+            flex-wrap: wrap;
+        }
+        .timer-value { font-size: 1.6rem; font-weight: 800; font-family: monospace; background: #1f2937; color: #facc15; padding: 0.2rem 0.8rem; border-radius: 40px; letter-spacing: 2px; }
+
+        .appointment-summary {
+            background: linear-gradient(125deg, #f8fafc, #f1f5f9);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+        .summary-row { display: flex; justify-content: space-between; padding: 0.7rem 0; border-bottom: 1px solid #e2e8f0; }
+        .summary-row:last-child { border-bottom: none; }
+        .summary-row.total { margin-top: 0.5rem; padding-top: 0.8rem; border-top: 2px dashed #2563eb; font-size: 1.2rem; }
+        .summary-label { font-weight: 500; color: #475569; display: flex; gap: 8px; align-items: center; }
+        .summary-value { font-weight: 700; color: #0f172a; }
+        .total .summary-value { font-size: 1.3rem; color: #2563eb; }
+
+        .methods-grid { display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 1.5rem; }
+        .payment-option {
+            display: flex; align-items: center; gap: 1rem; background: white; border-radius: 1.2rem; padding: 1rem 1.5rem;
+            border: 2px solid #e9eef3; cursor: pointer; transition: all 0.25s ease;
+        }
+        .payment-option:hover { border-color: #3b82f6; background: #eff6ff; transform: translateX(5px); }
+        .payment-option.selected { border-color: #2563eb; background: linear-gradient(135deg, #eff6ff, #ffffff); box-shadow: 0 8px 18px rgba(37,99,235,0.1); }
+        .payment-option-radio { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; }
+        .payment-option.selected .payment-option-radio { border-color: #2563eb; background-color: #2563eb; }
+        .payment-option.selected .payment-option-radio::after { content: "✓"; font-size: 14px; color: white; font-weight: bold; }
+        .payment-icon i { font-size: 1.8rem; color: #2563eb; }
+        .payment-method-name { font-weight: 700; font-size: 1rem; }
+        .payment-method-desc { font-size: 0.75rem; color: #64748b; }
+
+        /* Dynamic Forms - Complete Fields */
+        .method-info-panel {
+            background: #f9fafb;
+            border-radius: 1.5rem;
+            padding: 1.8rem;
+            margin: 0.5rem 0 1.8rem 0;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+            animation: fadeSlide 0.3s ease;
+        }
+        @keyframes fadeSlide { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        .form-group { margin-bottom: 1.2rem; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1e293b; font-size: 0.85rem; }
+        .form-group input, .form-group select {
+            width: 100%; padding: 0.85rem 1rem; border-radius: 1rem; border: 1.5px solid #e2e8f0;
+            font-family: 'Inter', sans-serif; transition: all 0.2s; background: white;
+        }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .inline-row { display: flex; gap: 1rem; }
+        .inline-row .form-group { flex: 1; }
+        .section-title { font-weight: 700; margin-bottom: 1rem; font-size: 1.1rem; color: #0f3b5c; border-left: 4px solid #2563eb; padding-left: 12px; }
+
+        .pay-btn {
+            width: 100%; background: linear-gradient(95deg, #1e3a8a, #2563eb, #0d9488); background-size: 200% auto;
+            border: none; padding: 1.2rem; border-radius: 2rem; font-weight: 800; font-size: 1.2rem;
+            color: white; display: flex; align-items: center; justify-content: center; gap: 12px;
+            cursor: pointer; transition: all 0.3s; margin-top: 0.5rem; box-shadow: 0 12px 25px -8px rgba(37,99,235,0.4);
+        }
+        .pay-btn:hover { transform: translateY(-3px); box-shadow: 0 20px 30px -12px #1e3a8a; }
+        .secure-badge { margin-top: 1.5rem; text-align: center; font-size: 0.85rem; background: #e6f7f2; width: fit-content; margin-left: auto; margin-right: auto; padding: 0.5rem 1.2rem; border-radius: 40px; font-weight: 500; }
+        .toast-notify { position: fixed; bottom: 2rem; right: 2rem; z-index: 9999; padding: 1rem 1.5rem; border-radius: 60px; font-weight: 600; backdrop-filter: blur(12px); background: rgba(0,0,0,0.85); color: white; display: flex; align-items: center; gap: 10px; animation: toastFly 0.3s ease-out; }
+        @keyframes toastFly { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+        @media (max-width: 680px) { body { padding: 0.8rem; } .payment-card { padding: 1.2rem; } .inline-row { flex-direction: column; gap: 0; } .timer-value { font-size: 1.2rem; } }
+        footer { text-align: center; margin-top: 1.5rem; font-size: 0.75rem; color: #4b5563; }
+        .required-star { color: #ef4444; margin-left: 3px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand"><i class="fas fa-hospital-user"></i> HealthCare Plus</div>
+            <div class="nav-menu"><i class="fas fa-shield-alt"></i> PCI Certified </div>
+        </div>
+    </nav>
+
+    <div class="payment-container" id="paymentContainer">
+        <!-- Add scripts here for API access -->
+        <script src="../js/config.js"></script>
+        <script src="../js/auth.js"></script>
+
+        <div class="payment-wrapper">
+        <div class="payment-card">
+            <div class="payment-header">
+                <div class="payment-summary">
+            <h3><i class="fas fa-file-invoice"></i> Payment Summary</h3>
+            <div class="summary-details">
+                <div class="summary-row">
+                    <span>Consultation Fee</span>
+                    <span id="displayAmount">₹ 500</span>
+                </div>
+                <div class="summary-row">
+                    <span>Platform Fee</span>
+                    <span>₹ 20</span>
+                </div>
+                <div class="summary-row">
+                    <span>Taxes (18% GST)</span>
+                    <span id="displayTax">₹ 93.6</span>
+                </div>
+                <div class="summary-row total-row">
+                    <span>Total Amount</span>
+                    <span class="total-amount" id="displayTotal">₹ 613.6</span>
+                </div>
+            </div>
+            <div class="security-badge">
+                <i class="fas fa-lock"></i>
+                <div>
+                    <strong>100% Secure Payment</strong>
+                    <br><small>256-bit SSL Encryption by Razorpay</small>
+                </div>
+            </div>
+        </div> 
+                <div class="icon-wrapper"><i class="fas fa-lock"></i></div>
+                <h1>Complete Secure Payment</h1>
+                <p style="color:#5b6e8c;">Enter required details to finalize booking</p>
+            </div>
+            <div class="payment-timer"><i class="fas fa-hourglass-half"></i> Session expires in: <span class="timer-value" id="paymentTimer">09:59</span> <i class="fas fa-clock"></i></div>
+
+            <!-- Appointment Summary -->
+            <div class="appointment-summary">
+                <h3 style="margin-bottom: 0.8rem;"><i class="fas fa-file-invoice"></i> Appointment Summary</h3>
+                <div class="summary-row"><span class="summary-label"><i class="fas fa-user-md"></i> Physician</span><span class="summary-value" id="summaryDoctor">Dr. Aditya Kulkarni</span></div>
+                <div class="summary-row"><span class="summary-label"><i class="fas fa-heartbeat"></i> Department</span><span class="summary-value" id="summarySpecialty">Cardiothoracic</span></div>
+                <div class="summary-row"><span class="summary-label"><i class="fas fa-calendar-alt"></i> Date</span><span class="summary-value" id="summaryDate">June 10, 2026</span></div>
+                <div class="summary-row"><span class="summary-label"><i class="fas fa-clock"></i> Time Slot</span><span class="summary-value" id="summaryTime">02:30 PM - 03:00 PM</span></div>
+                <div class="summary-row"><span class="summary-label"><i class="fas fa-id-card"></i> Booking Ref</span><span class="summary-value" id="appointmentId">#CARD-9823-HEALTH</span></div>
+                <div class="summary-row total"><span class="summary-label"><i class="fas fa-rupee-sign"></i> Total Amount</span><span class="summary-value" id="summaryFee">₹1,850</span></div>
+            </div>
+
+            <!-- Payment Methods Section -->
+            <div class="payment-methods-section">
+                <h3 style="font-size:1.3rem;"><i class="fas fa-credit-card"></i> Select Payment Method & Provide Details</h3>
+                <div class="methods-grid" id="methodsContainer">
+                    <div class="payment-option selected" data-method="upi" id="methodUpi"><div class="payment-option-radio"></div><span class="payment-icon"><i class="fab fa-google-pay"></i></span><div><div class="payment-method-name">UPI / BHIM</div><div class="payment-method-desc">Google Pay, PhonePe, Paytm, Amazon Pay UPI</div></div></div>
+                    <div class="payment-option" data-method="card" id="methodCard"><div class="payment-option-radio"></div><span class="payment-icon"><i class="fas fa-credit-card"></i></span><div><div class="payment-method-name">Credit / Debit Card</div><div class="payment-method-desc">Visa, Mastercard, RuPay, Amex, Diners</div></div></div>
+                    <div class="payment-option" data-method="netbanking" id="methodNetbanking"><div class="payment-option-radio"></div><span class="payment-icon"><i class="fas fa-university"></i></span><div><div class="payment-method-name">Net Banking</div><div class="payment-method-desc">All major banks (SBI, HDFC, ICICI, Axis, etc.)</div></div></div>
+                    <div class="payment-option" data-method="wallet" id="methodWallet"><div class="payment-option-radio"></div><span class="payment-icon"><i class="fas fa-wallet"></i></span><div><div class="payment-method-name">Mobile Wallet</div><div class="payment-method-desc">Paytm, Mobikwik, Freecharge, Amazon Pay</div></div></div>
+                </div>
+
+                <!-- Dynamic Panel: Each method shows exhaustive required fields -->
+                <div id="dynamicInfoPanel" class="method-info-panel"></div>
+            </div>
+
+            <button class="pay-btn" id="payNowBtn"><i class="fas fa-shield-alt"></i> <span id="payBtnText">Pay ₹1,850 Securely</span></button>
+            <div class="secure-badge"><i class="fas fa-check-circle"></i> 3D Secure Enabled | 256-bit SSL Encryption</div>
+        </div>
+        <footer>🔒 Your financial data is never stored on our servers. PCI DSS Level 1 compliant.</footer>
+    </div>
+
+    <script>
+        // Comprehensive Payment Manager with complete fields per method
+        class AdvancedPaymentGateway {
+            constructor() {
+                const params = new URLSearchParams(window.location.search);
+                this.aptId = params.get('appointmentId') || params.get('aptId') || '';
+                this.baseAmount = parseFloat(params.get('fee')) || 500;
+                this.tax = parseFloat((this.baseAmount * 0.18).toFixed(2));
+                this.platformFee = 20;
+                this.totalAmount = this.baseAmount + this.tax + this.platformFee;
+                
+                this.selectedMethod = null;
+                this.isProcessing = false;
+                this.timerSeconds = 599;
+                this.timerInterval = null;
+                this.paymentInProgress = false;
+                this.init();
+            }
+
+            init() {
+                this.updateUIWithParams();
+                this.loadAppointmentSummary();
+                this.startTimer();
+                this.registerMethodSelection();
+                this.renderFullForm('upi');
+                this.attachPayHandler();
+                this.showToast("Secure gateway initialized", "info");
+            }
+            
+            updateUIWithParams() {
+                const params = new URLSearchParams(window.location.search);
+                const doctorName = params.get('doctor');
+                const specialty = params.get('specialty');
+                const date = params.get('date');
+                const time = params.get('time');
+                
+                if (this.aptId) {
+                    const el = document.getElementById('appointmentId');
+                    if (el) el.innerText = `#${this.aptId.substring(0,8).toUpperCase()}`;
+                }
+                if (doctorName) {
+                    const doctorEl = document.querySelector('.payment-header p');
+                    if (doctorEl) doctorEl.innerHTML = `<i class="fas fa-stethoscope"></i> Dr. ${doctorName} | ${specialty || 'Consultation'}<br><small>${date || ''} ${time || ''}</small>`;
+                }
+                
+                document.getElementById('displayAmount').innerText = `₹ ${this.baseAmount}`;
+                document.getElementById('displayTax').innerText = `₹ ${this.tax}`;
+                document.getElementById('displayTotal').innerText = `₹ ${this.totalAmount}`;
+                
+                const payBtnText = document.getElementById('payBtnText');
+                if(payBtnText) payBtnText.innerText = `Pay ₹ ${this.totalAmount}`;
+            }
+
+            loadAppointmentSummary() {
+                const params = new URLSearchParams(window.location.search);
+                document.getElementById('summaryDoctor').innerHTML = `<i class="fas fa-user-md"></i> ${params.get('doctor') || 'Dr. Aditya Kulkarni'}`;
+                document.getElementById('summarySpecialty').innerHTML = `<i class="fas fa-heartbeat"></i> ${params.get('specialty') || 'Cardiothoracic'}`;
+                document.getElementById('summaryDate').innerHTML = `<i class="fas fa-calendar-alt"></i> ${params.get('date') || 'June 10, 2026'}`;
+                document.getElementById('summaryTime').innerHTML = `<i class="fas fa-clock"></i> ${params.get('time') || '02:30 PM - 03:00 PM'}`;
+                document.getElementById('appointmentId').innerHTML = params.get('aptId') || '#CARD-9823-HEALTH';
+                let fee = params.get('fee') ? `₹${params.get('fee')}` : '₹1,850';
+                if(params.get('fee')) this.baseAmount = parseInt(params.get('fee'));
+                document.getElementById('summaryFee').innerHTML = fee;
+                document.getElementById('payBtnText').innerText = `Pay ${fee} Securely`;
+            }
+
+            startTimer() {
+                const timerEl = document.getElementById('paymentTimer');
+                this.timerInterval = setInterval(() => {
+                    if(this.paymentInProgress) return;
+                    if(this.timerSeconds <= 0) {
+                        clearInterval(this.timerInterval);
+                        timerEl.innerText = '00:00';
+                        this.showToast("⏰ Session expired, please refresh and rebook.", "warning");
+                        setTimeout(() => window.history.back(), 3000);
+                    } else {
+                        this.timerSeconds--;
+                        const mins = Math.floor(this.timerSeconds / 60);
+                        const secs = this.timerSeconds % 60;
+                        timerEl.innerText = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+                        if(this.timerSeconds < 120) timerEl.style.background = "#b91c1c";
+                    }
+                }, 1000);
+            }
+
+            registerMethodSelection() {
+                const options = document.querySelectorAll('.payment-option');
+                options.forEach(opt => {
+                    opt.addEventListener('click', () => {
+                        if(this.paymentInProgress) { this.showToast("Transaction ongoing, wait...","info"); return; }
+                        options.forEach(o => o.classList.remove('selected'));
+                        opt.classList.add('selected');
+                        this.selectedMethod = opt.getAttribute('data-method');
+                        this.renderFullForm(this.selectedMethod);
+                    });
+                });
+            }
+
+            // Fully detailed forms with all necessary payment fields
+            renderFullForm(method) {
+                const panel = document.getElementById('dynamicInfoPanel');
+                let html = '';
+                if(method === 'upi') {
+                    html = `<div class="section-title"><i class="fab fa-google-pay"></i> UPI Payment Details (All fields required)</div>
+                        <div class="form-group"><label><i class="fas fa-id-card"></i> UPI Virtual Address / VPA <span class="required-star">*</span></label><input type="text" id="upiVpa" placeholder="e.g. username@okhdfcbank / 9876543210@paytm" value="rahul.verma@okhdfcbank"></div>
+                        <div class="inline-row"><div class="form-group"><label>Full Name (as per bank)<span class="required-star">*</span></label><input type="text" id="upiFullName" placeholder="Rahul Verma" value="Rahul Verma"></div>
+                        <div class="form-group"><label>Mobile Number (UPI linked)<span class="required-star">*</span></label><input type="tel" id="upiMobile" placeholder="9876543210" value="9876543210"></div></div>
+                        <div class="form-group"><label>Email ID <span class="required-star">*</span></label><input type="email" id="upiEmail" placeholder="rahul@example.com" value="rahul.verma@health.com"></div>
+                        <div class="form-group"><small><i class="fas fa-info-circle"></i> You'll receive a collect request on your UPI app.</small></div>`;
+                } 
+                else if(method === 'card') {
+                    html = `<div class="section-title"><i class="fas fa-credit-card"></i> Card Information (Secure)</div>
+                        <div class="form-group"><label>Card Number <span class="required-star">*</span></label><input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" value="4111 1111 1111 1111" maxlength="19"></div>
+                        <div class="inline-row"><div class="form-group"><label>Expiry Date (MM/YY)<span class="required-star">*</span></label><input type="text" id="cardExpiry" placeholder="MM/YY" value="08/28"></div>
+                        <div class="form-group"><label>CVV <span class="required-star">*</span></label><input type="password" id="cardCvv" placeholder="123" value="123" maxlength="4"></div></div>
+                        <div class="form-group"><label>Cardholder Name <span class="required-star">*</span></label><input type="text" id="cardName" placeholder="Exactly as on card" value="RAHUL VERMA"></div>
+                        <div class="inline-row"><div class="form-group"><label>Mobile Number (Registered)<span class="required-star">*</span></label><input type="tel" id="cardMobile" placeholder="9876543210" value="9876543210"></div>
+                        <div class="form-group"><label>Email <span class="required-star">*</span></label><input type="email" id="cardEmail" placeholder="rahul@example.com" value="rahul@healthcare.com"></div></div>`;
+                } 
+                else if(method === 'netbanking') {
+                    html = `<div class="section-title"><i class="fas fa-university"></i> Net Banking Credentials</div>
+                        <div class="form-group"><label>Select Bank <span class="required-star">*</span></label><select id="bankSelect"><option value="sbi">State Bank of India (SBI)</option><option value="hdfc">HDFC Bank</option><option value="icici">ICICI Bank</option><option value="axis">Axis Bank</option><option value="kotak">Kotak Mahindra Bank</option><option value="yesbank">Yes Bank</option></select></div>
+                        <div class="form-group"><label>Account Holder Name <span class="required-star">*</span></label><input type="text" id="bankHolderName" placeholder="Full name" value="Rahul Verma"></div>
+                        <div class="inline-row"><div class="form-group"><label>Registered Mobile Number<span class="required-star">*</span></label><input type="tel" id="bankMobile" placeholder="9876543210" value="9876543210"></div>
+                        <div class="form-group"><label>Date of Birth (DOB)<span class="required-star">*</span></label><input type="date" id="bankDob" value="1990-05-15"></div></div>
+                        <div class="form-group"><label>Email ID <span class="required-star">*</span></label><input type="email" id="bankEmail" placeholder="rahul@example.com" value="rahul@healthcare.com"></div>
+                        <div class="form-group"><small><i class="fas fa-shield-alt"></i> You'll be redirected to your bank's secure page.</small></div>`;
+                } 
+                else if(method === 'wallet') {
+                    html = `<div class="section-title"><i class="fas fa-coins"></i> Mobile Wallet Details</div>
+                        <div class="form-group"><label>Wallet Provider <span class="required-star">*</span></label><select id="walletProvider"><option value="paytm">Paytm</option><option value="amazon">Amazon Pay</option><option value="mobikwik">MobiKwik</option><option value="freecharge">Freecharge</option></select></div>
+                        <div class="form-group"><label>Wallet Registered Mobile Number<span class="required-star">*</span></label><input type="tel" id="walletMobile" placeholder="9998887776" value="9998887776"></div>
+                        <div class="form-group"><label>Full Name (As per wallet KYC)<span class="required-star">*</span></label><input type="text" id="walletName" placeholder="Rahul Verma" value="Rahul Verma"></div>
+                        <div class="inline-row"><div class="form-group"><label>Email ID <span class="required-star">*</span></label><input type="email" id="walletEmail" placeholder="rahul@example.com" value="rahul@wallet.com"></div>
+                        <div class="form-group"><label>Alternate Contact <span class="required-star">*</span></label><input type="text" id="walletAlt" placeholder="9876501234" value="9876501234"></div></div>`;
+                }
+                panel.innerHTML = html;
+                panel.style.animation = 'none';
+                panel.offsetHeight;
+                panel.style.animation = 'fadeSlide 0.25s ease';
+            }
+
+            // gather all required fields based on active method, validate thoroughly
+            collectPaymentDetails() {
+                const method = this.selectedMethod;
+                let details = { method, timestamp: Date.now() };
+                if(method === 'upi') {
+                    const vpa = document.getElementById('upiVpa')?.value.trim();
+                    const name = document.getElementById('upiFullName')?.value.trim();
+                    const mobile = document.getElementById('upiMobile')?.value.trim();
+                    const email = document.getElementById('upiEmail')?.value.trim();
+                    if(!vpa || !name || !mobile || !email) return { valid: false, msg: "Please fill all UPI fields (VPA, Name, Mobile, Email)" };
+                    if(!mobile.match(/^\d{10}$/)) return { valid: false, msg: "Enter valid 10-digit mobile number" };
+                    details = { ...details, vpa, name, mobile, email };
+                } 
+                else if(method === 'card') {
+                    const cardNum = document.getElementById('cardNumber')?.value.replace(/\s/g, '');
+                    const expiry = document.getElementById('cardExpiry')?.value;
+                    const cvv = document.getElementById('cardCvv')?.value;
+                    const name = document.getElementById('cardName')?.value.trim();
+                    const mobile = document.getElementById('cardMobile')?.value.trim();
+                    const email = document.getElementById('cardEmail')?.value.trim();
+                    if(!cardNum || !expiry || !cvv || !name || !mobile || !email) return { valid: false, msg: "Complete all card fields (Number, Expiry, CVV, Name, Mobile, Email)" };
+                    if(!cardNum.match(/^\d{13,19}$/)) return { valid: false, msg: "Invalid card number length" };
+                    if(!cvv.match(/^\d{3,4}$/)) return { valid: false, msg: "CVV must be 3-4 digits" };
+                    if(!mobile.match(/^\d{10}$/)) return { valid: false, msg: "Mobile number required 10 digits" };
+                    details = { ...details, cardNumber: cardNum, expiry, cvv, cardholderName: name, mobile, email };
+                }
+                else if(method === 'netbanking') {
+                    const bank = document.getElementById('bankSelect')?.value;
+                    const name = document.getElementById('bankHolderName')?.value.trim();
+                    const mobile = document.getElementById('bankMobile')?.value.trim();
+                    const dob = document.getElementById('bankDob')?.value;
+                    const email = document.getElementById('bankEmail')?.value.trim();
+                    if(!bank || !name || !mobile || !dob || !email) return { valid: false, msg: "Please provide Bank, Account Holder, Mobile, DOB & Email" };
+                    if(!mobile.match(/^\d{10}$/)) return { valid: false, msg: "Valid mobile number required" };
+                    details = { ...details, bank, name, mobile, dob, email };
+                }
+                else if(method === 'wallet') {
+                    const provider = document.getElementById('walletProvider')?.value;
+                    const mobile = document.getElementById('walletMobile')?.value.trim();
+                    const name = document.getElementById('walletName')?.value.trim();
+                    const email = document.getElementById('walletEmail')?.value.trim();
+                    const altContact = document.getElementById('walletAlt')?.value.trim();
+                    if(!provider || !mobile || !name || !email || !altContact) return { valid: false, msg: "Wallet details: Provider, Mobile, Name, Email and Alternate contact required" };
+                    if(!mobile.match(/^\d{10}$/)) return { valid: false, msg: "Wallet mobile must be 10 digits" };
+                    details = { ...details, provider, mobile, name, email, altContact };
+                }
+                return { valid: true, data: details };
+            }
+
+            attachPayHandler() {
+                const btn = document.getElementById('payNowBtn');
+                btn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    if(this.paymentInProgress) { this.showToast("Processing, please wait...", "info"); return; }
+                    const validation = this.collectPaymentDetails();
+                    if(!validation.valid) {
+                        this.showToast(validation.msg, "error");
+                        return;
+                    }
+                    this.paymentInProgress = true;
+                    const originalBtnHtml = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Securely processing...';
+                    btn.disabled = true;
+
+                    this.showToast(`🔒 Initiating ${this.selectedMethod.toUpperCase()} payment...`, "info");
+                    setTimeout(() => {
+                        const isSuccess = Math.random() > 0.03;
+                        if(isSuccess) {
+                            const txnId = "TXN" + Date.now() + Math.random().toString(36).substr(2,6).toUpperCase();
+                            this.verifyAndRedirect(txnId, validation.data);
+                        } else {
+                            this.handleFailure(btn, originalBtnHtml);
+                        }
+                    }, 2100);
+                });
+            }
+
+            async verifyAndRedirect(txnId, paymentData) {
+                this.showToast("✅ Payment Verified! Redirecting to confirmation...", "success");
+                const aptIdRaw = document.getElementById('appointmentId').innerText;
+                const aptId = aptIdRaw.replace('#CARD-9823-HEALTH', '').replace('#', '').trim() || new URLSearchParams(window.location.search).get('appointmentId') || new URLSearchParams(window.location.search).get('aptId') || '';
+
+                if (aptId && window.API) {
+                    try {
+                        await API.put(`/appointments/${aptId}/payment-status`, { paymentStatus: 'paid' });
+                    } catch (e) {
+                        console.error('Failed to update payment status', e);
+                    }
+                }
+
+                setTimeout(() => {
+                    const params = new URLSearchParams({
+                        status: 'confirmed',
+                        reference: txnId,
+                        appointment: aptId,
+                        amount: this.baseAmount,
+                        method: this.selectedMethod,
+                        payer: paymentData.name || paymentData.cardholderName || "Patient"
+                    });
+                    window.location.href = `appointment-confirmation.html?${params.toString()}`;
+                }, 1500);
+            }
+
+            handleFailure(btn, originalHtml) {
+                this.paymentInProgress = false;
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+                this.showToast("⚠️ Transaction failed! Please retry with correct details.", "error");
+                const panel = document.getElementById('dynamicInfoPanel');
+                panel.style.animation = "shake 0.4s ease";
+                setTimeout(() => panel.style.animation = "", 500);
+            }
+
+            showToast(msg, type) {
+                const toast = document.createElement('div');
+                toast.className = 'toast-notify';
+                let icon = '<i class="fas fa-bell"></i>';
+                if(type === 'success') icon = '<i class="fas fa-check-circle" style="color:#22c55e"></i>';
+                if(type === 'error') icon = '<i class="fas fa-exclamation-triangle" style="color:#f97316"></i>';
+                if(type === 'warning') icon = '<i class="fas fa-hourglass-half" style="color:#facc15"></i>';
+                toast.innerHTML = `${icon} <span>${msg}</span>`;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }
+        }
+
+        // CSS Shake
+        const styleShake = document.createElement('style');
+        styleShake.textContent = `@keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } 100% { transform: translateX(0); } }`;
+        document.head.appendChild(styleShake);
+        window.addEventListener('DOMContentLoaded', () => { new AdvancedPaymentGateway(); });
+    </script>
+</body>
+</html>

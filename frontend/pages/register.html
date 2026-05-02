@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - HealthCare Plus</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/auth.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card glass-container" style="max-width: 500px;">
+            <div class="auth-header">
+                <div class="logo-container">
+                    <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+                        <circle cx="30" cy="30" r="28" stroke="url(#gradient)" stroke-width="4"/>
+                        <path d="M20 30L27 37L40 24" stroke="url(#gradient)" stroke-width="4" stroke-linecap="round"/>
+                        <defs>
+                            <linearGradient id="gradient" x1="0" y1="0" x2="60" y2="60">
+                                <stop offset="0%" stop-color="#2563eb"/>
+                                <stop offset="100%" stop-color="#10b981"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <h1 class="auth-title">Create Account</h1>
+                <p class="auth-subtitle">Join HealthCare Plus today</p>
+            </div>
+
+            <div class="role-selector">
+                <button class="role-btn active" data-role="patient">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                    Patient
+                </button>
+                <button class="role-btn" data-role="doctor">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 8h-2v3h-3v2h3v3h2v-3h3v-2h-3V8zM4 8v2h2V8H4zm0 6v2h2v-2H4zm6-6v2h2V8h-2zm0 6v2h2v-2h-2z"/>
+                    </svg>
+                    Doctor
+                </button>
+                <button class="role-btn" data-role="nurse">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2L2 7v8c0 5 10 8 10 8s10-3 10-8V7l-10-5z"/>
+                    </svg>
+                    Nurse
+                </button>
+            </div>
+
+            <form id="registerForm" class="auth-form">
+                <div class="grid grid-2">
+                    <div class="form-group floating-label">
+                        <input type="text" id="firstName" class="form-input" required>
+                        <label for="firstName">First Name</label>
+                        <div class="input-icon">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="form-group floating-label">
+                        <input type="text" id="lastName" class="form-input" required>
+                        <label for="lastName">Last Name</label>
+                        <div class="input-icon">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group floating-label">
+                    <input type="email" id="email" class="form-input" required>
+                    <label for="email">Email Address</label>
+                    <div class="input-icon">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="form-group floating-label">
+                    <input type="tel" id="phone" class="form-input" required>
+                    <label for="phone">Phone Number</label>
+                    <div class="input-icon">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="form-group floating-label">
+                    <input type="password" id="password" class="form-input" required>
+                    <label for="password">Password</label>
+                    <div class="input-icon password-toggle" onclick="togglePassword('password')">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                            <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="form-group floating-label">
+                    <input type="password" id="confirmPassword" class="form-input" required>
+                    <label for="confirmPassword">Confirm Password</label>
+                    <div class="input-icon">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Patient-specific fields -->
+                <div id="patientFields" class="role-specific-fields">
+                    <div class="form-group floating-label">
+                        <input type="date" id="dob" class="form-input">
+                        <label for="dob">Date of Birth</label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Gender</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="gender" value="male" checked>
+                                <span class="radio-custom"></span>
+                                Male
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="gender" value="female">
+                                <span class="radio-custom"></span>
+                                Female
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="gender" value="other">
+                                <span class="radio-custom"></span>
+                                Other
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group floating-label">
+                        <input type="text" id="bloodGroup" class="form-input" placeholder=" ">
+                        <label for="bloodGroup">Blood Group</label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Medical History</label>
+                        <textarea id="medicalHistory" class="form-input" rows="3" placeholder="Any existing conditions, allergies, etc."></textarea>
+                    </div>
+                </div>
+
+                <!-- Doctor-specific fields -->
+                <div id="doctorFields" class="role-specific-fields" style="display: none;">
+                    <div class="form-group floating-label">
+                        <input type="text" id="specialization" class="form-input">
+                        <label for="specialization">Specialization</label>
+                    </div>
+
+                    <div class="form-group floating-label">
+                        <input type="text" id="licenseNumber" class="form-input">
+                        <label for="licenseNumber">Medical License Number</label>
+                    </div>
+
+                    <div class="form-group floating-label">
+                        <input type="number" id="experience" class="form-input">
+                        <label for="experience">Years of Experience</label>
+                    </div>
+
+                    <div class="form-group floating-label">
+                        <input type="number" id="consultationFee" class="form-input">
+                        <label for="consultationFee">Consultation Fee (₹)</label>
+                    </div>
+                </div>
+
+                <!-- Nurse-specific fields -->
+                <div id="nurseFields" class="role-specific-fields" style="display: none;">
+                    <div class="form-group floating-label">
+                        <input type="text" id="nurseLicense" class="form-input">
+                        <label for="nurseLicense">Nursing License Number</label>
+                    </div>
+
+                    <div class="form-group floating-label">
+                        <input type="number" id="nurseExperience" class="form-input">
+                        <label for="nurseExperience">Years of Experience</label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Department</label>
+                        <select id="department" class="form-input">
+                            <option value="">Select Department</option>
+                            <option value="emergency">Emergency</option>
+                            <option value="icu">ICU</option>
+                            <option value="general">General Ward</option>
+                            <option value="pediatric">Pediatric</option>
+                            <option value="surgical">Surgical</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Face Registration -->
+                <div class="form-group" style="text-align: center; margin-bottom: 20px;">
+                    <button type="button" class="btn btn-outline" onclick="startFaceRegistration()" id="btn-face-register">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle;">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/>
+                        </svg>
+                        Set Up Face Login (Optional)
+                    </button>
+                    <div id="video-container" style="display:none; text-align:center; margin-top:10px;">
+                        <video id="video-feed" width="300" height="225" autoplay muted style="border-radius:10px;"></video>
+                        <p id="face-register-status" style="margin-top:5px; font-size:12px; color: #666;"></p>
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="terms" required>
+                        <span class="checkmark"></span>
+                        I agree to the <a href="#">Terms & Conditions</a>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    <span>Create Account</span>
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                    </svg>
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Already have an account? <a href="login.html">Sign In</a></p>
+            </div>
+        </div>
+    </div>
+
+<script src="../js/config.js?v=2"></script>
+<script src="../js/auth.js?v=2"></script>
+<script>
+    let registeredFaceImageBase64 = null;
+
+    if (!window.AuthManager) {
+        console.error("AuthManager is not loaded. Check ../js/auth.js path.");
+        alert("Auth script failed to load. Check js path.");
+    }
+
+    // Role Selection with Dynamic Fields
+    document.querySelectorAll('.role-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            const role = this.dataset.role;
+            document.querySelectorAll('.role-specific-fields').forEach(f => f.style.display = 'none');
+
+            if (role === 'patient') {
+                document.getElementById('patientFields').style.display = 'block';
+            } else if (role === 'doctor') {
+                document.getElementById('doctorFields').style.display = 'block';
+            } else if (role === 'nurse') {
+                document.getElementById('nurseFields').style.display = 'block';
+            }
+        });
+    });
+
+    function togglePassword(fieldId) {
+        const input = document.getElementById(fieldId);
+        input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    const passwordInput = document.getElementById('password');
+    const strengthIndicator = document.createElement('div');
+    strengthIndicator.className = 'password-strength';
+    passwordInput.parentElement.appendChild(strengthIndicator);
+
+    passwordInput.addEventListener('input', function() {
+        const strength = calculatePasswordStrength(this.value);
+        strengthIndicator.innerHTML = `
+            <div class="strength-bar">
+                <div class="strength-fill" style="width: ${strength.score}%; background: ${strength.color};"></div>
+            </div>
+            <span style="color: ${strength.color};">${strength.text}</span>
+        `;
+    });
+
+    function calculatePasswordStrength(password) {
+        let score = 0;
+        if (password.length >= 8) score += 25;
+        if (password.match(/[a-z]/)) score += 25;
+        if (password.match(/[A-Z]/)) score += 25;
+        if (password.match(/[0-9]/) || password.match(/[^a-zA-Z0-9]/)) score += 25;
+
+        const colors = ['#ef4444', '#f59e0b', '#10b981', '#059669'];
+        const texts = ['Weak', 'Fair', 'Good', 'Strong'];
+        const index = Math.min(Math.max(Math.floor(score / 25) - 1, 0), 3);
+
+        return {
+            score: score,
+            color: colors[index],
+            text: texts[index]
+        };
+    }
+
+    // Form Submit
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        try {
+            if (!window.AuthManager) {
+                throw new Error("AuthManager is not loaded. Check ../js/auth.js path.");
+            }
+
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (password !== confirmPassword) {
+                Toast.show('Passwords do not match', 'error');
+                return;
+            }
+
+            const role = document.querySelector('.role-btn.active').dataset.role;
+
+            let phone = document.getElementById('phone').value.trim();
+            if (/^\d{10}$/.test(phone)) {
+                phone = `+91${phone}`;
+            }
+
+            const userData = {
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                email: document.getElementById('email').value,
+                phone: phone,
+                password: password,
+                role: role
+            };
+
+            if (role === 'patient') {
+                userData.dob = document.getElementById('dob').value;
+                userData.gender = document.querySelector('input[name="gender"]:checked').value;
+                userData.bloodGroup = document.getElementById('bloodGroup').value;
+                userData.medicalHistory = document.getElementById('medicalHistory').value;
+            } else if (role === 'doctor') {
+                userData.specialization = document.getElementById('specialization').value;
+                userData.licenseNumber = document.getElementById('licenseNumber').value;
+                userData.experience = document.getElementById('experience').value;
+                userData.consultationFee = document.getElementById('consultationFee').value;
+            } else if (role === 'nurse') {
+                userData.licenseNumber = document.getElementById('nurseLicense').value;
+                userData.nurseExperience = document.getElementById('nurseExperience').value;
+                userData.department = document.getElementById('department').value;
+            }
+
+            if (registeredFaceImageBase64) {
+                userData.faceImageBase64 = registeredFaceImageBase64;
+            }
+
+            console.log("Submitting register payload:", userData);
+            await window.AuthManager.register(userData);
+        } catch (error) {
+            console.error("Register submit error:", error);
+            alert(error.message || "Registration failed before request was sent.");
+        }
+    });
+
+    // Floating Labels Animation
+    document.querySelectorAll('.floating-label input, .floating-label textarea').forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentElement.classList.add('focused');
+        });
+
+        input.addEventListener('blur', function() {
+            if (!this.value) {
+                this.parentElement.classList.remove('focused');
+            }
+        });
+
+        if (input.value) {
+            input.parentElement.classList.add('focused');
+        }
+    });
+
+    async function startFaceRegistration() {
+        const videoContainer = document.getElementById('video-container');
+        const videoElement = document.getElementById('video-feed');
+        const statusText = document.getElementById('face-register-status');
+        const btn = document.getElementById('btn-face-register');
+
+        videoContainer.style.display = 'block';
+        statusText.textContent = 'Initializing camera...';
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            videoElement.srcObject = stream;
+            statusText.textContent = 'Please look at the camera for 3 seconds...';
+            
+            setTimeout(() => {
+                statusText.textContent = 'Face successfully captured!';
+                statusText.style.color = '#10b981';
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = videoElement.videoWidth;
+                canvas.height = videoElement.videoHeight;
+                canvas.getContext('2d').drawImage(videoElement, 0, 0);
+                registeredFaceImageBase64 = canvas.toDataURL('image/jpeg');
+                
+                stream.getTracks().forEach(track => track.stop());
+                setTimeout(() => {
+                    videoContainer.style.display = 'none';
+                    btn.innerHTML = '<i class="fas fa-check" style="color:#10b981;"></i> Face Registered';
+                    btn.disabled = true;
+                }, 1500);
+            }, 3000);
+        } catch (e) {
+            console.error("Camera error:", e);
+            statusText.textContent = 'Failed to access camera.';
+        }
+    }
+</script>
+
+    <style>
+        /* Additional styles for register page */
+        .radio-group {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        .radio-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            padding-left: 28px;
+        }
+        
+        .radio-label input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        .radio-custom {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            border: 2px solid #d1d5db;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        .radio-label input:checked ~ .radio-custom {
+            border-color: #2563eb;
+            background: #2563eb;
+            box-shadow: inset 0 0 0 4px white;
+        }
+        
+        .password-strength {
+            margin-top: 0.5rem;
+        }
+        
+        .strength-bar {
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 0.25rem;
+        }
+        
+        .strength-fill {
+            height: 100%;
+            transition: all 0.3s ease;
+        }
+        
+        .role-specific-fields {
+            animation: fadeInUp 0.5s ease-out;
+        }
+        
+        textarea.form-input {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        select.form-input {
+            cursor: pointer;
+        }
+    </style>
+</body>
+</html>

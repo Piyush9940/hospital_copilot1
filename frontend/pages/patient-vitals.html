@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>My Vitals | HealthCare Plus - Smart Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(145deg, #f0f4fa 0%, #e9eff5 100%);
+            min-height: 100vh;
+            color: #0a2540;
+        }
+        /* ========== Premium Navbar with Dashboard Access ========== */
+        .navbar {
+            background: rgba(255,255,255,0.96);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(37, 99, 235, 0.15);
+            box-shadow: 0 8px 25px -12px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0.8rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .nav-brand {
+            font-size: 1.65rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #134e7c, #2c6e9e);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .nav-brand i { background: none; color: #e11d48; font-size: 1.7rem; }
+        .nav-links {
+            display: flex;
+            gap: 0.6rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        /* Dashboard access buttons */
+        .dashboard-btn {
+            background: transparent;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #1f4662;
+            font-family: 'Inter', sans-serif;
+        }
+        .dashboard-btn i { font-size: 0.95rem; transition: transform 0.2s; }
+        .dashboard-btn:hover { background: #e6f0ff; color: #0f3b5c; transform: translateY(-2px); }
+        .dashboard-btn:active { transform: scale(0.96); }
+        .dashboard-btn.active {
+            background: #1e4a76;
+            color: white;
+            box-shadow: 0 6px 12px rgba(30,74,118,0.3);
+        }
+        .time-badge {
+            background: #f1f5f9;
+            padding: 0.4rem 1rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #1e293b;
+        }
+        /* Dashboard grid */
+        .dashboard-grid {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.8rem;
+        }
+        .vital-card {
+            background: rgba(255,255,255,0.97);
+            border-radius: 2rem;
+            padding: 1.6rem 1.8rem;
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.08);
+            transition: all 0.35s cubic-bezier(0.2,0.9,0.4,1.1);
+            border: 1px solid rgba(255,255,255,0.7);
+            scroll-margin-top: 100px;
+        }
+        .vital-card:hover { transform: translateY(-6px); box-shadow: 0 28px 40px -18px rgba(0, 32, 64, 0.2); border-color: rgba(59,130,246,0.2); }
+        .full-span { grid-column: 1 / -1; }
+        /* vitals circles */
+        .vital-display { text-align: center; }
+        .vital-circle {
+            width: 170px; height: 170px; border-radius: 50%; margin: 0 auto 1.2rem;
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.25s ease, box-shadow 0.3s;
+            cursor: pointer;
+        }
+        .vital-circle:hover { transform: scale(1.02); filter: brightness(1.02); }
+        .vital-value { font-size: 2.8rem; font-weight: 800; color: white; text-shadow: 0 2px 5px rgba(0,0,0,0.1); line-height: 1; }
+        .vital-unit { font-size: 0.9rem; font-weight: 500; opacity: 0.9; }
+        .vital-label { font-size: 1.25rem; font-weight: 700; margin: 0.6rem 0 0.3rem; }
+        .vital-status {
+            padding: 0.45rem 1.4rem; border-radius: 40px; font-weight: 600; font-size: 0.85rem;
+            display: inline-flex; align-items: center; gap: 6px; backdrop-filter: blur(4px);
+        }
+        .status-normal { background: #dff9e6; color: #0a5c2e; border-left: 3px solid #2ecc71; }
+        .status-warning { background: #fff3e0; color: #b85c00; border-left: 3px solid #f39c12; }
+        .status-critical { background: #ffe5e5; color: #b91c1c; border-left: 3px solid #e74c3c; animation: softPulse 1.2s infinite; }
+        @keyframes softPulse {
+            0% { background: #ffe5e5; }
+            50% { background: #ffcece; box-shadow: 0 0 0 2px rgba(231,76,60,0.2); }
+            100% { background: #ffe5e5; }
+        }
+        /* form styles */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 1.2rem;
+            align-items: end;
+        }
+        .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
+        .form-group label { font-weight: 600; font-size: 0.8rem; color: #334155; }
+        .form-input {
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 1.2rem;
+            padding: 0.8rem 1rem; font-size: 1rem; transition: all 0.2s; outline: none;
+        }
+        .form-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.2); background: white; }
+        .save-btn {
+            background: linear-gradient(100deg, #0f2b3d, #1e4a76); border: none; padding: 0.8rem;
+            border-radius: 1.8rem; font-weight: 700; color: white; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s;
+        }
+        .save-btn:hover { transform: scale(0.98); background: linear-gradient(100deg, #1e4a76, #0f2b3d); }
+        /* table */
+        .history-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        .history-table th { background: #f1f5f9; padding: 1rem 0.8rem; font-weight: 700; }
+        .history-table td { padding: 0.9rem 0.8rem; border-bottom: 1px solid #eef2ff; }
+        .history-table tr:hover { background: #fefce8; }
+        .live-indicator {
+            width: 10px; height: 10px; background: #10b981; border-radius: 50%; display: inline-block;
+            animation: livePulse 1.5s infinite; margin-right: 8px;
+        }
+        @keyframes livePulse {
+            0% { opacity: 0.4; transform: scale(0.9);}
+            100% { opacity: 1; transform: scale(1.2); background: #22c55e;}
+        }
+        .toast-msg {
+            position: fixed; bottom: 30px; right: 30px; background: #1e293b; backdrop-filter: blur(12px);
+            color: white; padding: 12px 24px; border-radius: 60px; font-weight: 500;
+            z-index: 9999; animation: slideUpFade 0.35s ease forwards; display: flex; align-items: center; gap: 10px;
+        }
+        @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px);} to { opacity: 1; transform: translateY(0);} }
+        .chart-container { position: relative; height: 300px; width: 100%; margin-top: 12px; }
+        h3 i { margin-right: 8px; color: #3b82f6; }
+        .flex-between { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; }
+        .section-highlight { transition: 0.2s; }
+        @media (max-width: 780px) {
+            .nav-container { flex-direction: column; align-items: stretch; }
+            .nav-links { justify-content: center; }
+            .vital-circle { width: 140px; height: 140px; }
+        }
+        /* scroll behaviour */
+        html { scroll-behavior: smooth; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-container">
+        <div class="nav-brand">
+            <i class="fas fa-heartbeat"></i> HealthCare Plus | Vitals Dashboard
+        </div>
+        <div class="nav-links" id="dashboardNavLinks">
+            <button class="dashboard-btn active" data-dashboard="vitals-overview">
+                <i class="fas fa-charging-station"></i> Live Vitals
+            </button>
+            <button class="dashboard-btn" data-dashboard="trends-panel">
+                <i class="fas fa-chart-line"></i> Trends
+            </button>
+            <button class="dashboard-btn" data-dashboard="record-panel">
+                <i class="fas fa-pen-alt"></i> Record
+            </button>
+            <button class="dashboard-btn" data-dashboard="history-panel">
+                <i class="fas fa-history"></i> History
+            </button>
+            <div class="time-badge">
+                <i class="far fa-clock"></i> <span id="liveClockDisplay">--:--:--</span>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main class="dashboard-grid" id="mainDashboardGrid">
+    <!-- Vitals Overview Section (4 cards) -->
+    <div class="vital-card" id="vitals-overview">
+        <div class="vital-display">
+            <div class="vital-circle" style="background: linear-gradient(145deg, #ef4444, #b91c1c); box-shadow: 0 10px 18px rgba(239,68,68,0.2);">
+                <div><div class="vital-value" id="heartRateValue">--</div><div class="vital-unit">BPM</div></div>
+            </div>
+            <div class="vital-label"><i class="fas fa-heart"></i> Heart Rate</div>
+            <div class="vital-status status-normal" id="hrStatus"><i class="fas fa-check-circle"></i> Normal</div>
+        </div>
+    </div>
+    <div class="vital-card">
+        <div class="vital-display">
+            <div class="vital-circle" style="background: linear-gradient(145deg, #3b82f6, #1e3a8a); box-shadow: 0 10px 18px rgba(59,130,246,0.2);">
+                <div><div class="vital-value" id="bpValueDisplay">--/--</div><div class="vital-unit">mmHg</div></div>
+            </div>
+            <div class="vital-label"><i class="fas fa-tachometer-alt"></i> Blood Pressure</div>
+            <div class="vital-status status-normal" id="bpStatusDisplay"><i class="fas fa-check-circle"></i> Optimal</div>
+        </div>
+    </div>
+    <div class="vital-card">
+        <div class="vital-display">
+            <div class="vital-circle" style="background: linear-gradient(145deg, #f59e0b, #b45309); box-shadow: 0 10px 18px rgba(245,158,11,0.2);">
+                <div><div class="vital-value" id="tempValue">--</div><div class="vital-unit">°F</div></div>
+            </div>
+            <div class="vital-label"><i class="fas fa-thermometer-half"></i> Temperature</div>
+            <div class="vital-status status-normal" id="tempStatusDisplay"><i class="fas fa-smile-wink"></i> Normal</div>
+        </div>
+    </div>
+    <div class="vital-card">
+        <div class="vital-display">
+            <div class="vital-circle" style="background: linear-gradient(145deg, #10b981, #047857); box-shadow: 0 10px 18px rgba(16,185,129,0.2);">
+                <div><div class="vital-value" id="spo2Value">--</div><div class="vital-unit">%</div></div>
+            </div>
+            <div class="vital-label"><i class="fas fa-lungs"></i> Oxygen Saturation</div>
+            <div class="vital-status status-normal" id="spo2StatusDisplay"><i class="fas fa-check-circle"></i> Normal</div>
+        </div>
+    </div>
+
+    <!-- Trends panel -->
+    <div class="vital-card full-span" id="trends-panel">
+        <div class="flex-between">
+            <h3><span class="live-indicator"></span> <i class="fas fa-chart-line"></i> Smart Trends (Last 7 Records)</h3>
+            <span style="font-size:0.7rem; background:#eef2ff; padding:4px 12px; border-radius:30px;"><i class="fas fa-sync-alt"></i> Auto-refresh</span>
+        </div>
+        <div class="chart-container">
+            <canvas id="trendChartCanvas" width="800" height="300"></canvas>
+        </div>
+    </div>
+
+    <!-- Record panel -->
+    <div class="vital-card full-span" id="record-panel">
+        <h3><i class="fas fa-pen-alt"></i> 📋 Record New Vitals (Dashboard Access)</h3>
+        <div class="form-grid">
+            <div class="form-group"><label><i class="fas fa-heartbeat"></i> Systolic / Diastolic</label><div style="display:flex; gap:8px;"><input type="number" class="form-input" id="sysInput" placeholder="120" style="width:50%"><input type="number" class="form-input" id="diaInput" placeholder="80" style="width:50%"></div></div>
+            <div class="form-group"><label><i class="fas fa-heart"></i> Pulse (BPM)</label><input type="number" class="form-input" id="pulseInput" placeholder="72"></div>
+            <div class="form-group"><label><i class="fas fa-thermometer-half"></i> Temp (°F)</label><input type="number" class="form-input" id="tempInput" placeholder="98.6" step="0.1"></div>
+            <div class="form-group"><label><i class="fas fa-lungs"></i> SpO₂ (%)</label><input type="number" class="form-input" id="spo2Input" placeholder="98"></div>
+            <div class="form-group"><button class="save-btn" id="commitVitalsBtn"><i class="fas fa-save"></i> Save to Dashboard</button></div>
+        </div>
+    </div>
+
+    <!-- History panel -->
+    <div class="vital-card full-span" id="history-panel">
+        <h3><i class="fas fa-history"></i> 📜 Vitals History Log</h3>
+        <div style="overflow-x: auto;">
+            <table class="history-table">
+                <thead><tr><th>Date & Time</th><th>BP (mmHg)</th><th>Pulse (BPM)</th><th>Temp (°F)</th><th>SpO₂ (%)</th><th>Status</th></tr></thead>
+                <tbody id="historyTableBody"><tr><td colspan="6" style="text-align:center">Loading dashboard data...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<script>
+    class FullDashboard {
+        constructor() {
+            this.vitalsRecords = [];     // latest first
+            this.chartInstance = null;
+            this.initMockData();
+            this.initializeDOM();
+            this.attachNavEvents();
+            this.renderEverything();
+            this.startLiveSimulation();
+            this.startClockTick();
+        }
+
+        initMockData() {
+            const now = new Date();
+            const formatHistory = (daysBack) => {
+                let d = new Date(now);
+                d.setDate(d.getDate() - daysBack);
+                return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+            };
+            this.vitalsRecords = [
+                { date: formatHistory(0), systolic: 118, diastolic: 76, pulse: 73, temp: 98.3, spo2: 98, status: "normal" },
+                { date: formatHistory(1), systolic: 122, diastolic: 80, pulse: 76, temp: 98.5, spo2: 97, status: "normal" },
+                { date: formatHistory(2), systolic: 130, diastolic: 85, pulse: 80, temp: 98.8, spo2: 96, status: "warning" },
+                { date: formatHistory(3), systolic: 115, diastolic: 73, pulse: 70, temp: 98.2, spo2: 98, status: "normal" },
+                { date: formatHistory(4), systolic: 136, diastolic: 88, pulse: 83, temp: 99.2, spo2: 95, status: "warning" },
+                { date: formatHistory(5), systolic: 119, diastolic: 77, pulse: 72, temp: 98.4, spo2: 97, status: "normal" },
+                { date: formatHistory(6), systolic: 111, diastolic: 69, pulse: 67, temp: 97.9, spo2: 99, status: "normal" }
+            ];
+            this.vitalsRecords.sort((a,b) => new Date(b.date) - new Date(a.date));
+        }
+
+        initializeDOM() {
+            this.elements = {
+                heartRateVal: document.getElementById('heartRateValue'),
+                bpDisplay: document.getElementById('bpValueDisplay'),
+                tempVal: document.getElementById('tempValue'),
+                spo2Val: document.getElementById('spo2Value'),
+                hrStat: document.getElementById('hrStatus'),
+                bpStat: document.getElementById('bpStatusDisplay'),
+                tempStat: document.getElementById('tempStatusDisplay'),
+                spo2Stat: document.getElementById('spo2StatusDisplay'),
+                historyBody: document.getElementById('historyTableBody')
+            };
+        }
+
+        getLatestRecord() { return this.vitalsRecords[0]; }
+
+        updateLiveCards() {
+            const latest = this.getLatestRecord();
+            if (!latest) return;
+            this.elements.heartRateVal.innerText = latest.pulse;
+            this.elements.bpDisplay.innerText = `${latest.systolic}/${latest.diastolic}`;
+            this.elements.tempVal.innerText = latest.temp.toFixed(1);
+            this.elements.spo2Val.innerText = latest.spo2;
+            this.updateStatusIndicators(latest);
+        }
+
+        updateStatusIndicators(record) {
+            // Heart Rate status
+            this.setStatusWidget(this.elements.hrStat, record.pulse, 60, 100, 'pulse', record.pulse);
+            // BP status
+            this.setBPStatus(this.elements.bpStat, record.systolic, record.diastolic);
+            // Temp status
+            this.setStatusWidget(this.elements.tempStat, record.temp, 97.0, 99.1, 'temp', record.temp);
+            // SpO2 status
+            this.setStatusWidget(this.elements.spo2Stat, record.spo2, 94, 100, 'oxy', record.spo2);
+        }
+
+        setStatusWidget(el, value, min, max, type, rawVal) {
+            let cls = 'status-normal';
+            let text = 'Normal';
+            let icon = '<i class="fas fa-check-circle"></i> ';
+            if (value < min || value > max) {
+                cls = 'status-warning';
+                text = 'Elevated';
+                icon = '<i class="fas fa-exclamation-triangle"></i> ';
+                if (type === 'temp' && value > 100.2) { cls = 'status-critical'; text = 'Fever'; icon = '<i class="fas fa-fire"></i> '; }
+                if (type === 'pulse' && (value > 115 || value < 45)) { cls = 'status-critical'; text = 'Critical'; icon = '<i class="fas fa-bell"></i> '; }
+                if (type === 'oxy' && value < 90) { cls = 'status-critical'; text = 'Severe'; icon = '<i class="fas fa-warning"></i> '; }
+            }
+            el.className = `vital-status ${cls}`;
+            el.innerHTML = `${icon} ${text}`;
+            if (cls === 'status-critical') this.showToast(`⚠️ Alert: ${type.toUpperCase()} abnormal (${rawVal})`, 'critical');
+        }
+
+        setBPStatus(el, systolic, diastolic) {
+            let cls = 'status-normal';
+            let msg = 'Optimal';
+            let icon = '<i class="fas fa-check-circle"></i> ';
+            if (systolic >= 130 || diastolic >= 85) { cls = 'status-warning'; msg = 'Elevated'; icon = '<i class="fas fa-chart-line"></i> '; }
+            if (systolic >= 140 || diastolic >= 90) { cls = 'status-critical'; msg = 'High BP'; icon = '<i class="fas fa-heartbeat"></i> ⚠️'; this.showToast("⚠️ High Blood Pressure Detected!", "warning"); }
+            if (systolic <= 90 || diastolic <= 50) { cls = 'status-critical'; msg = 'Low BP'; icon = '<i class="fas fa-dizzy"></i> '; this.showToast("⚠️ Low BP reading, please monitor.", "warning");}
+            el.className = `vital-status ${cls}`;
+            el.innerHTML = `${icon} ${msg}`;
+        }
+
+        updateHistoryTable() {
+            if (!this.elements.historyBody) return;
+            this.elements.historyBody.innerHTML = this.vitalsRecords.map(rec => {
+                const statusClass = `status-${rec.status}`;
+                return `<tr>
+                    <td><i class="far fa-calendar-alt"></i> ${rec.date}</td>
+                    <td><strong>${rec.systolic}/${rec.diastolic}</strong></td>
+                    <td>${rec.pulse} <i class="fas fa-heart" style="color:#e11d48; font-size:11px"></i></td>
+                    <td>${rec.temp.toFixed(1)}°F</td>
+                    <td>${rec.spo2}%</td>
+                    <td><span class="vital-status ${statusClass}"><i class="fas ${rec.status === 'normal' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${rec.status}</span></td>
+                </tr>`;
+            }).join('');
+        }
+
+        renderChart() {
+            const ctx = document.getElementById('trendChartCanvas').getContext('2d');
+            const reversedHistory = [...this.vitalsRecords].reverse();
+            const labels = reversedHistory.map(r => r.date.split(' ')[0]);
+            const hrDataset = reversedHistory.map(r => r.pulse);
+            const spo2Dataset = reversedHistory.map(r => r.spo2);
+            if (this.chartInstance) this.chartInstance.destroy();
+            this.chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: '❤️ Heart Rate (BPM)', data: hrDataset, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.05)', borderWidth: 3, pointRadius: 5, tension: 0.3, fill: true },
+                        { label: '💨 SpO₂ (%)', data: spo2Dataset, borderColor: '#10b981', borderWidth: 3, pointRadius: 5, tension: 0.3, fill: false, borderDash: [5,5] }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: false, min: 55 } } }
+            });
+        }
+
+        addNewVitals(systolic, diastolic, pulse, temp, spo2) {
+            const now = new Date();
+            const timestamp = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+            let status = 'normal';
+            if (systolic >= 135 || diastolic >= 85 || pulse > 100 || pulse < 55 || spo2 < 94 || temp > 99.1 || temp < 97.0) status = 'warning';
+            if (systolic >= 150 || diastolic >= 100 || pulse > 120 || spo2 < 90 || temp > 101) status = 'critical';
+            const newEntry = { date: timestamp, systolic, diastolic, pulse, temp: parseFloat(temp), spo2, status };
+            this.vitalsRecords.unshift(newEntry);
+            if (this.vitalsRecords.length > 12) this.vitalsRecords.pop();
+            this.updateLiveCards();
+            this.updateHistoryTable();
+            this.renderChart();
+            this.showToast(`✨ Vitals recorded: ${systolic}/${diastolic} mmHg, ${pulse} BPM`, 'success');
+            this.animateCards();
+        }
+
+        animateCards() {
+            document.querySelectorAll('.vital-circle').forEach(c => {
+                c.style.transform = 'scale(0.97)';
+                setTimeout(() => c.style.transform = '', 180);
+            });
+        }
+
+        showToast(message, type) {
+            const toastDiv = document.createElement('div');
+            toastDiv.className = 'toast-msg';
+            let emoji = type === 'success' ? '✅' : (type === 'warning' ? '⚠️' : '🔴');
+            toastDiv.innerHTML = `${emoji} ${message}`;
+            document.body.appendChild(toastDiv);
+            setTimeout(() => toastDiv.remove(), 3000);
+        }
+
+        startLiveSimulation() {
+            setInterval(() => {
+                if (!this.vitalsRecords.length) return;
+                let currentHR = parseInt(this.elements.heartRateVal.innerText);
+                if (!isNaN(currentHR)) {
+                    let variation = Math.floor(Math.random() * 5) - 2;
+                    let newHR = Math.min(125, Math.max(54, currentHR + variation));
+                    this.elements.heartRateVal.innerText = newHR;
+                    if (this.vitalsRecords[0]) {
+                        this.vitalsRecords[0].pulse = newHR;
+                        this.setStatusWidget(this.elements.hrStat, newHR, 60, 100, 'pulse', newHR);
+                        this.renderChart();
+                        this.updateHistoryTable();
+                    }
+                    const hrCircle = document.querySelector('.vital-circle[style*="linear-gradient(145deg, #ef4444"]');
+                    if (hrCircle) hrCircle.style.animation = 'softPulse 0.4s';
+                    setTimeout(() => { if(hrCircle) hrCircle.style.animation = ''; }, 400);
+                }
+            }, 4800);
+        }
+
+        startClockTick() {
+            const updateTime = () => {
+                const now = new Date();
+                document.getElementById('liveClockDisplay').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            };
+            updateTime();
+            setInterval(updateTime, 1000);
+        }
+
+        attachNavEvents() {
+            const navBtns = document.querySelectorAll('.dashboard-btn');
+            const sections = {
+                'vitals-overview': document.getElementById('vitals-overview'),
+                'trends-panel': document.getElementById('trends-panel'),
+                'record-panel': document.getElementById('record-panel'),
+                'history-panel': document.getElementById('history-panel')
+            };
+            navBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const targetId = btn.getAttribute('data-dashboard');
+                    if (targetId && sections[targetId]) {
+                        sections[targetId].scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        navBtns.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        sections[targetId].style.transform = 'scale(1.01)';
+                        setTimeout(() => { if(sections[targetId]) sections[targetId].style.transform = ''; }, 280);
+                    }
+                });
+            });
+            window.addEventListener('scroll', () => {
+                let activeFound = false;
+                for (const [id, element] of Object.entries(sections)) {
+                    if (element && element.getBoundingClientRect().top < 150 && element.getBoundingClientRect().bottom > 80) {
+                        const correspondingBtn = document.querySelector(`.dashboard-btn[data-dashboard="${id}"]`);
+                        if (correspondingBtn && !activeFound) {
+                            navBtns.forEach(b => b.classList.remove('active'));
+                            correspondingBtn.classList.add('active');
+                            activeFound = true;
+                            break;
+                        }
+                    }
+                }
+            });
+        }
+
+        renderEverything() {
+            this.updateLiveCards();
+            this.updateHistoryTable();
+            this.renderChart();
+        }
+
+        bindRecordEvent() {
+            const recordBtn = document.getElementById('commitVitalsBtn');
+            recordBtn.addEventListener('click', () => {
+                const sys = parseInt(document.getElementById('sysInput').value);
+                const dia = parseInt(document.getElementById('diaInput').value);
+                const pulse = parseInt(document.getElementById('pulseInput').value);
+                const temp = parseFloat(document.getElementById('tempInput').value);
+                const spo2 = parseInt(document.getElementById('spo2Input').value);
+                if (isNaN(sys) || isNaN(dia) || isNaN(pulse) || isNaN(temp) || isNaN(spo2)) {
+                    this.showToast("Please complete all fields", "warning");
+                    return;
+                }
+                if (pulse < 30 || pulse > 210 || spo2 < 50 || spo2 > 100 || temp < 94 || temp > 108) {
+                    this.showToast("Enter realistic values (Pulse 30-210, SpO2 50-100)", "warning");
+                    return;
+                }
+                this.addNewVitals(sys, dia, pulse, temp, spo2);
+                document.getElementById('sysInput').value = '';
+                document.getElementById('diaInput').value = '';
+                document.getElementById('pulseInput').value = '';
+                document.getElementById('tempInput').value = '';
+                document.getElementById('spo2Input').value = '';
+            });
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const dashboardApp = new FullDashboard();
+        dashboardApp.bindRecordEvent();
+    });
+</script>
+</body>
+</html>

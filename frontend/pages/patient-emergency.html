@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency - HealthCare Plus</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/emergency.css">
+</head>
+<body>
+    <div class="emergency-container">
+        <div class="emergency-header">
+            <div class="emergency-badge pulse">
+                <span>🚨</span>
+                <h1>EMERGENCY</h1>
+            </div>
+            <p>SOS Alert System - Immediate Medical Assistance</p>
+        </div>
+
+        <div class="emergency-content">
+            <div class="sos-section glass-container">
+                <div class="sos-button-container">
+                    <button class="sos-button" id="sosButton">
+                        <div class="sos-ring"></div>
+                        <span>SOS</span>
+                    </button>
+                    <p class="sos-instruction">Press and hold for 3 seconds or click once</p>
+                </div>
+
+                <div class="emergency-info">
+                    <h3>Emergency Contact Information</h3>
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <label>Emergency Contact</label>
+                            <input type="tel" id="emergencyContact" class="form-input" placeholder="+91 98765 43210">
+                        </div>
+                        <div class="info-card">
+                            <label>Blood Group</label>
+                            <input type="text" id="bloodGroup" class="form-input" placeholder="A+">
+                        </div>
+                        <div class="info-card">
+                            <label>Allergies</label>
+                            <input type="text" id="allergies" class="form-input" placeholder="Penicillin, Peanuts">
+                        </div>
+                        <div class="info-card">
+                            <label>Current Medications</label>
+                            <input type="text" id="medications" class="form-input" placeholder="Metformin 500mg">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="emergency-options glass-container">
+                <h3>Quick Emergency Actions</h3>
+                <div class="action-grid">
+                    <button class="emergency-action" onclick="callAmbulance()">
+                        <span class="action-icon">🚑</span>
+                        <span>Call Ambulance</span>
+                    </button>
+                    <button class="emergency-action" onclick="shareLocation()">
+                        <span class="action-icon">📍</span>
+                        <span>Share Location</span>
+                    </button>
+                    <button class="emergency-action" onclick="notifyDoctor()">
+                        <span class="action-icon">👨‍⚕️</span>
+                        <span>Notify Doctor</span>
+                    </button>
+                    <button class="emergency-action" onclick="videoCallEmergency()">
+                        <span class="action-icon">📹</span>
+                        <span>Emergency Video Call</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="nearby-hospitals glass-container">
+                <h3>Nearby Hospitals</h3>
+                <div class="hospitals-list" id="hospitalsList">
+                    <div class="loading">Loading nearby hospitals...</div>
+                </div>
+            </div>
+
+            <div class="emergency-history glass-container">
+                <h3>Recent Emergency Alerts</h3>
+                <div class="history-list" id="emergencyHistory"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="emergency-modal" id="emergencyModal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🚨 EMERGENCY ALERT ACTIVATED</h2>
+            </div>
+            <div class="modal-body">
+                <p>Emergency services have been notified.</p>
+                <p>Your location has been shared.</p>
+                <p>Stay calm. Help is on the way.</p>
+                <div class="countdown-timer" id="countdownTimer">00:00</div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" onclick="cancelEmergency()">Cancel (False Alarm)</button>
+                <button class="btn btn-primary" onclick="confirmEmergency()">Confirm Emergency</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/patient-emergency.js"></script>
+</body>
+</html>

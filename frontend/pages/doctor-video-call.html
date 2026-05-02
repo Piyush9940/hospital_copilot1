@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Secure Video Call - HealthCare Plus</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/video-call.css">
+    <style>
+        /* Reset & Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            background: #0a0a1a;
+        }
+
+        /* Permission Modal - Full Dynamic Overlay */
+        .permission-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 30% 10%, #0f172a, #020617);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+            transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            font-family: inherit;
+        }
+
+        .permission-card {
+            background: rgba(15, 25, 45, 0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 48px;
+            padding: 2.5rem;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 30px 50px rgba(0,0,0,0.5);
+            animation: floatIn 0.5s ease-out;
+            color: white;
+        }
+
+        @keyframes floatIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .permission-icon {
+            font-size: 5rem;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 10px 25px -5px rgba(59,130,246,0.5);
+        }
+
+        .permission-card h2 {
+            font-size: 1.9rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(135deg, #e0e7ff, #a5f3fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .permission-card p {
+            color: #cbd5e1;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .device-list {
+            background: rgba(0,0,0,0.4);
+            border-radius: 20px;
+            padding: 0.75rem;
+            margin: 1.5rem 0;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        .device-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .device-item:last-child {
+            border-bottom: none;
+        }
+
+        .permission-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        .btn-permit {
+            background: linear-gradient(95deg, #2563eb, #4f46e5);
+            border: none;
+            padding: 0.9rem 2rem;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 1rem;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            flex: 1;
+        }
+
+        .btn-permit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px -5px #3b82f6;
+        }
+
+        .btn-deny {
+            background: rgba(100, 116, 139, 0.5);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 0.9rem 2rem;
+            border-radius: 60px;
+            font-weight: 500;
+            color: #e2e8f0;
+            cursor: pointer;
+            transition: 0.2s;
+            flex: 1;
+        }
+
+        .btn-deny:hover {
+            background: rgba(220, 38, 38, 0.7);
+            border-color: #ef4444;
+        }
+
+        /* Video Container (hidden until permission granted) */
+        .video-container {
+            height: 100vh;
+            background: #1a1a2e;
+            display: none;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .video-container.active {
+            display: flex;
+        }
+
+        .video-toolbar {
+            padding: 1rem 2rem;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(10px);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .call-info-box {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .call-timer {
+            font-size: 1.2rem;
+            font-weight: 600;
+            background: rgba(255,255,255,0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 40px;
+            font-family: monospace;
+            letter-spacing: 1px;
+        }
+
+        .video-grid-area {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr;
+            position: relative;
+            padding: 1rem;
+        }
+
+        .main-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 28px;
+            background: #111827;
+            box-shadow: 0 20px 35px -12px black;
+        }
+
+        .pip-video {
+            position: absolute;
+            bottom: 120px;
+            right: 2rem;
+            width: 280px;
+            height: 210px;
+            border-radius: 20px;
+            border: 3px solid rgba(255,255,255,0.4);
+            object-fit: cover;
+            background: #2a2a3e;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+            transition: all 0.25s ease;
+            cursor: pointer;
+        }
+
+        .pip-video:hover {
+            transform: scale(1.02);
+            border-color: #3b82f6;
+        }
+
+        .video-placeholder-box {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border-radius: 28px;
+            color: white;
+        }
+
+        .control-bar {
+            padding: 1.2rem 2rem;
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(24px);
+            display: flex;
+            justify-content: center;
+            gap: 1.2rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .ctrl-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255,255,255,0.12);
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            position: relative;
+        }
+
+        .ctrl-btn:hover {
+            background: rgba(255,255,255,0.25);
+            transform: translateY(-2px);
+        }
+
+        .ctrl-btn.off {
+            background: #dc2626;
+            box-shadow: 0 0 8px #ef4444;
+        }
+
+        .ctrl-btn.end-call {
+            background: #dc2626;
+            width: 70px;
+            height: 70px;
+        }
+
+        .ctrl-btn.end-call:hover {
+            background: #b91c1c;
+            transform: scale(1.06);
+        }
+
+        .ctrl-tooltip {
+            position: absolute;
+            bottom: -38px;
+            background: #0f172fe6;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+        }
+
+        .ctrl-btn:hover .ctrl-tooltip {
+            opacity: 1;
+        }
+
+        .patient-info-bar {
+            position: absolute;
+            top: 100px;
+            left: 2rem;
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(12px);
+            color: white;
+            padding: 0.7rem 1.5rem;
+            border-radius: 60px;
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+            z-index: 20;
+        }
+
+        .recording-indicator {
+            width: 10px;
+            height: 10px;
+            background: #ef4444;
+            border-radius: 50%;
+            animation: pulse 1s infinite;
+            display: inline-block;
+        }
+
+        .chat-side-panel {
+            position: absolute;
+            right: 1.5rem;
+            top: 100px;
+            bottom: 120px;
+            width: 360px;
+            background: #0f172fe6;
+            backdrop-filter: blur(20px);
+            border-radius: 28px;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 20px 35px -8px black;
+            border: 1px solid rgba(255,255,255,0.15);
+            z-index: 50;
+        }
+
+        .chat-side-panel.open {
+            display: flex;
+            animation: slideInRight 0.25s ease;
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(30px);}
+            to { opacity: 1; transform: translateX(0);}
+        }
+
+        .chat-side-header {
+            padding: 1rem 1.2rem;
+            background: rgba(30,41,59,0.9);
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+
+        .chat-side-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .message-bubble {
+            background: #1e293b;
+            padding: 0.6rem 1rem;
+            border-radius: 20px;
+            max-width: 85%;
+            color: #f1f5f9;
+            font-size: 0.9rem;
+            align-self: flex-start;
+        }
+
+        .message-bubble.own {
+            background: #2563eb;
+            align-self: flex-end;
+        }
+
+        .chat-side-input {
+            padding: 1rem;
+            border-top: 1px solid #334155;
+            display: flex;
+            gap: 0.6rem;
+            background: #0f172f;
+        }
+
+        .chat-side-input input {
+            flex: 1;
+            padding: 0.7rem 1rem;
+            border: none;
+            border-radius: 40px;
+            background: #1e293b;
+            color: white;
+            outline: none;
+        }
+
+        .chat-side-input button {
+            padding: 0.5rem 1.2rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .toast-message {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293bdd;
+            backdrop-filter: blur(12px);
+            color: white;
+            padding: 0.75rem 1.8rem;
+            border-radius: 60px;
+            font-size: 0.9rem;
+            z-index: 3000;
+            pointer-events: none;
+            animation: fadeUpOut 2s ease forwards;
+            font-weight: 500;
+        }
+
+        @keyframes fadeUpOut {
+            0% { opacity: 0; bottom: 10px; }
+            15% { opacity: 1; bottom: 30px; }
+            85% { opacity: 1; bottom: 30px; }
+            100% { opacity: 0; bottom: 60px; visibility: hidden; }
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.4; transform: scale(0.9);}
+            100% { opacity: 1; transform: scale(1.2);}
+        }
+    </style>
+</head>
+<body>
+
+<!-- PERMISSION MODAL (first step) -->
+<div class="permission-modal" id="permissionModal">
+    <div class="permission-card">
+        <div class="permission-icon">🎥</div>
+        <h2>Start Video Consultation</h2>
+        <p>HealthCare Plus requires access to your camera and microphone for a secure, encrypted call with your patient.</p>
+        <div class="device-list" id="deviceStatusArea">
+            <div class="device-item">📹 <span>Camera: <span id="camStatusLabel">Not requested</span></span></div>
+            <div class="device-item">🎙️ <span>Microphone: <span id="micStatusLabel">Not requested</span></span></div>
+        </div>
+        <div class="permission-buttons">
+            <button class="btn-permit" id="allowBtn">✅ Allow Access</button>
+            <button class="btn-deny" id="denyBtn">❌ Cancel</button>
+        </div>
+        <p style="font-size: 0.75rem; margin-top: 1.2rem; opacity:0.7;">We respect your privacy. Media streams are encrypted and never stored.</p>
+    </div>
+</div>
+
+<!-- MAIN VIDEO CALL UI (hidden until permission granted) -->
+<div class="video-container" id="videoCallContainer">
+    <div class="video-toolbar">
+        <div class="call-info-box">
+            <h3>👨‍⚕️ Live Consultation</h3>
+            <span style="color: #10b981;">● Secure Call</span>
+            <div class="call-timer" id="callTimer">00:00</div>
+        </div>
+        <div>
+            <button class="ctrl-btn" style="width: auto; padding: 0 1.2rem; border-radius: 40px; font-size: 0.85rem;" id="recordBtn" onclick="videoCallHandler.toggleRecording()">
+                <span class="recording-indicator" style="margin-right: 6px;"></span> Record
+            </button>
+        </div>
+    </div>
+
+    <div class="video-grid-area">
+        <div class="patient-info-bar">
+            <div style="width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #a855f7); display: flex; align-items: center; justify-content: center; font-weight: bold;">JS</div>
+            <div>
+                <strong>John Smith</strong>
+                <p style="font-size: 0.8rem; opacity: 0.8;">Patient • Age 45 • Follow-up</p>
+            </div>
+        </div>
+
+        <!-- Remote video (simulated remote stream placeholder with dynamic display) -->
+        <video class="main-video" id="remoteVideo" autoplay playsinline poster="">
+            <source src="" type="video/mp4">
+        </video>
+        <!-- Local video (user's camera) -->
+        <video class="pip-video" id="localVideo" autoplay playsinline muted></video>
+
+        <!-- Chat panel -->
+        <div class="chat-side-panel" id="chatPanel">
+            <div class="chat-side-header">
+                <span>💬 Consultation Chat</span>
+                <button onclick="videoCallHandler.toggleChat()" style="background: none; border: none; color: white; font-size: 1.3rem; cursor: pointer;">✕</button>
+            </div>
+            <div class="chat-side-messages" id="chatMessages">
+                <div class="message-bubble" style="background:#334155;">👋 Hello! I'm Dr. Wilson. How are you feeling today?</div>
+                <div class="message-bubble own">Much better, doctor. Thank you.</div>
+            </div>
+            <div class="chat-side-input">
+                <input type="text" placeholder="Type your message..." id="chatInput">
+                <button onclick="videoCallHandler.sendChatMsg()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="control-bar">
+        <button class="ctrl-btn" id="micBtn" onclick="videoCallHandler.toggleMic()">
+            🎤 <span class="ctrl-tooltip">Microphone</span>
+        </button>
+        <button class="ctrl-btn" id="videoBtn" onclick="videoCallHandler.toggleVideo()">
+            📹 <span class="ctrl-tooltip">Camera</span>
+        </button>
+        <button class="ctrl-btn" onclick="videoCallHandler.shareScreen()">
+            🖥️ <span class="ctrl-tooltip">Share Screen</span>
+        </button>
+        <button class="ctrl-btn end-call" onclick="videoCallHandler.endCall()">
+            📞 <span class="ctrl-tooltip">End Call</span>
+        </button>
+        <button class="ctrl-btn" onclick="videoCallHandler.toggleChat()">
+            💬 <span class="ctrl-tooltip">Chat</span>
+        </button>
+        <button class="ctrl-btn" onclick="videoCallHandler.openPatientRecord()">
+            📋 <span class="ctrl-tooltip">Patient Record</span>
+        </button>
+    </div>
+</div>
+
+<script>
+    // Full dynamic call manager with mandatory permission first
+    class VideoCallManager {
+        constructor() {
+            this.localStream = null;
+            this.isMuted = false;
+            this.isVideoOff = false;
+            this.isRecording = false;
+            this.callSeconds = 0;
+            this.timerInterval = null;
+            this.callActive = false;
+            this.permissionGranted = false;
+        }
+
+        showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = 'toast-message';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2200);
+        }
+
+        // Update device status in permission modal
+        updateDeviceStatus(cameraOk, micOk) {
+            const camSpan = document.getElementById('camStatusLabel');
+            const micSpan = document.getElementById('micStatusLabel');
+            if (camSpan) camSpan.innerHTML = cameraOk ? '✅ Granted' : '❌ Required';
+            if (micSpan) micSpan.innerHTML = micOk ? '✅ Granted' : '❌ Required';
+        }
+
+        async requestPermissionsAndStart() {
+            // Show loading indicator on button (optional)
+            const allowBtn = document.getElementById('allowBtn');
+            const originalText = allowBtn.innerText;
+            allowBtn.innerText = 'Requesting...';
+            allowBtn.disabled = true;
+            
+            try {
+                // First get media stream with both video and audio
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                this.localStream = stream;
+                this.permissionGranted = true;
+                this.updateDeviceStatus(true, true);
+                this.showToast('Camera & Microphone access granted! Starting consultation...', 'info');
+                // Hide modal and activate full UI
+                document.getElementById('permissionModal').style.display = 'none';
+                const videoContainer = document.getElementById('videoCallContainer');
+                videoContainer.classList.add('active');
+                videoContainer.style.display = 'flex';
+                
+                // Attach local video stream to PIP element
+                const localVideoElem = document.getElementById('localVideo');
+                localVideoElem.srcObject = stream;
+                localVideoElem.muted = true; // avoid feedback
+                
+                // Simulate remote patient video placeholder (for demo, we will show a dynamic animated fallback)
+                // In real scenario you'd connect to WebRTC, but for demo use a subtle gradient + custom image simulation
+                this.simulateRemoteVideo();
+                
+                // Start call timer
+                this.startTimer();
+                this.callActive = true;
+                
+                // Show welcome toast
+                this.showToast('Connected to patient • Virtual waiting room active', 'info');
+                
+            } catch (err) {
+                console.error('Permission error:', err);
+                let errorMsg = 'Unable to access camera/microphone. ';
+                if (err.name === 'NotAllowedError') errorMsg += 'You denied permission. Please allow access.';
+                else if (err.name === 'NotFoundError') errorMsg += 'No camera or microphone found.';
+                else errorMsg += 'Please check your device settings.';
+                this.updateDeviceStatus(false, false);
+                this.showToast(errorMsg, 'error');
+                allowBtn.innerText = originalText;
+                allowBtn.disabled = false;
+                // Reset buttons if needed
+                const denyBtn = document.getElementById('denyBtn');
+                if(denyBtn) denyBtn.innerText = '❌ Close';
+                return;
+            }
+        }
+
+        simulateRemoteVideo() {
+            // Create a dynamic canvas-based remote video effect (simulating patient video stream)
+            const remoteVideo = document.getElementById('remoteVideo');
+            // Since real remote video might require signaling, we generate a nice medical-themed placeholder
+            const canvas = document.createElement('canvas');
+            canvas.width = 1280;
+            canvas.height = 720;
+            const ctx = canvas.getContext('2d');
+            
+            let frameCount = 0;
+            const animateRemote = () => {
+                if (!this.callActive) return;
+                ctx.fillStyle = '#0f172f';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                // gradient background
+                const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                grad.addColorStop(0, '#1e1b4b');
+                grad.addColorStop(1, '#111827');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                // medical cross / avatar
+                ctx.font = 'bold 70px "Segoe UI"';
+                ctx.fillStyle = '#cbd5e1';
+                ctx.shadowBlur = 0;
+                ctx.fillText("👤", canvas.width/2 - 45, canvas.height/2);
+                ctx.font = '28px Inter';
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillText("Patient • John Smith", canvas.width/2 - 130, canvas.height/2 + 90);
+                ctx.font = '18px monospace';
+                ctx.fillStyle = '#60a5fa';
+                ctx.fillText("Secure connection • Ready", canvas.width/2 - 140, canvas.height - 60);
+                // subtle animation
+                frameCount++;
+                if (remoteVideo && remoteVideo.srcObject !== canvas.captureStream()) {
+                    try {
+                        const stream = canvas.captureStream(30);
+                        remoteVideo.srcObject = stream;
+                        remoteVideo.play().catch(e=>console.log);
+                    } catch(e) {}
+                }
+                requestAnimationFrame(animateRemote);
+            };
+            animateRemote();
+        }
+
+        startTimer() {
+            if (this.timerInterval) clearInterval(this.timerInterval);
+            this.timerInterval = setInterval(() => {
+                if (this.callActive) {
+                    this.callSeconds++;
+                    const mins = Math.floor(this.callSeconds / 60);
+                    const secs = this.callSeconds % 60;
+                    const timerElem = document.getElementById('callTimer');
+                    if (timerElem) timerElem.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+
+        toggleMic() {
+            if (!this.localStream) return this.showToast("Microphone not available", "error");
+            this.isMuted = !this.isMuted;
+            this.localStream.getAudioTracks().forEach(track => {
+                track.enabled = !this.isMuted;
+            });
+            const micBtn = document.getElementById('micBtn');
+            micBtn.classList.toggle('off', this.isMuted);
+            micBtn.innerHTML = this.isMuted ? '🔇' : '🎤';
+            this.showToast(this.isMuted ? 'Microphone muted' : 'Microphone unmuted', 'info');
+        }
+
+        toggleVideo() {
+            if (!this.localStream) return this.showToast("Camera not accessible", "error");
+            this.isVideoOff = !this.isVideoOff;
+            const videoTrack = this.localStream.getVideoTracks()[0];
+            if (videoTrack) videoTrack.enabled = !this.isVideoOff;
+            const videoBtn = document.getElementById('videoBtn');
+            videoBtn.classList.toggle('off', this.isVideoOff);
+            videoBtn.innerHTML = this.isVideoOff ? '📷' : '📹';
+            this.showToast(this.isVideoOff ? 'Camera turned off' : 'Camera on', 'info');
+        }
+
+        toggleRecording() {
+            this.isRecording = !this.isRecording;
+            const recordBtn = document.getElementById('recordBtn');
+            if (this.isRecording) {
+                recordBtn.style.background = "#ef4444";
+                recordBtn.innerHTML = "⏺ Recording...";
+                this.showToast("Recording started (simulated)", "warning");
+            } else {
+                recordBtn.style.background = "";
+                recordBtn.innerHTML = "⏹️ Record";
+                this.showToast("Recording stopped", "info");
+            }
+        }
+
+        toggleChat() {
+            const panel = document.getElementById('chatPanel');
+            panel.classList.toggle('open');
+        }
+
+        shareScreen() {
+            if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+                navigator.mediaDevices.getDisplayMedia({ video: true }).then(screenStream => {
+                    const localVideo = document.getElementById('localVideo');
+                    const oldStream = this.localStream;
+                    if (localVideo.srcObject) {
+                        const videoTrack = screenStream.getVideoTracks()[0];
+                        if (videoTrack) {
+                            const senderStream = new MediaStream();
+                            if (oldStream.getAudioTracks().length) senderStream.addTrack(oldStream.getAudioTracks()[0]);
+                            senderStream.addTrack(videoTrack);
+                            this.localStream = senderStream;
+                            localVideo.srcObject = senderStream;
+                            videoTrack.onended = () => {
+                                this.restoreCameraAfterShare();
+                            };
+                            this.showToast("Screen sharing active", "info");
+                        }
+                    }
+                }).catch(() => this.showToast("Screen share cancelled", "error"));
+            } else {
+                this.showToast("Screen sharing not supported", "error");
+            }
+        }
+
+        restoreCameraAfterShare() {
+            if (navigator.mediaDevices) {
+                navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
+                    if (this.localStream) {
+                        const audioTrack = this.localStream.getAudioTracks()[0];
+                        if (audioTrack && stream.getAudioTracks().length === 0) stream.addTrack(audioTrack);
+                    }
+                    this.localStream = stream;
+                    document.getElementById('localVideo').srcObject = stream;
+                    this.showToast("Camera restored", "info");
+                }).catch(()=>this.showToast("Unable to restore camera"));
+            }
+        }
+
+        openPatientRecord() {
+            window.open('https://example.com/patient-record', '_blank');
+            this.showToast("Opening EMR record (demo)", "info");
+        }
+
+        sendChatMsg() {
+            const input = document.getElementById('chatInput');
+            const msg = input.value.trim();
+            if (msg === '') return;
+            const messagesDiv = document.getElementById('chatMessages');
+            const ownMsgDiv = document.createElement('div');
+            ownMsgDiv.className = 'message-bubble own';
+            ownMsgDiv.innerHTML = `<strong>You:</strong> ${escapeHtml(msg)}`;
+            messagesDiv.appendChild(ownMsgDiv);
+            input.value = '';
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            // Simulate reply after 1 second dynamic
+            setTimeout(() => {
+                const replyDiv = document.createElement('div');
+                replyDiv.className = 'message-bubble';
+                replyDiv.innerHTML = `<strong>Dr. Wilson:</strong> I'll review that. Thank you.`;
+                messagesDiv.appendChild(replyDiv);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }, 900);
+        }
+
+        endCall() {
+            if (confirm("Are you sure you want to end this consultation?")) {
+                this.callActive = false;
+                if (this.localStream) {
+                    this.localStream.getTracks().forEach(track => track.stop());
+                }
+                if (this.timerInterval) clearInterval(this.timerInterval);
+                this.showToast("Call ended. Thank you for using HealthCare Plus.", "info");
+                setTimeout(() => {
+                    window.location.reload(); // Reset to permission state (or just go back)
+                }, 1800);
+            }
+        }
+    }
+
+    // Helper
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    const videoCallHandler = new VideoCallManager();
+    // Bind global events
+    document.getElementById('allowBtn')?.addEventListener('click', () => videoCallHandler.requestPermissionsAndStart());
+    document.getElementById('denyBtn')?.addEventListener('click', () => {
+        videoCallHandler.showToast("Permission denied. Cannot start call.", "error");
+        setTimeout(() => {
+            if(confirm("Without media permissions, call won't start. Refresh to try again?")) window.location.reload();
+        }, 100);
+    });
+    
+    // Make sure the timer and UI are ready only after permission.
+    // attach fallback for ending call from external functions
+    window.videoCallHandler = videoCallHandler;
+</script>
+</body>
+</html>

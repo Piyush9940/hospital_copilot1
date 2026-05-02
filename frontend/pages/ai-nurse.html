@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Nurse - HealthCare Plus</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/ai-nurse.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">HealthCare Plus</div>
+            <div class="nav-menu" id="navMenu"></div>
+        </div>
+    </nav>
+
+    <main class="ai-nurse-container">
+        <div class="chat-container glass-container">
+            <div class="chat-header">
+                <div class="ai-avatar">
+                    <span>🤖</span>
+                    <div class="pulse-ring"></div>
+                </div>
+
+                <div class="ai-info">
+                    <h2>AI Health Assistant</h2>
+                    <p>Online • Ready to help</p>
+                </div>
+
+                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                    <select id="languageSelect" class="form-select" style="padding:8px 10px; border-radius:10px;">
+                        <option value="en">English</option>
+                        <option value="hi">Hindi</option>
+                        <option value="kn">Kannada</option>
+                        <option value="ta">Tamil</option>
+                        <option value="te">Telugu</option>
+                    </select>
+
+                    <div class="chat-actions">
+                        <button class="icon-btn" onclick="toggleVoice()" id="voiceBtn" title="Speech to text">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                                <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                            </svg>
+                        </button>
+
+                        <button class="icon-btn" onclick="toggleTTS()" id="ttsBtn" title="Text to speech">
+                            🔊
+                        </button>
+
+                        <button class="icon-btn" onclick="clearChat()">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="message ai-message">
+                    <div class="message-avatar">🤖</div>
+                    <div class="message-content">
+                        <p>Hello! I'm your AI Health Assistant. How can I help you today?</p>
+                        <span class="message-time">Just now</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quick-suggestions" id="quickSuggestions">
+                <button class="suggestion-chip" onclick="sendQuickMessage('I have a headache')">🤕 Headache</button>
+                <button class="suggestion-chip" onclick="sendQuickMessage('I have fever')">🌡️ Fever</button>
+                <button class="suggestion-chip" onclick="sendQuickMessage('I have cough')">😷 Cough</button>
+                <button class="suggestion-chip" onclick="sendQuickMessage('Book appointment')">📅 Book Appointment</button>
+            </div>
+
+            <div class="chat-input-container">
+                <div class="attachment-preview" id="attachmentPreview"></div>
+
+                <div class="chat-input-wrapper">
+                    <button class="attach-btn" onclick="triggerFileUpload()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/>
+                        </svg>
+                    </button>
+
+                    <input type="file" id="fileInput" style="display:none" accept="image/*,audio/*" multiple>
+                    <input type="text" class="chat-input" id="messageInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
+
+                    <button class="send-btn" onclick="sendMessage()" id="sendBtn">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/ai-nurse.js"></script>
+</body>
+</html>

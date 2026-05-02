@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>HealthCare Plus | Patient Dashboard</title>
+    <!-- Google Fonts + Font Awesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f0f4f8;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+
+        /* Modern Navbar with blur effect */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(37, 99, 235, 0.15);
+        }
+
+        .nav-container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-brand {
+            font-size: 1.7rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-brand:before {
+            content: "\f0f8";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 600;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-size: 1.6rem;
+        }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            background: #f8fafc;
+            padding: 0.5rem 1.2rem;
+            border-radius: 60px;
+        }
+
+        .nav-menu i {
+            font-size: 1.3rem;
+            color: #3b82f6;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .nav-menu span {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        /* layout */
+        .patient-detail-container {
+            max-width: 1440px;
+            margin: 2rem auto;
+            padding: 0 1.8rem;
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 2rem;
+        }
+
+        /* Sidebar : glassmorphic + animations */
+        .patient-sidebar {
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(2px);
+            border-radius: 32px;
+            padding: 2rem 1.5rem;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.08);
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+
+        .patient-sidebar:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 25px 40px -14px rgba(37, 99, 235, 0.15);
+        }
+
+        .patient-avatar-large {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #3b82f6, #9333ea);
+            margin: 0 auto 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.2rem;
+            font-weight: 600;
+            color: white;
+            box-shadow: 0 15px 25px -8px rgba(59,130,246,0.4);
+            transition: transform 0.3s ease;
+            animation: softPulse 3s infinite;
+        }
+
+        @keyframes softPulse {
+            0% { box-shadow: 0 10px 20px -5px rgba(59,130,246,0.3); transform: scale(1);}
+            50% { box-shadow: 0 18px 30px -5px rgba(59,130,246,0.5); transform: scale(1.02);}
+            100% { box-shadow: 0 10px 20px -5px rgba(59,130,246,0.3); transform: scale(1);}
+        }
+
+        .patient-avatar-large:hover {
+            transform: scale(1.02);
+        }
+
+        .patient-info-list {
+            margin-top: 1.6rem;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.9rem 0;
+            border-bottom: 1px solid #eef2ff;
+            transition: all 0.2s;
+        }
+
+        .info-label {
+            color: #475569;
+            font-weight: 500;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-value {
+            font-weight: 700;
+            color: #0f172a;
+            background: #f8fafc;
+            padding: 0.25rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.85rem;
+        }
+
+        /* buttons - properly styled + interactive */
+        .action-btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            margin-top: 1.8rem;
+        }
+
+        .btn-primary, .btn-success, .btn-secondary {
+            border: none;
+            padding: 0.9rem 0;
+            border-radius: 60px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-family: 'Inter', sans-serif;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(95deg, #2563eb, #1d4ed8);
+            color: white;
+            box-shadow: 0 6px 14px rgba(37,99,235,0.25);
+        }
+        .btn-success {
+            background: linear-gradient(95deg, #10b981, #059669);
+            color: white;
+            box-shadow: 0 6px 14px rgba(16,185,129,0.2);
+        }
+        .btn-secondary {
+            background: linear-gradient(95deg, #8b5cf6, #6d28d9);
+            color: white;
+            box-shadow: 0 6px 14px rgba(139,92,246,0.25);
+        }
+
+        .btn-primary:hover, .btn-success:hover, .btn-secondary:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.05);
+            box-shadow: 0 12px 20px -8px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary:active, .btn-success:active, .btn-secondary:active {
+            transform: translateY(1px);
+        }
+
+        /* card styling */
+        .content-card {
+            background: white;
+            border-radius: 32px;
+            padding: 1.8rem 2rem;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.05);
+            transition: all 0.25s;
+            border: 1px solid rgba(203, 213, 225, 0.4);
+        }
+
+        /* tabs modern */
+        .tab-nav {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+            border-bottom: 1.5px solid #e2e8f0;
+            padding-bottom: 0.8rem;
+        }
+
+        .tab-btn {
+            padding: 0.7rem 1.3rem;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: #475569;
+            border-radius: 40px;
+            transition: all 0.25s ease;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn i {
+            font-size: 1rem;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            color: white;
+            box-shadow: 0 6px 14px rgba(37,99,235,0.25);
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: #eef2ff;
+            color: #1e40af;
+            transform: translateY(-1px);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeSlideUp 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* vital mini cards */
+        .vital-mini-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.2rem;
+            background: #f8fafd;
+            border-radius: 24px;
+            transition: all 0.2s;
+            border: 1px solid #eef2ff;
+        }
+
+        .vital-mini-card:hover {
+            transform: translateY(-3px);
+            background: white;
+            border-color: #3b82f6;
+            box-shadow: 0 10px 20px -8px #bfdbfe;
+        }
+
+        .vital-mini-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #1e3a8a;
+        }
+
+        /* report and medication */
+        .report-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.2rem;
+            border-radius: 20px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .report-item:hover, .medication-item:hover {
+            background: #f8fafc;
+            transform: translateX(4px);
+            border-left: 4px solid #3b82f6;
+        }
+
+        .action-btn-sm {
+            border: none;
+            background: linear-gradient(145deg, #10b981, #059669);
+            padding: 0.5rem 1.2rem;
+            border-radius: 40px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .action-btn-sm:hover {
+            transform: scale(1.02);
+            filter: brightness(1.05);
+        }
+
+        .medication-item {
+            list-style: none;
+            padding: 1rem 1.2rem;
+            background: #f9fafb;
+            border-radius: 20px;
+            margin-bottom: 0.75rem;
+            border-left: 4px solid #2563eb;
+            transition: all 0.2s;
+        }
+
+        .ai-summary-box {
+            background: linear-gradient(115deg, #f0f9ff, #ecfdf5);
+            border-radius: 28px;
+            padding: 1.5rem;
+            border-left: 6px solid #3b82f6;
+            transition: 0.2s;
+        }
+
+        .ai-summary-box:hover {
+            background: linear-gradient(115deg, #eef2ff, #e6f7ec);
+            transform: translateY(-2px);
+        }
+
+        #patientVitalsChart {
+            max-height: 320px;
+            width: 100%;
+        }
+
+        /* responsiveness */
+        @media (max-width: 950px) {
+            .patient-detail-container {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            .patient-sidebar {
+                position: relative;
+                top: 0;
+                text-align: center;
+            }
+            .info-row {
+                justify-content: space-between;
+            }
+            .tab-nav {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 550px) {
+            .nav-container {
+                padding: 0.8rem 1rem;
+            }
+            .patient-detail-container {
+                padding: 0 1rem;
+            }
+            .content-card {
+                padding: 1.2rem;
+            }
+            .tab-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+            .vital-mini-value {
+                font-size: 1.3rem;
+            }
+            .action-btn-sm {
+                padding: 0.4rem 0.9rem;
+            }
+        }
+
+        canvas {
+            max-width: 100%;
+        }
+        
+        /* toast notification style for buttons */
+        .toast-msg {
+            position: fixed;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 60px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            z-index: 1000;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2);
+            backdrop-filter: blur(8px);
+            animation: fadeInOut 2s ease forwards;
+            pointer-events: none;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateX(-50%) translateY(20px);}
+            15% { opacity: 1; transform: translateX(-50%) translateY(0);}
+            85% { opacity: 1; transform: translateX(-50%) translateY(0);}
+            100% { opacity: 0; transform: translateX(-50%) translateY(20px); visibility: hidden;}
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">HealthCare Plus</div>
+            <div class="nav-menu">
+                <i class="fas fa-bell"></i>
+                <span>Dr. Elena Richard</span>
+                <i class="fas fa-user-circle" style="font-size:1.5rem;"></i>
+            </div>
+        </div>
+    </nav>
+
+    <div class="patient-detail-container">
+        <!-- Improved Sidebar with properly working buttons -->
+        <div class="patient-sidebar">
+            <div class="patient-avatar-large" id="patientAvatar">JS</div>
+            <h2 style="text-align: center; font-weight: 800; letter-spacing:-0.3px;" id="patientName">John Smith</h2>
+            <p style="text-align: center; color: #3b82f6; font-weight: 500;"><i class="fas fa-id-card"></i> Patient #HC-4528</p>
+            
+            <div class="patient-info-list">
+                <div class="info-row"><span class="info-label"><i class="fas fa-calendar-alt"></i> Age</span><span class="info-value" id="patientAge">45 yrs</span></div>
+                <div class="info-row"><span class="info-label"><i class="fas fa-venus-mars"></i> Gender</span><span class="info-value" id="patientGender">Male</span></div>
+                <div class="info-row"><span class="info-label"><i class="fas fa-tint"></i> Blood Group</span><span class="info-value" id="patientBlood">O+</span></div>
+                <div class="info-row"><span class="info-label"><i class="fas fa-ruler"></i> Height</span><span class="info-value" id="patientHeight">175 cm</span></div>
+                <div class="info-row"><span class="info-label"><i class="fas fa-weight-scale"></i> Weight</span><span class="info-value" id="patientWeight">78 kg</span></div>
+                <div class="info-row"><span class="info-label"><i class="fas fa-calculator"></i> BMI</span><span class="info-value" id="patientBMI">25.5</span></div>
+                <div class="info-row"><span class="info-label"><i class="fas fa-clock"></i> Last Visit</span><span class="info-value">Jan 15, 2024</span></div>
+            </div>
+
+            <div class="action-btn-group">
+                <button class="btn-primary" id="videoCallBtn"><i class="fas fa-video"></i> Start Video Call</button>
+                <button class="btn-success" id="createReportBtn"><i class="fas fa-file-alt"></i> Create Report</button>
+                <button class="btn-secondary" id="sendMessageBtn"><i class="fas fa-comment-dots"></i> Send Message</button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="patient-content">
+            <div class="content-card">
+                <div class="tab-nav">
+                    <button class="tab-btn active" data-tab="overview"><i class="fas fa-chalkboard-user"></i> Overview</button>
+                    <button class="tab-btn" data-tab="medical"><i class="fas fa-notes-medical"></i> History</button>
+                    <button class="tab-btn" data-tab="vitals"><i class="fas fa-heartbeat"></i> Vitals</button>
+                    <button class="tab-btn" data-tab="reports"><i class="fas fa-folder-open"></i> Reports</button>
+                    <button class="tab-btn" data-tab="medications"><i class="fas fa-pills"></i> Medications</button>
+                    <button class="tab-btn" data-tab="ai-summary"><i class="fas fa-robot"></i> AI Summary</button>
+                </div>
+
+                <!-- OVERVIEW -->
+                <div class="tab-content active" id="tab-overview">
+                    <h3 style="margin-bottom: 1.2rem; display: flex; align-items: center; gap: 10px;"><i class="fas fa-chart-line" style="color:#2563eb;"></i> Health Snapshot</h3>
+                    <div class="patient-details" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1.2rem;">
+                        <div class="vital-mini-card"><span class="vital-mini-value">120/80</span><span class="vital-mini-label"><i class="fas fa-heart"></i> Blood Pressure</span></div>
+                        <div class="vital-mini-card"><span class="vital-mini-value">72</span><span class="vital-mini-label"><i class="fas fa-waveform"></i> Heart Rate</span></div>
+                        <div class="vital-mini-card"><span class="vital-mini-value">98.6°F</span><span class="vital-mini-label"><i class="fas fa-temperature-high"></i> Temperature</span></div>
+                        <div class="vital-mini-card"><span class="vital-mini-value">98%</span><span class="vital-mini-label"><i class="fas fa-lungs"></i> SpO2</span></div>
+                    </div>
+                    <h4 style="margin: 1.8rem 0 1rem;"><i class="fas fa-calendar-check"></i> Recent Appointments</h4>
+                    <ul style="list-style: none;">
+                        <li style="padding: 0.8rem 0; border-bottom: 1px solid #eef2ff;"><i class="fas fa-stethoscope" style="color:#3b82f6; width: 28px;"></i> Jan 20, 2024 - Cardiology Consultation</li>
+                        <li style="padding: 0.8rem 0; border-bottom: 1px solid #eef2ff;"><i class="fas fa-flask" style="color:#3b82f6;"></i> Jan 10, 2024 - Blood Test & Lipid Profile</li>
+                        <li style="padding: 0.8rem 0;"><i class="fas fa-notes-medical" style="color:#3b82f6;"></i> Dec 15, 2023 - Annual Checkup</li>
+                    </ul>
+                </div>
+
+                <!-- MEDICAL HISTORY -->
+                <div class="tab-content" id="tab-medical">
+                    <h3 style="margin-bottom: 1.2rem;"><i class="fas fa-history"></i> Medical Background</h3>
+                    <div style="margin-bottom: 1.5rem; background: #f8fafc; padding: 1rem; border-radius: 20px;">
+                        <h4 style="color: #0f172a;"><i class="fas fa-disease"></i> Chronic Conditions</h4>
+                        <p style="margin-top: 6px;">🔹 Hypertension (controlled) &nbsp;|&nbsp; 🔹 Type 2 Diabetes (early stage)</p>
+                    </div>
+                    <div style="margin-bottom: 1.5rem; background: #fefce8; padding: 1rem; border-radius: 20px;">
+                        <h4 style="color: #b45309;"><i class="fas fa-allergies"></i> Allergies</h4>
+                        <p>⚠️ Penicillin (severe) &nbsp;•&nbsp; 🥜 Peanuts (mild rash)</p>
+                    </div>
+                    <div style="background: #eef2ff; padding: 1rem; border-radius: 20px;">
+                        <h4><i class="fas fa-scalpel"></i> Past Surgeries</h4>
+                        <p>Appendectomy (2010, laparoscopic)</p>
+                    </div>
+                </div>
+
+                <!-- VITALS CHART -->
+                <div class="tab-content" id="tab-vitals">
+                    <h3 style="margin-bottom: 1rem;"><i class="fas fa-chart-simple"></i> Weekly Vitals Trends</h3>
+                    <canvas id="patientVitalsChart" width="400" height="200" style="max-height: 280px; width:100%"></canvas>
+                    <p class="vital-mini-label" style="margin-top: 1rem; text-align: center;">📊 Heart Rate & Systolic BP over last 7 days</p>
+                </div>
+
+                <!-- REPORTS -->
+                <div class="tab-content" id="tab-reports">
+                    <h3 style="margin-bottom: 1.2rem;"><i class="fas fa-file-pdf"></i> Digital Medical Reports</h3>
+                    <div class="report-item">
+                        <div><strong><i class="fas fa-tachometer-alt"></i> Blood Test Report</strong><br><span style="font-size: 0.8rem;">Jan 10, 2024 - CBC, HbA1c</span></div>
+                        <button class="action-btn-sm download-report"><i class="fas fa-download"></i> Download</button>
+                    </div>
+                    <div class="report-item">
+                        <div><strong><i class="fas fa-x-ray"></i> Chest X-Ray</strong><br><span style="font-size: 0.8rem;">Dec 20, 2023 - Normal findings</span></div>
+                        <button class="action-btn-sm download-report"><i class="fas fa-download"></i> Download</button>
+                    </div>
+                </div>
+
+                <!-- MEDICATIONS -->
+                <div class="tab-content" id="tab-medications">
+                    <h3><i class="fas fa-prescription-bottle"></i> Active Prescriptions</h3>
+                    <ul class="medication-list" style="margin-top: 1rem; padding-left:0;">
+                        <li class="medication-item"><strong>💊 Metformin 500mg</strong><br><span style="color:#475569;">Twice daily after meals • For Diabetes management</span></li>
+                        <li class="medication-item"><strong>💊 Amlodipine 5mg</strong><br><span style="color:#475569;">Once daily in the morning • Hypertension control</span></li>
+                    </ul>
+                    <div class="ai-summary-box" style="margin-top: 1.5rem; background:#fef9e3;">
+                        <i class="fas fa-clock"></i> <strong>Next refill:</strong> Metformin refill due Feb 10, 2024.
+                    </div>
+                </div>
+
+                <!-- AI SUMMARY -->
+                <div class="tab-content" id="tab-ai-summary">
+                    <h3><i class="fas fa-brain"></i> AI Clinical Intelligence</h3>
+                    <div class="ai-summary-box">
+                        <h4><i class="fas fa-microchip"></i> 🤖 AI Health Summary</h4>
+                        <p>Patient exhibits stable glycemic control with HbA1c at 6.8%. BP averages 118/78 over 2 weeks. Lifestyle improvements recommended: 30 min daily walk. Medication adherence high. Risk of diabetic neuropathy low.</p>
+                    </div>
+                    <div class="ai-summary-box" style="margin-top: 1rem; border-left-color: #f97316; background: linear-gradient(115deg, #fff7ed, #fffbeb);">
+                        <h4><i class="fas fa-exclamation-triangle"></i> Predictive Risk Assessment</h4>
+                        <ul style="list-style: none; margin-top: 8px;">
+                            <li>🔹 Family history of cardiovascular events → moderate risk</li>
+                            <li>🔹 Sedentary pattern detected via recent step data</li>
+                            <li>🔹 Slightly elevated BMI (25.5) – weight management recommended</li>
+                        </ul>
+                        <button class="btn-primary" id="genPlanBtn" style="margin-top: 1rem; background: #f97316; font-size:0.8rem; padding: 0.7rem;"><i class="fas fa-file-medical-alt"></i> Generate Prevention Plan</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let vitalsChart = null;
+
+        // Helper: show toast message for any action
+        function showToast(message, icon = "✅") {
+            const toast = document.createElement('div');
+            toast.className = 'toast-msg';
+            toast.innerHTML = `${icon} ${message}`;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.remove();
+            }, 2000);
+        }
+
+        // Tab switching with event delegation
+        function initTabs() {
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const tabName = btn.getAttribute('data-tab');
+                    if (!tabName) return;
+                    
+                    // Update active button
+                    tabBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    // Update active content
+                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                    const activeTab = document.getElementById(`tab-${tabName}`);
+                    if (activeTab) activeTab.classList.add('active');
+                    
+                    // Init chart if vitals tab opened
+                    if (tabName === 'vitals') {
+                        setTimeout(() => initializeVitalsChart(), 80);
+                    }
+                });
+            });
+        }
+
+        function initializeVitalsChart() {
+            const canvasElem = document.getElementById('patientVitalsChart');
+            if (!canvasElem) return;
+            if (vitalsChart) vitalsChart.destroy();
+            const ctx = canvasElem.getContext('2d');
+            vitalsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [
+                        {
+                            label: '❤️ Heart Rate (bpm)',
+                            data: [72, 74, 70, 73, 71, 75, 72],
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239,68,68,0.05)',
+                            borderWidth: 3,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#dc2626',
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: '💙 Systolic BP (mmHg)',
+                            data: [120, 118, 122, 119, 121, 117, 120],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59,130,246,0.05)',
+                            borderWidth: 3,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#2563eb',
+                            tension: 0.3,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { position: 'top' } }
+                }
+            });
+        }
+
+        // Button actions with proper feedback
+        function setupButtons() {
+            const videoBtn = document.getElementById('videoCallBtn');
+            const reportBtn = document.getElementById('createReportBtn');
+            const messageBtn = document.getElementById('sendMessageBtn');
+            const downloadBtns = document.querySelectorAll('.download-report');
+            const genPlanBtn = document.getElementById('genPlanBtn');
+            
+            if (videoBtn) {
+                videoBtn.addEventListener('click', () => {
+                    showToast("Launching secure video consultation...", "📹");
+                    // Simulate: could be window.location.href = 'doctor-video-call.html';
+                });
+            }
+            if (reportBtn) {
+                reportBtn.addEventListener('click', () => {
+                    showToast("Opening clinical report builder", "📋");
+                });
+            }
+            if (messageBtn) {
+                messageBtn.addEventListener('click', () => {
+                    showToast("AI Nurse chat initialized — ask about medications", "💬");
+                });
+            }
+            downloadBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showToast("Simulated download: report ready", "📥");
+                });
+            });
+            if (genPlanBtn) {
+                genPlanBtn.addEventListener('click', () => {
+                    showToast("AI wellness plan generated & sent to provider", "🧠");
+                });
+            }
+        }
+
+        // Sidebar info row hover animation
+        function enhanceInfoRows() {
+            const infoRows = document.querySelectorAll('.info-row');
+            infoRows.forEach(row => {
+                row.addEventListener('mouseenter', () => { row.style.transform = 'translateX(5px)'; row.style.backgroundColor = '#fafcff'; });
+                row.addEventListener('mouseleave', () => { row.style.transform = 'translateX(0)'; row.style.backgroundColor = 'transparent'; });
+            });
+        }
+
+        window.addEventListener('load', () => {
+            initTabs();
+            setupButtons();
+            enhanceInfoRows();
+            // if vitals tab is not active initially don't load chart until needed
+            const activeTab = document.querySelector('.tab-content.active');
+            if (activeTab && activeTab.id === 'tab-vitals') initializeVitalsChart();
+        });
+    </script>
+</body>
+</html>

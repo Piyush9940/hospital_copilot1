@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>MediRecords | Smart Medical Reports Dashboard</title>
+    <!-- Google Fonts + Font Awesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f4f7fc;
+            color: #1e293b;
+            scroll-behavior: smooth;
+        }
+
+        /* modern navbar */
+        .navbar {
+            background: linear-gradient(135deg, #0f2b3d 0%, #1b4a6e 100%);
+            backdrop-filter: blur(4px);
+            padding: 1rem 2rem;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .nav-brand {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(120deg, #fff, #bfdbfe);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-brand i {
+            color: #7ab7ef;
+            font-size: 1.8rem;
+            background: none;
+            -webkit-background-clip: unset;
+            background-clip: unset;
+            color: #b8deff;
+        }
+
+        /* Dashboard button in navbar */
+        .nav-dashboard-btn {
+            background: rgba(255,255,255,0.12);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.25);
+            padding: 0.6rem 1.4rem;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: 0.3px;
+        }
+
+        .nav-dashboard-btn i {
+            font-size: 1rem;
+            color: #9ac7e7;
+        }
+
+        .nav-dashboard-btn:hover {
+            background: #2563eb;
+            border-color: #ffffff80;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+        }
+
+        /* main container */
+        .reports-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 2rem;
+        }
+
+        /* cards */
+        .report-form-card, .report-list-card {
+            background: rgba(255,255,255,0.96);
+            backdrop-filter: blur(2px);
+            border-radius: 32px;
+            padding: 1.8rem;
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.02);
+            transition: all 0.25s ease;
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        .report-form-card:hover, .report-list-card:hover {
+            box-shadow: 0 25px 40px -14px rgba(0,0,0,0.12);
+        }
+
+        .form-group {
+            margin-bottom: 1.4rem;
+        }
+
+        .form-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            margin-bottom: 0.6rem;
+            color: #0f2b3d;
+            font-size: 0.9rem;
+            letter-spacing: -0.2px;
+        }
+
+        .form-group label i {
+            color: #2c6e9e;
+            width: 20px;
+        }
+
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 0.9rem 1rem;
+            border: 2px solid #e2edf2;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+            background: #ffffff;
+        }
+
+        .form-textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #2c7cb6;
+            box-shadow: 0 0 0 4px rgba(44,124,182,0.12);
+        }
+
+        /* save button */
+        .save-btn {
+            background: linear-gradient(100deg, #1b5e7a, #0f3b4f);
+            border: none;
+            padding: 1rem;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 1rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.25s;
+            width: 100%;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .save-btn:hover {
+            background: linear-gradient(100deg, #0f4a64, #082c3b);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px -8px rgba(27,94,122,0.4);
+        }
+
+        /* search bar */
+        .search-filter-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.8rem;
+            flex-wrap: wrap;
+        }
+
+        .search-filter-bar input {
+            flex: 2;
+            border-radius: 60px;
+            padding: 0.8rem 1.2rem;
+            border: 2px solid #e0edf2;
+        }
+
+        .search-filter-bar select {
+            flex: 1;
+            border-radius: 60px;
+            background: white;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        /* report cards */
+        .report-item {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 1.4rem;
+            margin-bottom: 1.2rem;
+            transition: all 0.2s ease;
+            border: 1px solid #eef3f8;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            cursor: default;
+        }
+
+        .report-item:hover {
+            border-color: #bbdef5;
+            transform: translateY(-3px);
+            box-shadow: 0 16px 28px -12px rgba(0, 46, 71, 0.12);
+            background: #fefefe;
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .report-type-badge {
+            padding: 0.3rem 1rem;
+            border-radius: 100px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            width: fit-content;
+        }
+
+        .type-diagnosis { background: #e0f2fe; color: #0369a1; }
+        .type-prescription { background: #dcfce7; color: #15803d; }
+        .type-lab { background: #fff3e3; color: #b45309; }
+        .type-general { background: #e9eef3; color: #2c3e50; }
+
+        .patient-name {
+            font-weight: 800;
+            font-size: 1.2rem;
+            margin: 0.5rem 0 0.3rem 0;
+            color: #0b2b3b;
+        }
+
+        .report-meta {
+            font-size: 0.75rem;
+            color: #6c8dae;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .detail-row {
+            margin: 0.6rem 0;
+            line-height: 1.4;
+            font-size: 0.9rem;
+            background: #fafdff;
+            padding: 6px 12px;
+            border-radius: 16px;
+        }
+
+        .report-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 1.2rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1.1rem;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #f0f4f9;
+            color: #2c5a74;
+        }
+
+        .btn-edit { background: #eef2ff; color: #2563eb; }
+        .btn-download { background: #e6f7ed; color: #0e6b3e; }
+        .btn-delete { background: #fee9e9; color: #dc2626; }
+
+        .btn-sm:hover {
+            transform: translateY(-2px);
+            filter: brightness(0.96);
+            box-shadow: 0 6px 12px -6px rgba(0,0,0,0.15);
+        }
+
+        /* toast animation */
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(60px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .toast-custom {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #1e2f3c;
+            color: white;
+            padding: 1rem 1.8rem;
+            border-radius: 60px;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            animation: slideInRight 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* empty state */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #8aaec0;
+        }
+
+        /* dashboard summary panel (hidden by default, shown when clicking dashboard btn) */
+        .dashboard-summary {
+            background: white;
+            border-radius: 28px;
+            padding: 1.6rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 25px -8px rgba(0,0,0,0.05);
+            display: none;
+            border: 1px solid #e2edf2;
+        }
+
+        .dashboard-summary.active {
+            display: block;
+            animation: fadeSlideUp 0.3s ease;
+        }
+
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stats-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: space-between;
+            margin-top: 1rem;
+        }
+
+        .stat-card {
+            background: #f8fafc;
+            border-radius: 24px;
+            padding: 1rem 1.5rem;
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+            border-left: 4px solid #2c7cb6;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #0f2b3d;
+        }
+
+        @media (max-width: 880px) {
+            .reports-container {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+                padding: 0 1.2rem;
+            }
+            .navbar {
+                padding: 0.8rem 1.2rem;
+            }
+            .nav-brand {
+                font-size: 1.4rem;
+            }
+            .stats-grid {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .report-header {
+                flex-direction: column;
+            }
+            .search-filter-bar {
+                flex-direction: column;
+            }
+            .search-filter-bar select {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" style="margin-right: 8px;">
+                    <circle cx="16" cy="16" r="14" stroke="#bfdbfe" stroke-width="2"/>
+                    <path d="M10 16L14 20L22 12" stroke="#bfdbfe" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                HealthCare Plus
+            </div>
+            <div class="nav-menu" style="display: flex; gap: 1.5rem; color: white;">
+                <a href="doctor-dashboard2.html" class="nav-link" style="color: white; text-decoration: none;">Dashboard</a>
+                <a href="doctor-appointments.html" class="nav-link" style="color: white; text-decoration: none;">Appointments</a>
+                <a href="doctor-patients.html" class="nav-link" style="color: white; text-decoration: none;">Patients</a>
+                <a href="doctor-reports.html" class="nav-link active" style="color: white; text-decoration: underline;">Reports</a>
+            </div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <!-- Dashboard Button added in navbar -->
+                <button class="nav-dashboard-btn" id="dashboardNavBtn">
+                    <i class="fas fa-chalkboard-user"></i> Dashboard
+                </button>
+                <div style="color: #cde3f0; font-size: 0.85rem;">
+                    <i class="fas fa-shield-alt"></i> HIPAA Ready
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="reports-container">
+        <!-- Dashboard Summary Panel (hidden initially) -->
+        <div id="dashboardPanel" class="dashboard-summary full-width" style="grid-column: span 2;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <h3><i class="fas fa-chart-line" style="color: #2c7cb6;"></i> Clinical Dashboard Overview</h3>
+                <button id="closeDashboardBtn" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #6c8dae;"><i class="fas fa-times-circle"></i></button>
+            </div>
+            <div class="stats-grid" id="statsGrid">
+                <!-- dynamic stats injected -->
+            </div>
+            <p style="margin-top: 1rem; font-size: 0.8rem; color: #2c6e9e;"><i class="fas fa-chart-simple"></i> Real-time medical records summary</p>
+        </div>
+
+        <!-- Create Report Form - Enhanced -->
+        <div class="report-form-card">
+            <h2 style="margin-bottom: 0.2rem; display: flex; gap: 10px; align-items: center;">
+                <i class="fas fa-file-waveform" style="color:#2c7cb6"></i> 
+                <span>New Medical Record</span>
+            </h2>
+            <p style="margin-bottom: 1.5rem; font-size: 0.8rem; color: #5b7d9a;">Fill in the details below to generate a professional report</p>
+            <div class="form-group">
+                <label><i class="fas fa-user-injured"></i> Patient Name *</label>
+                <select class="form-input" id="patientSelect">
+                    <option value="">-- Select patient --</option>
+                    <option>Emily Rodriguez</option>
+                    <option>James O'Connor</option>
+                    <option>Olivia Chen</option>
+                    <option>William Harper</option>
+                    <option>Isabella Martinez</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-tag"></i> Report Category *</label>
+                <select class="form-input" id="reportType">
+                    <option value="">-- Choose type --</option>
+                    <option>Diagnosis</option>
+                    <option>Prescription</option>
+                    <option>Lab Results</option>
+                    <option>General Notes</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-stethoscope"></i> Diagnosis / Condition *</label>
+                <input type="text" class="form-input" id="diagnosis" placeholder="e.g., Acute Bronchitis, Hypertension Stage 2" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-pills"></i> Prescription / Treatment</label>
+                <textarea class="form-textarea" id="prescription" placeholder="Medications, dosage, frequency..."></textarea>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-comment-dots"></i> Clinical Notes</label>
+                <textarea class="form-textarea" id="notes" placeholder="Observations, follow-up recommendations, lifestyle advice"></textarea>
+            </div>
+            <button class="save-btn" onclick="window.reportsManager.createReport()">
+                <i class="fas fa-save"></i> <span>Create Report</span>
+                <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+
+        <!-- Reports List - Enhanced dynamic -->
+        <div class="report-list-card">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; margin-bottom: 0.8rem;">
+                <h2 style="display: flex; gap: 8px;"><i class="fas fa-folder-open"></i> Clinical Records</h2>
+                <span style="font-size: 0.7rem; background: #eaf4ff; padding: 4px 10px; border-radius: 40px;" id="recordCountBadge">0 records</span>
+            </div>
+            <div class="search-filter-bar">
+                <input type="text" class="form-input" id="searchInput" placeholder="🔍 Search by patient or diagnosis..." autocomplete="off">
+                <select class="form-input" id="filterTypeSelect">
+                    <option value="all">📋 All Types</option>
+                    <option value="diagnosis">🩺 Diagnosis</option>
+                    <option value="prescription">💊 Prescription</option>
+                    <option value="lab">🧪 Lab Results</option>
+                    <option value="general">📝 General Notes</option>
+                </select>
+            </div>
+            <div id="reportsList" style="max-height: 550px; overflow-y: auto; padding-right: 4px;">
+                <!-- dynamic reports injected -->
+                <div class="empty-state" style="display: flex; flex-direction: column; align-items: center;"><i class="fas fa-notes-medical" style="font-size: 3rem; opacity: 0.4;"></i><p>Loading reports...</p></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        class ReportsManager {
+            constructor() {
+                this.reports = [];
+                this.init();
+            }
+
+            async init() {
+                if (window.requireRole && !requireRole(['doctor', 'nurse', 'admin'])) return;
+                
+                try {
+                    const res = await API.get('/reports');
+                    this.reports = res?.data || res || [];
+                } catch (e) {
+                    console.error('Failed to fetch reports', e);
+                    this.reports = [];
+                }
+                
+                this.renderReports();
+                this.attachEventListeners();
+                this.setupDashboardToggle();
+            }
+
+            attachEventListeners() {
+                const searchInput = document.getElementById('searchInput');
+                const filterSelect = document.getElementById('filterTypeSelect');
+                if (searchInput) searchInput.addEventListener('input', () => this.applySearchAndFilter());
+                if (filterSelect) filterSelect.addEventListener('change', () => this.applySearchAndFilter());
+            }
+
+            setupDashboardToggle() {
+                const dashboardBtn = document.getElementById('dashboardNavBtn');
+                const dashboardPanel = document.getElementById('dashboardPanel');
+                const closeBtn = document.getElementById('closeDashboardBtn');
+                if (dashboardBtn) {
+                    dashboardBtn.addEventListener('click', () => {
+                        this.updateDashboardStats();
+                        dashboardPanel.classList.add('active');
+                        dashboardPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    });
+                }
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', () => {
+                        dashboardPanel.classList.remove('active');
+                    });
+                }
+            }
+
+            updateDashboardStats() {
+                const statsContainer = document.getElementById('statsGrid');
+                if (!statsContainer) return;
+                const totalReports = this.reports.length;
+                const diagnosisCount = this.reports.filter(r => r.type === 'diagnosis').length;
+                const prescriptionCount = this.reports.filter(r => r.type === 'prescription').length;
+                const labCount = this.reports.filter(r => r.type === 'lab').length;
+                const uniquePatients = [...new Map(this.reports.map(r => [r.patient, r.patient])).values()].length;
+                
+                statsContainer.innerHTML = `
+                    <div class="stat-card"><div class="stat-number">${totalReports}</div><div>Total Reports</div></div>
+                    <div class="stat-card"><div class="stat-number">${diagnosisCount}</div><div>Diagnoses</div></div>
+                    <div class="stat-card"><div class="stat-number">${prescriptionCount}</div><div>Prescriptions</div></div>
+                    <div class="stat-card"><div class="stat-number">${labCount}</div><div>Lab Results</div></div>
+                    <div class="stat-card"><div class="stat-number">${uniquePatients}</div><div>Active Patients</div></div>
+                `;
+            }
+
+            applySearchAndFilter() {
+                const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
+                const filterType = document.getElementById('filterTypeSelect')?.value || 'all';
+                
+                let filtered = [...this.reports];
+                if (filterType !== 'all') {
+                    filtered = filtered.filter(r => r.type === filterType);
+                }
+                if (searchTerm.trim() !== '') {
+                    filtered = filtered.filter(r => 
+                        (r.patient?.toLowerCase() || '').includes(searchTerm) || 
+                        (r.diagnosis?.toLowerCase() || '').includes(searchTerm)
+                    );
+                }
+                this.renderFilteredList(filtered);
+            }
+
+            renderFilteredList(filteredReports) {
+                const container = document.getElementById('reportsList');
+                if (!container) return;
+                if (filteredReports.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><i class="fas fa-search" style="font-size: 2.5rem; opacity: 0.5;"></i><p style="margin-top: 12px;">No matching records found</p></div>`;
+                    document.getElementById('recordCountBadge').innerText = `0 records`;
+                    return;
+                }
+                document.getElementById('recordCountBadge').innerText = `${filteredReports.length} record${filteredReports.length !== 1 ? 's' : ''}`;
+                container.innerHTML = filteredReports.map(report => this.generateReportHTML(report)).join('');
+            }
+
+            generateReportHTML(report) {
+                let typeDisplay = report.type.charAt(0).toUpperCase() + report.type.slice(1);
+                if (report.type === 'lab') typeDisplay = 'Lab Results';
+                if (report.type === 'general') typeDisplay = 'General Notes';
+                let badgeClass = '';
+                if (report.type === 'diagnosis') badgeClass = 'type-diagnosis';
+                else if (report.type === 'prescription') badgeClass = 'type-prescription';
+                else if (report.type === 'lab') badgeClass = 'type-lab';
+                else badgeClass = 'type-general';
+                
+                return `
+                    <div class="report-item" data-id="${report.id}">
+                        <div class="report-header">
+                            <div>
+                                <span class="report-type-badge ${badgeClass}"><i class="fas ${this.getTypeIcon(report.type)}"></i> ${typeDisplay}</span>
+                                <div class="patient-name"><i class="fas fa-user-circle" style="color:#2c7cb6;"></i> ${this.escapeHtml(report.patient?.name || report.patient || 'Patient')}</div>
+                            </div>
+                            <div class="report-meta">
+                                <i class="far fa-calendar-alt"></i> ${report.date || new Date(report.createdAt || report.created_at || Date.now()).toISOString().split('T')[0]}
+                                <i class="fas fa-hashtag" style="opacity:0.6"></i> ID:${report.id}
+                            </div>
+                        </div>
+                        <div class="detail-row"><i class="fas fa-diagnoses" style="width: 22px; color:#22668d;"></i> <strong>Diagnosis:</strong> ${this.escapeHtml(report.diagnosis)}</div>
+                        <div class="detail-row"><i class="fas fa-prescription-bottle"></i> <strong>Prescription/Treatment:</strong> ${this.escapeHtml(report.prescription) || '—'}</div>
+                        ${report.notes ? `<div class="detail-row"><i class="fas fa-pen-alt"></i> <strong>Notes:</strong> ${this.escapeHtml(report.notes)}</div>` : ''}
+                        <div class="report-actions">
+                            <button class="btn-sm btn-edit" onclick="window.reportsManager.editReport(${report.id})"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn-sm btn-download" onclick="window.reportsManager.downloadReport(${report.id})"><i class="fas fa-download"></i> PDF</button>
+                            <button class="btn-sm btn-delete" onclick="window.reportsManager.deleteReport(${report.id})"><i class="fas fa-trash-alt"></i> Delete</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            getTypeIcon(type) {
+                if(type === 'diagnosis') return 'fa-stethoscope';
+                if(type === 'prescription') return 'fa-tablets';
+                if(type === 'lab') return 'fa-microscope';
+                return 'fa-notes-medical';
+            }
+
+            renderReports() {
+                this.applySearchAndFilter();
+                if (document.getElementById('dashboardPanel')?.classList.contains('active')) {
+                    this.updateDashboardStats();
+                }
+            }
+
+            async createReport() {
+                const patient = document.getElementById('patientSelect').value;
+                const rawType = document.getElementById('reportType').value;
+                const diagnosis = document.getElementById('diagnosis').value.trim();
+                const prescription = document.getElementById('prescription').value.trim();
+                const notes = document.getElementById('notes').value.trim();
+
+                if (!patient || !rawType || !diagnosis) {
+                    this.showToast('❌ Please fill required fields: Patient, Report Type & Diagnosis', 'error');
+                    return;
+                }
+                
+                let typeKey = '';
+                switch(rawType) {
+                    case 'Diagnosis': typeKey = 'diagnosis'; break;
+                    case 'Prescription': typeKey = 'prescription'; break;
+                    case 'Lab Results': typeKey = 'lab'; break;
+                    default: typeKey = 'general';
+                }
+                
+                // Construct summary from prescription and notes
+                const summary = `Prescription: ${prescription || 'N/A'}\nNotes: ${notes || '—'}`;
+                // Assuming patient value is an ID or we match it; here we just use what's typed or selected
+                // If it's a demo string, we map it to 1 for fallback, or use the real select value if implemented
+                const patientId = 1; // Replace with dynamic patientId picker value
+
+                try {
+                    const newReport = await API.post('/reports', {
+                        patientId: patientId,
+                        diagnosis: diagnosis,
+                        summary: summary
+                    });
+                    
+                    // Format response into local model
+                    const localReport = {
+                        id: newReport?.data?.id || Date.now(),
+                        patient: patient,
+                        type: typeKey,
+                        diagnosis: diagnosis,
+                        prescription: prescription || 'N/A',
+                        notes: notes || '—',
+                        date: new Date().toISOString().split('T')[0]
+                    };
+                    
+                    this.reports.unshift(localReport);
+                    this.clearForm();
+                    this.renderReports();
+                    this.showToast(`✅ Report created for ${patient}`, 'success');
+                    const listContainer = document.getElementById('reportsList');
+                    if(listContainer) listContainer.scrollTop = 0;
+                } catch(e) {
+                    console.error('Error saving report', e);
+                    this.showToast('❌ Failed to create report', 'error');
+                }
+            }
+
+            editReport(id) {
+                const report = this.reports.find(r => r.id === id);
+                if (!report) return;
+                document.getElementById('patientSelect').value = report.patient;
+                let typeDisplayOriginal = '';
+                if(report.type === 'diagnosis') typeDisplayOriginal = 'Diagnosis';
+                else if(report.type === 'prescription') typeDisplayOriginal = 'Prescription';
+                else if(report.type === 'lab') typeDisplayOriginal = 'Lab Results';
+                else typeDisplayOriginal = 'General Notes';
+                document.getElementById('reportType').value = typeDisplayOriginal;
+                document.getElementById('diagnosis').value = report.diagnosis;
+                document.getElementById('prescription').value = report.prescription === 'N/A' ? '' : report.prescription;
+                document.getElementById('notes').value = (report.notes === '—' ? '' : report.notes);
+                this.reports = this.reports.filter(r => r.id !== id);
+                this.renderReports();
+                this.showToast(`✏️ Editing report - update details & click Create`, 'info');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            deleteReport(id) {
+                if (confirm('⚠️ Permanently delete this medical report? This action cannot be undone.')) {
+                    this.reports = this.reports.filter(r => r.id !== id);
+                    this.renderReports();
+                    this.showToast('🗑️ Report deleted successfully', 'error');
+                }
+            }
+
+            downloadReport(id) {
+                const report = this.reports.find(r => r.id === id);
+                if (!report) return;
+                const content = `MEDICAL REPORT\n----------------------------\nPatient: ${report.patient}\nDate: ${report.date}\nReport Type: ${report.type.toUpperCase()}\nDiagnosis: ${report.diagnosis}\nPrescription: ${report.prescription}\nClinical Notes: ${report.notes}\n----------------------------\nGenerated by HealthCare Plus · Secure Portal`;
+                const blob = new Blob([content], {type: 'text/plain'});
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.href = url;
+                link.download = `Report_${report.patient.replace(/\s/g,'_')}_${report.id}.txt`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                this.showToast(`📄 Downloaded report for ${report.patient}`, 'success');
+            }
+
+            clearForm() {
+                document.getElementById('patientSelect').value = '';
+                document.getElementById('reportType').value = '';
+                document.getElementById('diagnosis').value = '';
+                document.getElementById('prescription').value = '';
+                document.getElementById('notes').value = '';
+            }
+
+            showToast(message, type) {
+                const existingToast = document.querySelector('.toast-custom');
+                if (existingToast) existingToast.remove();
+                const toast = document.createElement('div');
+                toast.className = 'toast-custom';
+                toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-exclamation-triangle' : 'fa-info-circle')}"></i> ${message}`;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3200);
+            }
+
+            escapeHtml(str) {
+                if (!str) return '';
+                return str.replace(/[&<>]/g, function(m) {
+                    if (m === '&') return '&amp;';
+                    if (m === '<') return '&lt;';
+                    if (m === '>') return '&gt;';
+                    return m;
+                });
+            }
+        }
+
+        window.reportsManager = new ReportsManager();
+        window.createReport = () => window.reportsManager.createReport();
+        window.editReport = (id) => window.reportsManager.editReport(id);
+        window.downloadReport = (id) => window.reportsManager.downloadReport(id);
+        window.deleteReport = (id) => window.reportsManager.deleteReport(id);
+    </script>
+</body>
+</html>

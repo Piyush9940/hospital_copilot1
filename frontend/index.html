@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthCare Plus - Your Health, Our Priority</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/homepage.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+        <div class="gradient-orb orb-3"></div>
+        <div class="floating-particles"></div>
+    </div>
+
+    <!-- Preloader -->
+    <div class="preloader" id="preloader">
+        <div class="loader-content">
+            <div class="medical-loader">
+                <svg class="heartbeat-loader" viewBox="0 0 100 100">
+                    <path class="heart-path" d="M50,30 C50,30 25,10 25,25 C25,40 50,60 50,60 C50,60 75,40 75,25 C75,10 50,30 50,30 Z" fill="none" stroke="#2563eb" stroke-width="2"/>
+                </svg>
+                <div class="pulse-rings">
+                    <div class="ring"></div>
+                    <div class="ring"></div>
+                    <div class="ring"></div>
+                </div>
+            </div>
+            <h2 class="loader-text">HealthCare <span>Plus</span></h2>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Navigation -->
+    <nav class="navbar-floating" id="navbar">
+        <div class="nav-container">
+            <div class="nav-brand-wrapper">
+                <div class="brand-icon">
+                    <svg class="brand-svg" viewBox="0 0 40 40">
+                        <circle cx="20" cy="20" r="18" fill="none" stroke="url(#brandGradient)" stroke-width="2"/>
+                        <path d="M12 20 L18 26 L28 14" stroke="url(#brandGradient)" stroke-width="2" stroke-linecap="round" fill="none"/>
+                        <defs>
+                            <linearGradient id="brandGradient" x1="0" y1="0" x2="40" y2="40">
+                                <stop offset="0%" stop-color="#2563eb"/>
+                                <stop offset="100%" stop-color="#10b981"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <a href="index.html" class="nav-brand">
+                    HealthCare <span>Plus</span>
+                </a>
+            </div>
+
+            <div class="nav-menu-wrapper">
+                <ul class="nav-menu">
+                    <li><a href="#home" class="nav-link active">Home</a></li>
+                    <li><a href="#services" class="nav-link">Services</a></li>
+                    <li><a href="#doctors" class="nav-link">Doctors</a></li>
+                    <li><a href="#features" class="nav-link">Features</a></li>
+                    <li><a href="#testimonials" class="nav-link">Testimonials</a></li>
+                    <li><a href="#contact" class="nav-link">Contact</a></li>
+                </ul>
+            </div>
+
+            <div class="nav-actions">
+                <button class="nav-btn emergency-btn" onclick="window.location.href='pages/patient-emergency.html'">
+                    <i class="fas fa-ambulance"></i>
+                    <span>Emergency</span>
+                    <div class="btn-pulse"></div>
+                </button>
+                <button class="nav-btn login-btn" onclick="window.location.href='pages/login.html'">
+                    <span>Login</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+                <button class="mobile-toggle" id="mobileToggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu-header">
+            <h3>Menu</h3>
+            <button class="close-menu" id="closeMenu">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <ul class="mobile-nav-links">
+            <li><a href="#home"><i class="fas fa-home"></i> Home</a></li>
+            <li><a href="#services"><i class="fas fa-stethoscope"></i> Services</a></li>
+            <li><a href="#doctors"><i class="fas fa-user-md"></i> Doctors</a></li>
+            <li><a href="#features"><i class="fas fa-star"></i> Features</a></li>
+            <li><a href="#testimonials"><i class="fas fa-comments"></i> Testimonials</a></li>
+            <li><a href="#contact"><i class="fas fa-envelope"></i> Contact</a></li>
+            <li class="mobile-emergency"><a href="pages/patient-emergency.html"><i class="fas fa-ambulance"></i> Emergency SOS</a></li>
+            <li><a href="pages/login.html"><i class="fas fa-sign-in-alt"></i> Login / Register</a></li>
+        </ul>
+    </div>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero-section">
+        <div class="hero-container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <span class="badge-icon">🏆</span>
+                    <span>#1 Healthcare Platform 2024</span>
+                </div>
+                
+                <h1 class="hero-title">
+                    <span class="title-line">Your Health Is</span>
+                    <span class="title-line gradient-text">Our Priority</span>
+                </h1>
+                
+                <p class="hero-description">
+                    Experience healthcare reimagined with AI-powered diagnostics, 
+                    24/7 virtual consultations, and personalized care plans.
+                </p>
+
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <div class="stat-number" data-target="10000">0</div>
+                        <div class="stat-label">Happy Patients</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" data-target="500">0</div>
+                        <div class="stat-label">Expert Doctors</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" data-target="50">0</div>
+                        <div class="stat-label">Specialties</div>
+                    </div>
+                </div>
+
+                <div class="hero-cta">
+                    <button class="cta-primary" onclick="window.location.href='pages/register.html'">
+                        <span>Get Started</span>
+                        <i class="fas fa-arrow-right"></i>
+                        <div class="btn-shine"></div>
+                    </button>
+                    <button class="cta-secondary" onclick="window.location.href='pages/ai-nurse.html'">
+                        <i class="fas fa-robot"></i>
+                        <span>Talk to AI Nurse</span>
+                    </button>
+                    <button class="cta-video" onclick="playIntroVideo()">
+                        <i class="fas fa-play"></i>
+                        <span>Watch Video</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="hero-visual">
+                <div class="floating-cards">
+                    <div class="float-card card-1">
+                        <div class="card-icon">👨‍⚕️</div>
+                        <div class="card-info">
+                            <h4>Dr. Sarah Johnson</h4>
+                            <p>Cardiologist • Available Now</p>
+                        </div>
+                    </div>
+                    <div class="float-card card-2">
+                        <div class="card-icon">🤖</div>
+                        <div class="card-info">
+                            <h4>AI Health Assistant</h4>
+                            <p>24/7 Online • Ready to Help</p>
+                        </div>
+                    </div>
+                    <div class="float-card card-3">
+                        <div class="card-icon">📅</div>
+                        <div class="card-info">
+                            <h4>Next Available</h4>
+                            <p>Today • 10:30 AM</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hero-image-wrapper">
+                    <div class="hero-image">
+                        <img src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600" alt="Doctor" class="main-image">
+                        <div class="image-glow"></div>
+                    </div>
+                    <div class="floating-elements">
+                        <div class="float-element element-1">❤️</div>
+                        <div class="float-element element-2">🫁</div>
+                        <div class="float-element element-3">🧠</div>
+                        <div class="float-element element-4">💊</div>
+                        <div class="float-element element-5">🩺</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="scroll-indicator">
+            <div class="mouse">
+                <div class="wheel"></div>
+            </div>
+            <p>Scroll to explore</p>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="services-section">
+        <div class="section-container">
+            <div class="section-header">
+                <span class="section-subtitle">Our Services</span>
+                <h2 class="section-title">
+                    Comprehensive Healthcare
+                    <span class="title-highlight">Solutions</span>
+                </h2>
+                <p class="section-description">
+                    Discover our range of medical services designed to provide you with the best care possible
+                </p>
+            </div>
+
+            <div class="services-grid">
+                <div class="service-card" onclick="window.location.href='pages/ai-nurse.html'">
+                    <div class="service-icon">
+                        <div class="icon-bg"></div>
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3>AI Health Assistant</h3>
+                    <p>24/7 AI-powered health advice and symptom checker with personalized recommendations</p>
+                    <div class="service-features">
+                        <span><i class="fas fa-check"></i> Instant Response</span>
+                        <span><i class="fas fa-check"></i> Symptom Analysis</span>
+                        <span><i class="fas fa-check"></i> Health Tips</span>
+                    </div>
+                    <div class="service-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <div class="service-card featured" onclick="window.location.href='pages/appointment-list.html'">
+                    <div class="service-badge">Most Popular</div>
+                    <div class="service-icon">
+                        <div class="icon-bg"></div>
+                        <i class="fas fa-video"></i>
+                    </div>
+                    <h3>Video Consultation</h3>
+                    <p>Connect with top specialists through secure HD video calls from the comfort of your home</p>
+                    <div class="service-features">
+                        <span><i class="fas fa-check"></i> HD Video</span>
+                        <span><i class="fas fa-check"></i> Secure Connection</span>
+                        <span><i class="fas fa-check"></i> Instant Prescription</span>
+                    </div>
+                    <div class="service-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <div class="service-card" onclick="window.location.href='pages/patient-emergency.html'">
+                    <div class="service-icon">
+                        <div class="icon-bg"></div>
+                        <i class="fas fa-ambulance"></i>
+                    </div>
+                    <h3>Emergency Care</h3>
+                    <p>24/7 emergency response with real-time location tracking and hospital coordination</p>
+                    <div class="service-features">
+                        <span><i class="fas fa-check"></i> 24/7 Support</span>
+                        <span><i class="fas fa-check"></i> GPS Tracking</span>
+                        <span><i class="fas fa-check"></i> Quick Response</span>
+                    </div>
+                    <div class="service-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <div class="service-card" onclick="window.location.href='pages/patient-reports.html'">
+                    <div class="service-icon">
+                        <div class="icon-bg"></div>
+                        <i class="fas fa-file-medical"></i>
+                    </div>
+                    <h3>Health Records</h3>
+                    <p>Secure digital storage for all your medical reports, prescriptions, and test results</p>
+                    <div class="service-features">
+                        <span><i class="fas fa-check"></i> Cloud Storage</span>
+                        <span><i class="fas fa-check"></i> Easy Access</span>
+                        <span><i class="fas fa-check"></i> Share with Doctors</span>
+                    </div>
+                    <div class="service-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <div class="service-card" onclick="window.location.href='pages/patient-vitals.html'">
+                    <div class="service-icon">
+                        <div class="icon-bg"></div>
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <h3>Vitals Monitoring</h3>
+                    <p>Real-time tracking of your vital signs with AI-powered health insights and alerts</p>
+                    <div class="service-features">
+                        <span><i class="fas fa-check"></i> Real-time Tracking</span>
+                        <span><i class="fas fa-check"></i> Health Insights</span>
+                        <span><i class="fas fa-check"></i> Smart Alerts</span>
+                    </div>
+                    <div class="service-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <div class="service-card" onclick="window.location.href='pages/appointment-book.html'">
+                    <div class="service-icon">
+                        <div class="icon-bg"></div>
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <h3>Easy Appointments</h3>
+                    <p>Book appointments with your preferred doctors at your convenient time slots</p>
+                    <div class="service-features">
+                        <span><i class="fas fa-check"></i> Flexible Timing</span>
+                        <span><i class="fas fa-check"></i> Choose Doctor</span>
+                        <span><i class="fas fa-check"></i> Instant Confirmation</span>
+                    </div>
+                    <div class="service-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section with Animated Cards -->
+    <section id="features" class="features-section">
+        <div class="section-container">
+            <div class="section-header">
+                <span class="section-subtitle">Why Choose Us</span>
+                <h2 class="section-title">
+                    Revolutionary Healthcare
+                    <span class="title-highlight">Features</span>
+                </h2>
+                <p class="section-description">
+                    Experience healthcare like never before with our cutting-edge features
+                </p>
+            </div>
+
+            <div class="features-showcase">
+                <div class="feature-item left">
+                    <div class="feature-content">
+                        <div class="feature-number">01</div>
+                        <h3>AI-Powered Diagnostics</h3>
+                        <p>Advanced AI algorithms analyze symptoms and provide accurate preliminary diagnoses, helping you understand your condition better.</p>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check-circle"></i> 95% Accuracy Rate</li>
+                            <li><i class="fas fa-check-circle"></i> Instant Analysis</li>
+                            <li><i class="fas fa-check-circle"></i> Personalized Recommendations</li>
+                        </ul>
+                        <button class="feature-btn" onclick="window.location.href='pages/ai-nurse.html'">
+                            Try AI Nurse <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                    <div class="feature-visual">
+                        <div class="visual-container">
+                            <div class="ai-animation">
+                                <div class="brain-waves"></div>
+                                <i class="fas fa-brain"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-item right">
+                    <div class="feature-visual">
+                        <div class="visual-container">
+                            <div class="video-animation">
+                                <div class="video-pulse"></div>
+                                <i class="fas fa-video"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-content">
+                        <div class="feature-number">02</div>
+                        <h3>Seamless Video Consultations</h3>
+                        <p>Connect with doctors through crystal-clear video calls with features like screen sharing, chat, and file sharing.</p>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check-circle"></i> HD Video Quality</li>
+                            <li><i class="fas fa-check-circle"></i> End-to-End Encryption</li>
+                            <li><i class="fas fa-check-circle"></i> Multi-device Support</li>
+                        </ul>
+                        <button class="feature-btn" onclick="window.location.href='pages/appointment-list.html'">
+                            Book Consultation <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="feature-item left">
+                    <div class="feature-content">
+                        <div class="feature-number">03</div>
+                        <h3>Smart Emergency Response</h3>
+                        <p>One-tap SOS alerts with real-time location sharing, automatic hospital notification, and ambulance dispatch.</p>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check-circle"></i> 24/7 Emergency Support</li>
+                            <li><i class="fas fa-check-circle"></i> GPS Location Tracking</li>
+                            <li><i class="fas fa-check-circle"></i> Instant Hospital Alert</li>
+                        </ul>
+                        <button class="feature-btn emergency" onclick="window.location.href='pages/patient-emergency.html'">
+                            Emergency SOS <i class="fas fa-exclamation-triangle"></i>
+                        </button>
+                    </div>
+                    <div class="feature-visual">
+                        <div class="visual-container">
+                            <div class="emergency-animation">
+                                <div class="sos-pulse"></div>
+                                <i class="fas fa-ambulance"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Doctors Section -->
+    <section id="doctors" class="doctors-section">
+        <div class="section-container">
+            <div class="section-header">
+                <span class="section-subtitle">Expert Doctors</span>
+                <h2 class="section-title">
+                    Meet Our
+                    <span class="title-highlight">Specialists</span>
+                </h2>
+                <p class="section-description">
+                    Our team of experienced doctors is here to provide you with the best medical care
+                </p>
+            </div>
+
+            <div class="doctors-slider">
+                <button class="slider-btn prev" onclick="slideDoctors(-1)"><i class="fas fa-chevron-left"></i></button>
+                
+                <div class="doctors-container" id="doctorsContainer">
+                    <div class="doctor-slide">
+                        <div class="doctor-card-detailed">
+                            <div class="doctor-image-wrapper">
+                                <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400" alt="Dr. Sarah Johnson">
+                                <div class="doctor-badge">Available Today</div>
+                            </div>
+                            <div class="doctor-info-detailed">
+                                <h3>Dr. Sarah Johnson</h3>
+                                <p class="specialty">Senior Cardiologist</p>
+                                <div class="doctor-rating">
+                                    <div class="stars">★★★★★</div>
+                                    <span>4.9 (1.2k reviews)</span>
+                                </div>
+                                <div class="doctor-stats">
+                                    <span><i class="fas fa-briefcase"></i> 15+ Years</span>
+                                    <span><i class="fas fa-user-md"></i> 5000+ Patients</span>
+                                </div>
+                                <button class="book-doctor-btn" onclick="window.location.href='pages/appointment-book.html?doctor=1'">
+                                    Book Appointment
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="doctor-slide">
+                        <div class="doctor-card-detailed">
+                            <div class="doctor-image-wrapper">
+                                <img src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=400" alt="Dr. Michael Chen">
+                                <div class="doctor-badge available">Next Available: 2 PM</div>
+                            </div>
+                            <div class="doctor-info-detailed">
+                                <h3>Dr. Michael Chen</h3>
+                                <p class="specialty">Neurologist</p>
+                                <div class="doctor-rating">
+                                    <div class="stars">★★★★★</div>
+                                    <span>4.8 (980 reviews)</span>
+                                </div>
+                                <div class="doctor-stats">
+                                    <span><i class="fas fa-briefcase"></i> 12+ Years</span>
+                                    <span><i class="fas fa-user-md"></i> 4200+ Patients</span>
+                                </div>
+                                <button class="book-doctor-btn" onclick="window.location.href='pages/appointment-book.html?doctor=2'">
+                                    Book Appointment
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="doctor-slide">
+                        <div class="doctor-card-detailed">
+                            <div class="doctor-image-wrapper">
+                                <img src="https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=400" alt="Dr. Priya Sharma">
+                                <div class="doctor-badge">Available Now</div>
+                            </div>
+                            <div class="doctor-info-detailed">
+                                <h3>Dr. Priya Sharma</h3>
+                                <p class="specialty">Pediatrician</p>
+                                <div class="doctor-rating">
+                                    <div class="stars">★★★★★</div>
+                                    <span>4.9 (1.5k reviews)</span>
+                                </div>
+                                <div class="doctor-stats">
+                                    <span><i class="fas fa-briefcase"></i> 10+ Years</span>
+                                    <span><i class="fas fa-user-md"></i> 6000+ Patients</span>
+                                </div>
+                                <button class="book-doctor-btn" onclick="window.location.href='pages/appointment-book.html?doctor=3'">
+                                    Book Appointment
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="doctor-slide">
+                        <div class="doctor-card-detailed">
+                            <div class="doctor-image-wrapper">
+                                <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400" alt="Dr. Rajesh Kumar">
+                                <div class="doctor-badge">Video Consult</div>
+                            </div>
+                            <div class="doctor-info-detailed">
+                                <h3>Dr. Rajesh Kumar</h3>
+                                <p class="specialty">Orthopedic Surgeon</p>
+                                <div class="doctor-rating">
+                                    <div class="stars">★★★★☆</div>
+                                    <span>4.7 (850 reviews)</span>
+                                </div>
+                                <div class="doctor-stats">
+                                    <span><i class="fas fa-briefcase"></i> 20+ Years</span>
+                                    <span><i class="fas fa-user-md"></i> 8000+ Patients</span>
+                                </div>
+                                <button class="book-doctor-btn" onclick="window.location.href='pages/appointment-book.html?doctor=4'">
+                                    Book Appointment
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="slider-btn next" onclick="slideDoctors(1)"><i class="fas fa-chevron-right"></i></button>
+            </div>
+
+            <div class="slider-dots" id="sliderDots"></div>
+            
+            <div class="view-all-doctors">
+                <button class="btn-outline-large" onclick="window.location.href='pages/appointment-list.html'">
+                    View All Doctors <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Counter Section -->
+    <section class="stats-counter-section">
+        <div class="stats-overlay"></div>
+        <div class="section-container">
+            <div class="stats-grid-large">
+                <div class="stat-box">
+                    <div class="stat-icon-large">
+                        <i class="fas fa-smile"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="counter" data-target="15000">0</div>
+                        <span class="plus">+</span>
+                        <p>Happy Patients</p>
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon-large">
+                        <i class="fas fa-user-md"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="counter" data-target="500">0</div>
+                        <span class="plus">+</span>
+                        <p>Expert Doctors</p>
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon-large">
+                        <i class="fas fa-hospital"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="counter" data-target="50">0</div>
+                        <span class="plus">+</span>
+                        <p>Partner Hospitals</p>
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon-large">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="counter" data-target="25">0</div>
+                        <span class="plus">+</span>
+                        <p>Awards Won</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="testimonials-section">
+        <div class="section-container">
+            <div class="section-header">
+                <span class="section-subtitle">Testimonials</span>
+                <h2 class="section-title">
+                    What Our
+                    <span class="title-highlight">Patients Say</span>
+                </h2>
+                <p class="section-description">
+                    Read what our patients have to say about their experience with HealthCare Plus
+                </p>
+            </div>
+
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="testimonial-quote">
+                        <i class="fas fa-quote-left"></i>
+                    </div>
+                    <p class="testimonial-text">
+                        "The AI Nurse feature is amazing! It helped me understand my symptoms and connected me with the right specialist within minutes. Highly recommended!"
+                    </p>
+                    <div class="testimonial-author">
+                        <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100" alt="Patient">
+                        <div class="author-info">
+                            <h4>Emily Watson</h4>
+                            <p>Cardiac Patient</p>
+                            <div class="rating">★★★★★</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card featured">
+                    <div class="testimonial-quote">
+                        <i class="fas fa-quote-left"></i>
+                    </div>
+                    <p class="testimonial-text">
+                        "Video consultations saved me so much time. The doctor was very professional and the prescription was sent instantly. Best healthcare platform!"
+                    </p>
+                    <div class="testimonial-author">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100" alt="Patient">
+                        <div class="author-info">
+                            <h4>James Anderson</h4>
+                            <p>Regular Patient</p>
+                            <div class="rating">★★★★★</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <div class="testimonial-quote">
+                        <i class="fas fa-quote-left"></i>
+                    </div>
+                    <p class="testimonial-text">
+                        "Emergency feature is a lifesaver! When my father had chest pain, the SOS alert got us an ambulance within 10 minutes. Thank you HealthCare Plus!"
+                    </p>
+                    <div class="testimonial-author">
+                        <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100" alt="Patient">
+                        <div class="author-info">
+                            <h4>Sarah Mitchell</h4>
+                            <p>Family Member</p>
+                            <div class="rating">★★★★★</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="section-container">
+            <div class="cta-wrapper">
+                <div class="cta-content">
+                    <h2>Ready to Take Control of Your Health?</h2>
+                    <p>Join thousands of satisfied patients who trust HealthCare Plus for their medical needs.</p>
+                    <div class="cta-buttons">
+                        <button class="cta-primary-large" onclick="window.location.href='pages/register.html'">
+                            <span>Get Started Now</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                        <button class="cta-secondary-large" onclick="window.location.href='pages/ai-nurse.html'">
+                            <i class="fas fa-robot"></i>
+                            <span>Try AI Nurse</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="cta-visual">
+                    <div class="cta-image">
+                        <img src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=500" alt="Healthcare">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact" class="footer">
+        <div class="footer-container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="brand-wrapper">
+                        <svg class="footer-brand-svg" viewBox="0 0 40 40">
+                            <circle cx="20" cy="20" r="18" fill="none" stroke="url(#footerGradient)" stroke-width="2"/>
+                            <path d="M12 20 L18 26 L28 14" stroke="url(#footerGradient)" stroke-width="2" stroke-linecap="round" fill="none"/>
+                        </svg>
+                        <h3>HealthCare <span>Plus</span></h3>
+                    </div>
+                    <p>Your trusted healthcare partner, providing quality medical services with compassion and innovation.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#services">Services</a></li>
+                        <li><a href="#doctors">Doctors</a></li>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#testimonials">Testimonials</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-links">
+                    <h4>Services</h4>
+                    <ul>
+                        <li><a href="pages/ai-nurse.html">AI Health Assistant</a></li>
+                        <li><a href="pages/appointment-list.html">Video Consultation</a></li>
+                        <li><a href="pages/patient-emergency.html">Emergency Care</a></li>
+                        <li><a href="pages/patient-reports.html">Health Records</a></li>
+                        <li><a href="pages/patient-vitals.html">Vitals Monitoring</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-contact">
+                    <h4>Contact Us</h4>
+                    <ul>
+                        <li><i class="fas fa-phone"></i> +91 1800 123 4567</li>
+                        <li><i class="fas fa-envelope"></i> care@healthcareplus.com</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 123 Medical Center, Healthcare City</li>
+                        <li><i class="fas fa-clock"></i> 24/7 Support Available</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2024 HealthCare Plus. All rights reserved.</p>
+                <div class="footer-bottom-links">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Cookie Policy</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="backToTop">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/homepage.js"></script>
+</body>
+</html>
