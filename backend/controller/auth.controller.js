@@ -80,7 +80,7 @@ export const register = async (req, res, next) => {
                 const formData = new FormData();
                 formData.append('file', blob, 'face.jpg');
                 
-                const aiResponse = await fetch(`${process.env.AI_SERVICE_URL || 'http://127.0.0.1:8000'}/face/register`, {
+                const aiResponse = await fetch(`${process.env.AI_SERVICE_URL || 'https://piyush9940-hospital-copilot-ai-service.hf.space'}/face/register`, {
                     method: 'POST',
                     body: formData
                 });
@@ -204,7 +204,7 @@ export const login = async (req, res, next) => {
                 formData.append('file', blob, 'face.jpg');
                 formData.append('target_embedding', user.face_embedding_json);
                 
-                const verifyResponse = await fetch(`${process.env.AI_SERVICE_URL || 'http://127.0.0.1:8000'}/face/verify`, {
+                const verifyResponse = await fetch(`${process.env.AI_SERVICE_URL || 'https://piyush9940-hospital-copilot-ai-service.hf.space'}/face/verify`, {
                     method: 'POST',
                     body: formData
                 });
@@ -288,7 +288,7 @@ export const faceLogin = async (req, res, next) => {
             const formData = new FormData();
             formData.append('file', blob, 'face.jpg');
             
-            const aiResponse = await fetch(`${process.env.AI_SERVICE_URL || 'http://127.0.0.1:8000'}/face/register`, {
+            const aiResponse = await fetch(`${process.env.AI_SERVICE_URL || 'https://piyush9940-hospital-copilot-ai-service.hf.space'}/face/register`, {
                 method: 'POST',
                 body: formData
             });

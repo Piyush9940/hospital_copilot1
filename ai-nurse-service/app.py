@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -10,7 +11,7 @@ from routes.skin_routes import router as skin_router
 app = FastAPI(
     title="AI Nurse Service",
     version="1.0.0",
-    description="AI Nurse backend service with chat, voice, and translation support"
+    description="AI Nurse backend service with chat, voice, translation, face authentication, and skin detection support"
 )
 
 app.add_middleware(
@@ -47,9 +48,11 @@ async def health_check():
 if __name__ == "__main__":
     import uvicorn
 
+    port = int(os.environ.get("PORT", 7860))
+
     uvicorn.run(
         "app:app",
-        host="127.0.0.1",
-        port=8000,
-        reload=True
+        host="0.0.0.0",
+        port=port,
+        reload=False
     )

@@ -14,7 +14,7 @@ export const predictSkinDisease = async (req, res, next) => {
         const formData = new FormData();
         formData.append('file', blob, 'skin.jpg');
 
-        const aiResponse = await fetch(`${process.env.AI_SERVICE_URL || 'http://127.0.0.1:8000'}/skin/predict`, {
+        const aiResponse = await fetch(`${process.env.AI_SERVICE_URL || 'https://piyush9940-hospital-copilot-ai-service.hf.space'}/skin/predict`, {
             method: 'POST',
             body: formData
         });

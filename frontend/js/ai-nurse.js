@@ -1,7 +1,7 @@
 class AINurse {
     constructor() {
-        this.RAG_API_URL = window.CONFIG && window.CONFIG.NODE_API ? `${window.CONFIG.NODE_API}/ai-nurse/chat` : "http://localhost:3000/api/ai-nurse/chat";
-        this.AI_SERVICE_URL = window.CONFIG && window.CONFIG.AI_API ? window.CONFIG.AI_API.replace('/api', '') : "http://127.0.0.1:8000";
+        this.RAG_API_URL = window.CONFIG && window.CONFIG.NODE_API ? `${window.CONFIG.NODE_API}/ai-nurse/chat` : "https://hospital-copilot1.onrender.com/api/ai-nurse/chat";
+        this.AI_SERVICE_URL = window.CONFIG && window.CONFIG.AI_API ? window.CONFIG.AI_API.replace('/api', '') : "https://piyush9940-hospital-copilot-ai-service.hf.space";
 
         this.messages = [];
         this.sessionId = this.getOrCreateSessionId();

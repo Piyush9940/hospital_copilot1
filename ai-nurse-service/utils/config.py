@@ -74,8 +74,7 @@ class Settings:
 
     # =========================
     # 🔗 NODE BACKEND CONNECTION
-    # =========================
-    NODE_BACKEND_URL: str = os.getenv("NODE_BACKEND_URL", "http://localhost:5000")
+    NODE_BACKEND_URL: str = os.getenv("NODE_BACKEND_URL", "https://hospital-copilot1.onrender.com")
 
     # =========================
     # 🛡️ SAFETY SETTINGS

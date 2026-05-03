@@ -5,7 +5,10 @@ export const createPatientProfile = (userId, age, gender, history, allergies, me
     try {
         const validUserId = validateId(userId, "User ID");
         const validAge = Number(age);
-        const normalizedGender = typeof gender === "string" ? gender.trim() : "";
+        let normalizedGender = typeof gender === "string" ? gender.trim() : "";
+        if (normalizedGender) {
+            normalizedGender = normalizedGender.charAt(0).toUpperCase() + normalizedGender.slice(1).toLowerCase();
+        }
         const normalizedHistory = typeof history === "string" ? history.trim() : "";
         const normalizedAllergies = typeof allergies === "string" ? allergies.trim() : "";
         const normalizedMedications = typeof medications === "string" ? medications.trim() : "";

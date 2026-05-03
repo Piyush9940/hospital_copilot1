@@ -4,7 +4,7 @@ import FormData from "form-data";
 import { createError, sanitize } from "../utils/helper.js";
 
 const AI_NURSE_BASE_URL =
-    process.env.AI_NURSE_BASE_URL || "http://127.0.0.1:8000";
+    process.env.AI_NURSE_BASE_URL || "https://piyush9940-hospital-copilot-ai-service.hf.space";
 
 const AI_NURSE_TIMEOUT = Number(process.env.AI_NURSE_TIMEOUT || 120000);
 
