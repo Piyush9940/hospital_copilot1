@@ -166,6 +166,91 @@ const drawBulletList = (doc, value) => {
     });
 };
 
+const formatStructuredLabel = (key) =>
+    String(key || "")
+        .replace(/[_-]+/g, " ")
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+
+const shouldSkipStructuredKey = (key) =>
+    ["image", "file", "raw", "base64"].includes(String(key || "").toLowerCase());
+
+const drawStructuredData = (doc, value, depth = 0) => {
+    if (value === undefined || value === null || value === "") {
+        drawParagraph(doc, "N/A");
+        return;
+    }
+
+    if (Array.isArray(value)) {
+        if (!value.length) {
+            drawParagraph(doc, "N/A");
+            return;
+        }
+
+        value.forEach((item, index) => {
+            if (item && typeof item === "object") {
+                ensureSpace(doc, 42);
+                doc
+                    .fillColor("#0f766e")
+                    .font("Helvetica-Bold")
+                    .fontSize(Math.max(8.6, 10 - depth * 0.4))
+                    .text(`Item ${index + 1}`, {
+                        width: doc.page.width - doc.page.margins.left - doc.page.margins.right,
+                    });
+                doc.moveDown(0.2);
+                drawStructuredData(doc, item, depth + 1);
+                return;
+            }
+
+            ensureSpace(doc, 30);
+            const y = doc.y;
+            doc.fillColor("#0f766e").font("Helvetica-Bold").fontSize(9.6).text("-", doc.page.margins.left + depth * 10, y);
+            doc.fillColor("#1f2937").font("Helvetica").fontSize(9.6).text(stringifyPdfValue(item), doc.page.margins.left + depth * 10 + 14, y, {
+                width: doc.page.width - doc.page.margins.left - doc.page.margins.right - depth * 10 - 14,
+                lineGap: 3,
+            });
+            doc.moveDown(0.2);
+        });
+        return;
+    }
+
+    if (typeof value === "object") {
+        const entries = Object.entries(value).filter(([key]) => !shouldSkipStructuredKey(key));
+        if (!entries.length) {
+            drawParagraph(doc, "N/A");
+            return;
+        }
+
+        entries.forEach(([key, item]) => {
+            ensureSpace(doc, 42);
+            doc
+                .fillColor(depth === 0 ? "#0f766e" : "#334155")
+                .font("Helvetica-Bold")
+                .fontSize(Math.max(8.8, 10.4 - depth * 0.45))
+                .text(formatStructuredLabel(key), doc.page.margins.left + depth * 10, doc.y, {
+                    width: doc.page.width - doc.page.margins.left - doc.page.margins.right - depth * 10,
+                });
+            doc.moveDown(0.25);
+
+            if (item && typeof item === "object") {
+                drawStructuredData(doc, item, depth + 1);
+            } else {
+                doc
+                    .fillColor("#1f2937")
+                    .font("Helvetica")
+                    .fontSize(9.6)
+                    .text(stringifyPdfValue(item), doc.page.margins.left + depth * 10, doc.y, {
+                        width: doc.page.width - doc.page.margins.left - doc.page.margins.right - depth * 10,
+                        lineGap: 3,
+                    });
+                doc.moveDown(0.45);
+            }
+        });
+        return;
+    }
+
+    drawParagraph(doc, value);
+};
+
 const drawFooterPages = (doc) => {
     const range = doc.bufferedPageRange();
     const contentWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
@@ -527,10 +612,10 @@ export const generateMedicalScanReportPdf = async ({
 
         if (result && typeof result === "object") {
             const compactRows = Object.entries(result)
-                .filter(([key]) => !["image", "file", "raw", "base64"].includes(String(key).toLowerCase()))
-                .slice(0, 10)
+                .filter(([key, value]) => !shouldSkipStructuredKey(key) && (!value || typeof value !== "object"))
+                .slice(0, 8)
                 .map(([key, value]) => ({
-                    label: key.replace(/[_-]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase()),
+                    label: formatStructuredLabel(key),
                     value,
                 }));
 
@@ -539,11 +624,8 @@ export const generateMedicalScanReportPdf = async ({
                 drawInfoGrid(doc, compactRows);
             }
 
-            drawSectionHeading(doc, "Raw JSON Appendix");
-            doc.font("Courier").fontSize(8.2).fillColor("#334155").text(JSON.stringify(result, null, 2), {
-                width: contentWidth,
-                lineGap: 2,
-            });
+            drawSectionHeading(doc, "Detailed AI Output");
+            drawStructuredData(doc, result);
         }
 
         ensureSpace(doc, 76);

@@ -84,9 +84,9 @@ const normalizePrediction = (scanLabel, result) => {
             "result",
         ]) || `${scanLabel} Analysis`;
 
-    const confidence = findValueByKeys(result, ["confidence", "score", "probability", "accuracy"]);
+    const confidence = findValueByKeys(result, ["confidence", "confidence_percent", "score", "probability", "accuracy"]);
     const impression = findValueByKeys(result, ["impression", "summary", "description", "findings", "report"]);
-    const recommendation = findValueByKeys(result, ["recommendation", "recommendations", "precautions", "advice"]);
+    const recommendation = findValueByKeys(result, ["recommendation", "recommendations", "recommended_next_steps", "next_steps", "precautions", "advice"]);
 
     const summaryParts = [
         condition ? `Detected/Predicted: ${condition}` : "",
