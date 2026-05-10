@@ -17,7 +17,7 @@
 > **AI-powered hospital management that thinks alongside doctors, nurses, and patients.**
 > Face auth · RAG Nurse · Skin AI · Emergency dispatch · Video consults — all in one platform.
 
-🌐 **Live:** [hospital-copilot1.vercel.app](https://hospital-copilot1.vercel.app)
+🌐 **Live:** [hospital-copilot1.vercel.app](https://hospital-copilot1.vercel.app/)
 
 ---
 
