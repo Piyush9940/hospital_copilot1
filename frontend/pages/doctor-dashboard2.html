@@ -2,231 +2,681 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doctor Dashboard - HealthCare Plus</title>
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/doctor.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>MediFlow | Doctor Dashboard</title>
+    <!-- Google Fonts & Simple Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f4f7fc;
+            color: #1a2c3e;
+            line-height: 1.5;
+            scroll-behavior: smooth;
+        }
+
+        /* clean glass & shadows */
+        .glass-container {
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 28px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.02), 0 2px 6px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(203, 213, 225, 0.5);
+            transition: all 0.2s ease;
+        }
+
+        /* navbar */
+        .navbar {
+            background: #ffffff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 2px 8px rgba(0, 0, 0, 0.02);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid #e9edf2;
+        }
+
+        .nav-container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 0 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.55rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1e4b8f, #14805e);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
+        }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            font-weight: 500;
+            color: #2c3e4e;
+            font-size: 0.95rem;
+            transition: 0.2s;
+            padding: 6px 0;
+            border-bottom: 2px solid transparent;
+        }
+
+        .nav-link.active, .nav-link:hover {
+            color: #1f6e43;
+            border-bottom-color: #1f6e43;
+        }
+
+        .user-menu {
+            position: relative;
+        }
+
+        .user-menu-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: #1f2c38;
+            padding: 6px 12px;
+            border-radius: 40px;
+            background: #f8fafc;
+            transition: all 0.2s;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(145deg, #2f855a, #146b43);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .user-dropdown {
+            position: absolute;
+            right: 0;
+            top: 50px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            width: 180px;
+            display: none;
+            z-index: 20;
+            border: 1px solid #e2e8f0;
+        }
+
+        .user-dropdown a {
+            display: block;
+            padding: 12px 20px;
+            color: #1e2a3a;
+            text-decoration: none;
+            font-size: 0.85rem;
+            border-bottom: 1px solid #f0f2f5;
+        }
+
+        .user-dropdown a:last-child {
+            border-bottom: none;
+        }
+
+        .user-dropdown a:hover {
+            background: #f8fafc;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            background: none;
+            border: none;
+            font-size: 1.6rem;
+            color: #1f6e43;
+        }
+
+        /* dashboard container */
+        .dashboard-container {
+            max-width: 1440px;
+            margin: 28px auto 40px;
+            padding: 0 28px;
+        }
+
+        .welcome-section {
+            padding: 24px 32px;
+            margin-bottom: 32px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+            background: linear-gradient(115deg, #ffffff 0%, #fefefe 100%);
+        }
+
+        .welcome-title {
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: #0f2b3d;
+        }
+
+        .doctor-stats {
+            display: flex;
+            gap: 28px;
+            align-items: center;
+        }
+
+        .stat-badge {
+            text-align: center;
+            background: #f8fafd;
+            padding: 10px 22px;
+            border-radius: 44px;
+        }
+
+        .stat-number {
+            font-size: 1.7rem;
+            font-weight: 800;
+            color: #1f5e3f;
+            display: block;
+        }
+
+        .status-toggle {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: #f1f5f9;
+            padding: 8px 20px;
+            border-radius: 60px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 26px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: 0.2s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.2s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #2b8c5e;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* stats grid 4 cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-bottom: 36px;
+        }
+
+        .stat-card {
+            padding: 20px 18px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: transform 0.1s ease, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stat-info h4 {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #5e6f8d;
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1e2f3f;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 28px;
+        }
+
+        .dashboard-card {
+            padding: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .card-header h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            letter-spacing: -0.2px;
+        }
+
+        .view-all {
+            font-size: 0.8rem;
+            color: #237a54;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .schedule-timeline, .patient-list, .alerts-container, .reports-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .timeline-item, .patient-item, .alert-item, .report-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #ecf3f8;
+        }
+
+        .time-badge {
+            background: #eef2ff;
+            padding: 5px 12px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #2c6e9e;
+        }
+
+        .patient-name {
+            font-weight: 600;
+        }
+
+        .quick-actions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .quick-action-btn {
+            background: #f8fafd;
+            border: 1px solid #e4e9f0;
+            border-radius: 28px;
+            padding: 14px 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            justify-content: center;
+        }
+
+        .quick-action-btn:hover {
+            background: #ffffff;
+            border-color: #cbdbe0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+
+        .emergency-btn {
+            background: #fff1f0;
+            border-color: #ffc6c0;
+            color: #bc3f2e;
+        }
+
+        .alert-count {
+            background: #ef4444;
+            color: white;
+            border-radius: 40px;
+            padding: 2px 10px;
+            font-size: 0.7rem;
+        }
+
+        .empty-message {
+            color: #8a99b0;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.85rem;
+        }
+
+        button {
+            background: none;
+            border: none;
+        }
+
+        @media (max-width: 1000px) {
+            .stats-grid {
+                grid-template-columns: repeat(2,1fr);
+            }
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            .nav-menu {
+                display: none;
+            }
+            .mobile-menu-btn {
+                display: flex;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .dashboard-container {
+                padding: 0 18px;
+            }
+            .stat-card {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                    <circle cx="16" cy="16" r="14" stroke="url(#navGradient)" stroke-width="2"/>
-                    <path d="M10 16L14 20L22 12" stroke="url(#navGradient)" stroke-width="2" stroke-linecap="round"/>
-                    <defs>
-                        <linearGradient id="navGradient" x1="0" y1="0" x2="32" y2="32">
-                            <stop offset="0%" stop-color="#2563eb"/>
-                            <stop offset="100%" stop-color="#10b981"/>
-                        </linearGradient>
-                    </defs>
-                </svg>
-                HealthCare Plus
-            </div>
 
-            <div class="nav-menu">
-                <a href="doctor-dashboard.html" class="nav-link active">Dashboard</a>
-                <a href="doctor-appointments.html" class="nav-link">Appointments</a>
-                <a href="doctor-patient-view.html" class="nav-link">Patients</a>
-                <a href="doctor-chat-approval.html" class="nav-link">Chat Requests</a>
-                <a href="doctor-reports.html" class="nav-link">Reports</a>
-                <a href="doctor-profile.html" class="nav-link">Profile</a>
-
-                <div class="user-menu">
-                    <button class="user-menu-btn" onclick="toggleUserMenu()">
-                        <div class="avatar" id="userAvatar"></div>
-                        <span id="userName"></span>
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                        </svg>
-                    </button>
-                    <div class="user-dropdown" id="userDropdown">
-                        <a href="doctor-profile.html">Profile Settings</a>
-                        <a href="#" onclick="Auth.logout()">Logout</a>
-                    </div>
-                </div>
-            </div>
-
-            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
+<nav class="navbar">
+    <div class="nav-container">
+        <div class="nav-brand">
+            <i class="fas fa-heartbeat" style="font-size: 28px; color: #1f6e43;"></i>
+            MediFlow
         </div>
-    </nav>
-
-    <main class="dashboard-container">
-        <div class="welcome-section glass-container">
-            <div class="welcome-content">
-                <div>
-                    <h1 class="welcome-title">Welcome, Dr. <span id="doctorLastName">Smith</span>! 👨‍⚕️</h1>
-                    <p class="welcome-subtitle">You have <span id="todayAppointments">0</span> appointments today</p>
-                </div>
-                <div class="doctor-status">
-                    <div class="status-toggle">
-                        <span class="status-label">Availability:</span>
-                        <label class="switch">
-                            <input type="checkbox" id="availabilityToggle" checked>
-                            <span class="slider"></span>
-                        </label>
-                        <span id="availabilityText">Available</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="doctor-stats">
-                <div class="stat-badge">
-                    <span class="stat-number" id="totalPatients">0</span>
-                    <span class="stat-label">Total Patients</span>
-                </div>
-                <div class="stat-badge">
-                    <span class="stat-number" id="completedToday">0</span>
-                    <span class="stat-label">Completed Today</span>
-                </div>
-                <div class="stat-badge">
-                    <span class="stat-number" id="pendingReviews">0</span>
-                    <span class="stat-label">Pending Reviews</span>
+        <div class="nav-menu" id="navMenu">
+            <a href="doctor-dashboard2.html" class="nav-link active">Dashboard</a>
+            <a href="doctor-appointments.html" class="nav-link">Appointments</a>
+            <a href="doctor-patients.html" class="nav-link">Patients</a>
+            <a href="doctor-chat-approval.html" class="nav-link">Chat Requests</a>
+            <a href="doctor-reports.html" class="nav-link">Reports</a>
+            <a href="doctor-emergency.html" class="nav-link" style="color:#d9534f;"><i class="fas fa-ambulance"></i> Emergencies</a>
+            <a href="doctor-profile.html" class="nav-link">Profile</a>
+            <div class="user-menu">
+                <button class="user-menu-btn" id="userMenuBtn">
+                    <div class="avatar" id="userAvatar">DM</div>
+                    <span id="userName">Dr. Mitchell</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="user-dropdown" id="userDropdown">
+                    <a href="doctor-profile.html">Profile Settings</a>
+                    <a href="#" id="logoutBtn">Logout</a>
                 </div>
             </div>
         </div>
+        <button class="mobile-menu-btn" id="mobileMenuToggle"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
 
-        <div class="stats-grid">
-            <div class="stat-card glass-container">
-                <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                        <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
-                    </svg>
-                </div>
-                <div class="stat-info">
-                    <h4>Next Appointment</h4>
-                    <div class="stat-value" id="nextAppointmentTime">--</div>
-                    <p class="stat-detail" id="nextPatientName">No appointment</p>
-                </div>
-            </div>
-
-            <div class="stat-card glass-container">
-                <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                        <path d="M21 6h-2v2h-2V6h-2V4h2V2h2v2h2v2zm-10 3c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm0 4c-2.33 0-7 1.17-7 3.5V17h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
-                    </svg>
-                </div>
-                <div class="stat-info">
-                    <h4>New Patients</h4>
-                    <div class="stat-value" id="newPatients">0</div>
-                    <p class="stat-detail">This month</p>
-                </div>
-            </div>
-
-            <div class="stat-card glass-container">
-                <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                        <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12zM7 9h10v2H7zm0 4h7v2H7z"/>
-                    </svg>
-                </div>
-                <div class="stat-info">
-                    <h4>Chat Requests</h4>
-                    <div class="stat-value" id="chatRequests">0</div>
-                    <p class="stat-detail">Pending approval</p>
-                </div>
-            </div>
-
-            <div class="stat-card glass-container" onclick="window.location.href='doctor-video-call.html'">
-                <div class="stat-icon" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                        <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
-                    </svg>
-                </div>
-                <div class="stat-info">
-                    <h4>Video Calls</h4>
-                    <div class="stat-value" id="videoCalls">0</div>
-                    <p class="stat-detail">Scheduled today</p>
-                </div>
+<main class="dashboard-container">
+    <!-- welcome row -->
+    <div class="welcome-section glass-container">
+        <div>
+            <h1 class="welcome-title">Welcome, Dr. <span id="doctorLastName">Mitchell</span> <i class="fas fa-stethoscope"></i></h1>
+            <p class="welcome-subtitle">You have <strong id="todayAppointments">0</strong> appointments today</p>
+        </div>
+        <div class="doctor-status">
+            <div class="status-toggle">
+                <span class="status-label"><i class="fas fa-clock"></i> Availability:</span>
+                <label class="switch">
+                    <input type="checkbox" id="availabilityToggle" checked>
+                    <span class="slider"></span>
+                </label>
+                <span id="availabilityText">Available</span>
             </div>
         </div>
+    </div>
 
-        <div class="dashboard-grid">
-            <div class="dashboard-card glass-container">
-                <div class="card-header">
-                    <h3>Today's Schedule</h3>
-                    <a href="doctor-appointments.html" class="view-all">View All →</a>
-                </div>
-                <div class="schedule-timeline" id="scheduleTimeline"></div>
-            </div>
+    <!-- inline stats row (total patients, completed, pending) -->
+    <div class="doctor-stats" style="display: flex; justify-content: space-between; background: transparent; margin-bottom: 28px; gap: 12px; flex-wrap: wrap;">
+        <div class="stat-badge glass-container"><span class="stat-number" id="totalPatients">0</span><span class="stat-label"> Total Patients</span></div>
+        <div class="stat-badge glass-container"><span class="stat-number" id="completedToday">0</span><span class="stat-label"> Completed Today</span></div>
+        <div class="stat-badge glass-container"><span class="stat-number" id="pendingReviews">0</span><span class="stat-label"> Pending Reviews</span></div>
+    </div>
 
-            <div class="dashboard-card glass-container">
-                <div class="card-header">
-                    <h3>Recent Patients</h3>
-                    <a href="doctor-patient-view.html" class="view-all">View All →</a>
-                </div>
-                <div class="patient-list" id="recentPatients"></div>
-            </div>
+    <!-- 4 card metrics -->
+    <div class="stats-grid">
+        <div class="stat-card glass-container"><div class="stat-icon" style="background: #2d6a4f;"><i class="fas fa-calendar-check fa-xl" style="color:white"></i></div><div class="stat-info"><h4>Next Appointment</h4><div class="stat-value" id="nextAppointmentTime">--:--</div><p id="nextPatientName" style="font-size:12px">No appointment</p></div></div>
+        <div class="stat-card glass-container"><div class="stat-icon" style="background: #1f7b4d;"><i class="fas fa-user-plus fa-xl" style="color:white"></i></div><div class="stat-info"><h4>New Patients</h4><div class="stat-value" id="newPatients">0</div><p>this month</p></div></div>
+        <div class="stat-card glass-container"><div class="stat-icon" style="background: #f4a261;"><i class="fas fa-comment-dots fa-xl" style="color:white"></i></div><div class="stat-info"><h4>Chat Requests</h4><div class="stat-value" id="chatRequests">0</div><p>pending approval</p></div></div>
+        <div class="stat-card glass-container" onclick="alert('📹 Video call interface ready (demo)')"><div class="stat-icon" style="background: #6c63ff;"><i class="fas fa-video fa-xl" style="color:white"></i></div><div class="stat-info"><h4>Video Calls</h4><div class="stat-value" id="videoCalls">0</div><p>scheduled today</p></div></div>
+    </div>
 
-            <div class="dashboard-card glass-container">
-                <div class="card-header">
-                    <h3>Weekly Overview</h3>
-                    <select id="chartPeriod" class="chart-selector">
-                        <option value="week">This Week</option>
-                        <option value="month">This Month</option>
-                        <option value="year">This Year</option>
-                    </select>
-                </div>
-                <canvas id="analyticsChart"></canvas>
-            </div>
+    <!-- 2 column grid inner (graph removed, now balanced) -->
+    <div class="dashboard-grid">
+        <div class="dashboard-card glass-container"><div class="card-header"><h3><i class="far fa-clock"></i> Today's Schedule</h3><a href="#" class="view-all">View All →</a></div><div class="schedule-timeline" id="scheduleTimeline"></div></div>
+        <div class="dashboard-card glass-container"><div class="card-header"><h3><i class="fas fa-user-injured"></i> Recent Patients</h3><a href="#" class="view-all">View All →</a></div><div class="patient-list" id="recentPatients"></div></div>
+        <div class="dashboard-card glass-container"><div class="card-header"><h3><i class="fas fa-bell"></i> Emergency Alerts</h3><span class="alert-count" id="alertCount">0</span></div><div class="alerts-container" id="emergencyAlerts"></div></div>
+        <div class="dashboard-card glass-container"><div class="card-header"><h3><i class="fas fa-file-alt"></i> Pending Reports</h3><a href="#" class="view-all">Manage →</a></div><div class="reports-list" id="pendingReports"></div></div>
+        <div class="dashboard-card glass-container"><div class="card-header"><h3><i class="fas fa-bolt"></i> Quick Actions</h3></div><div class="quick-actions-grid"><button class="quick-action-btn" id="startCallBtn"><i class="fas fa-video"></i> Start Video Call</button><button class="quick-action-btn"><i class="fas fa-file-prescription"></i> Create Report</button><button class="quick-action-btn"><i class="fas fa-comment-medical"></i> Respond to Chat</button><button class="quick-action-btn emergency-btn"><i class="fas fa-truck-medical"></i> Emergency Mode</button></div></div>
+    </div>
+</main>
 
-            <div class="dashboard-card glass-container emergency-alerts">
-                <div class="card-header">
-                    <h3>Emergency Alerts</h3>
-                    <span class="alert-count" id="alertCount">0</span>
-                </div>
-                <div class="alerts-container" id="emergencyAlerts"></div>
-            </div>
+<script src="../js/config.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+    (function() {
+        // DOM references
+        const todayAppSpan = document.getElementById('todayAppointments');
+        const totalPatientsSpan = document.getElementById('totalPatients');
+        const completedTodaySpan = document.getElementById('completedToday');
+        const pendingReviewsSpan = document.getElementById('pendingReviews');
+        const nextAppTimeSpan = document.getElementById('nextAppointmentTime');
+        const nextPatientSpan = document.getElementById('nextPatientName');
+        const newPatientsSpan = document.getElementById('newPatients');
+        const chatRequestsSpan = document.getElementById('chatRequests');
+        const videoCallsSpan = document.getElementById('videoCalls');
+        const scheduleTimeline = document.getElementById('scheduleTimeline');
+        const recentPatientsDiv = document.getElementById('recentPatients');
+        const emergencyAlertsDiv = document.getElementById('emergencyAlerts');
+        const pendingReportsDiv = document.getElementById('pendingReports');
+        const alertCountSpan = document.getElementById('alertCount');
+        const availabilityToggle = document.getElementById('availabilityToggle');
+        const availabilityText = document.getElementById('availabilityText');
 
-            <div class="dashboard-card glass-container">
-                <div class="card-header">
-                    <h3>Pending Reports</h3>
-                    <a href="doctor-reports.html" class="view-all">Manage →</a>
-                </div>
-                <div class="reports-list" id="pendingReports"></div>
-            </div>
+        // Toggle availability
+        availabilityToggle.addEventListener('change', (e) => {
+            availabilityText.innerText = e.target.checked ? 'Available' : 'Unavailable';
+        });
 
-            <div class="dashboard-card glass-container">
-                <div class="card-header">
-                    <h3>Quick Actions</h3>
-                </div>
-                <div class="quick-actions-grid">
-                    <button class="quick-action-btn" onclick="startVideoCall()">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
-                        </svg>
-                        Start Video Call
-                    </button>
-                    <button class="quick-action-btn" onclick="window.location.href='doctor-reports.html'">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
-                        </svg>
-                        Create Report
-                    </button>
-                    <button class="quick-action-btn" onclick="window.location.href='doctor-chat-approval.html'">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12zM7 9h10v2H7zm0 4h7v2H7z"/>
-                        </svg>
-                        Respond to Chat
-                    </button>
-                    <button class="quick-action-btn emergency-btn" onclick="handleEmergency()">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 2L2 7v8c0 5 10 8 10 8s10-3 10-8V7l-10-5zm-1 5h2v6h-2V7zm0 8h2v2h-2v-2z"/>
-                        </svg>
-                        Emergency Mode
-                    </button>
-                </div>
-            </div>
-        </div>
-    </main>
+        // Mock data (clean and realistic)
+        const appointmentsToday = [
+            { time: "09:30 AM", patient: "Emma Watson", type: "Follow-up" },
+            { time: "11:15 AM", patient: "James Carter", type: "Consultation" },
+            { time: "02:00 PM", patient: "Sophia Ramirez", type: "Lab Review" },
+            { time: "04:30 PM", patient: "Michael Lee", type: "Telehealth" }
+        ];
+        const completedCount = 2;
+        const totalPatientsCount = 284;
+        const pendingReviewsCount = 5;
+        const newPatientsThisMonth = 18;
+        const pendingChatRequests = 3;
+        const videoCallsToday = 1;
 
-    <script src="../js/config.js"></script>
-    <script src="../js/auth.js"></script>
-    <script src="../js/doctor-dashboard.js"></script>
+        todayAppSpan.innerText = appointmentsToday.length;
+        totalPatientsSpan.innerText = totalPatientsCount;
+        completedTodaySpan.innerText = completedCount;
+        pendingReviewsSpan.innerText = pendingReviewsCount;
+        newPatientsSpan.innerText = newPatientsThisMonth;
+        chatRequestsSpan.innerText = pendingChatRequests;
+        videoCallsSpan.innerText = videoCallsToday;
+        document.getElementById('doctorLastName').innerText = "Mitchell";
+        document.getElementById('userName').innerHTML = "Dr. Mitchell";
+        document.getElementById('userAvatar').innerHTML = "DM";
+
+        // Next appointment
+        if (appointmentsToday.length) {
+            nextAppTimeSpan.innerText = appointmentsToday[0].time;
+            nextPatientSpan.innerText = appointmentsToday[0].patient;
+        } else {
+            nextAppTimeSpan.innerText = "--:--";
+            nextPatientSpan.innerText = "No upcoming";
+        }
+
+        // Render timeline
+        function renderTimeline() {
+            scheduleTimeline.innerHTML = '';
+            appointmentsToday.forEach(app => {
+                const div = document.createElement('div');
+                div.className = 'timeline-item';
+                div.innerHTML = `
+                    <div><span class="time-badge">${app.time}</span> <strong>${app.patient}</strong><br><small style="color:#5f7d9c">${app.type}</small></div>
+                    <i class="fas fa-chevron-right" style="color:#98b1c9"></i>
+                `;
+                scheduleTimeline.appendChild(div);
+            });
+            if (!appointmentsToday.length) scheduleTimeline.innerHTML = '<div class="empty-message">No appointments scheduled today</div>';
+        }
+
+        // Recent patients
+        const recentPatientsList = [
+            { name: "Olivia Bennett", lastVisit: "2 days ago", condition: "Hypertension" },
+            { name: "Liam O'Connor", lastVisit: "Yesterday", condition: "Diabetes Type 2" },
+            { name: "Chloe Garcia", lastVisit: "3 days ago", condition: "Routine Check" },
+            { name: "Ethan Park", lastVisit: "1 week ago", condition: "Asthma" }
+        ];
+        function renderRecentPatients() {
+            recentPatientsDiv.innerHTML = '';
+            recentPatientsList.forEach(p => {
+                const el = document.createElement('div');
+                el.className = 'patient-item';
+                el.innerHTML = `<div><span class="patient-name">${p.name}</span><div style="font-size:12px; color:#5f7d9c">${p.condition}</div></div><div style="font-size:12px">${p.lastVisit}</div>`;
+                recentPatientsDiv.appendChild(el);
+            });
+        }
+
+        // Emergency alerts
+        let emergencies = [
+            { id: 1, patient: "Arthur Morgan", severity: "High", description: "Chest pain, BP critical" },
+            { id: 2, patient: "Mary Johnson", severity: "Moderate", description: "Severe allergic reaction" }
+        ];
+        function renderEmergencies() {
+            emergencyAlertsDiv.innerHTML = '';
+            if (emergencies.length === 0) {
+                emergencyAlertsDiv.innerHTML = '<div class="empty-message">No active emergencies ✅</div>';
+                alertCountSpan.innerText = '0';
+                return;
+            }
+            alertCountSpan.innerText = emergencies.length;
+            emergencies.forEach(em => {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert-item';
+                alertDiv.style.borderLeft = em.severity === 'High' ? '4px solid #ef4444' : '4px solid #f59e0b';
+                alertDiv.style.paddingLeft = '10px';
+                alertDiv.innerHTML = `<div><strong>⚠️ ${em.patient}</strong><div style="font-size:12px">${em.description}</div></div><span style="background:#f1f3f5; padding:4px 8px; border-radius:20px; font-size:11px;">${em.severity}</span>`;
+                emergencyAlertsDiv.appendChild(alertDiv);
+            });
+        }
+
+        // Pending reports
+        const reportsMock = [
+            { patient: "Sophia Ramirez", type: "Blood work", date: "May 12" },
+            { patient: "James Carter", type: "MRI Review", date: "May 10" },
+            { patient: "Nina Dobrev", type: "ECG Analysis", date: "May 9" }
+        ];
+        function renderReports() {
+            pendingReportsDiv.innerHTML = '';
+            reportsMock.forEach(r => {
+                const repItem = document.createElement('div');
+                repItem.className = 'report-item';
+                repItem.innerHTML = `<div><strong>${r.patient}</strong> - ${r.type}</div><div style="font-size:12px">${r.date}</div>`;
+                pendingReportsDiv.appendChild(repItem);
+            });
+            if (!reportsMock.length) pendingReportsDiv.innerHTML = '<div class="empty-message">All reports finalized</div>';
+        }
+
+        // Quick actions
+        document.getElementById('startCallBtn')?.addEventListener('click', () => alert("📞 Starting secure video call ... (demo)"));
+        document.querySelector('.emergency-btn')?.addEventListener('click', () => alert("🚨 Emergency mode activated: high priority protocols."));
+        document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            if(window.Auth) window.Auth.logout();
+            else window.location.href = 'login.html';
+        });
+
+        // User dropdown toggle
+        const userBtn = document.getElementById('userMenuBtn');
+        const userDropdown = document.getElementById('userDropdown');
+        userBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userDropdown.style.display = userDropdown.style.display === 'block' ? 'none' : 'block';
+        });
+        document.addEventListener('click', () => userDropdown.style.display = 'none');
+
+        // Mobile menu toggle
+        const mobileBtn = document.getElementById('mobileMenuToggle');
+        const navMenuDiv = document.getElementById('navMenu');
+        mobileBtn?.addEventListener('click', () => {
+            if (navMenuDiv.style.display === 'flex') navMenuDiv.style.display = 'none';
+            else navMenuDiv.style.display = 'flex';
+        });
+
+        // final render
+        renderTimeline();
+        renderRecentPatients();
+        renderEmergencies();
+        renderReports();
+
+        // set active nav highlight
+        document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+        document.querySelector('.nav-link')?.classList.add('active');
+    })();
+</script>
 </body>
 </html>

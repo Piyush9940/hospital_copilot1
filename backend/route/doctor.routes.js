@@ -23,6 +23,7 @@ const router = express.Router();
 router.post(
     "/profile",
     authMiddleware,
+    roleMiddleware("doctor"),
     [
         body("userId").notEmpty().withMessage("userId is required"),
         body("specialization").trim().notEmpty().withMessage("specialization is required"),

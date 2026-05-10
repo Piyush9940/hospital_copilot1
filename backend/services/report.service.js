@@ -8,7 +8,7 @@ import {
 } from "../model/report.model.js";
 
 import { getPatientByUserId } from "../model/patient.model.js";
-import { createError, validateId, sanitize } from "../utils/helper.js";
+import { createError, validateId, validateStringId, sanitize } from "../utils/helper.js";
 
 /**
  * Normalize report object
@@ -19,9 +19,11 @@ const normalizeReport = (report) => {
     return {
         id: report.id || null,
         patientId: report.patient_id || null,
+        doctorId: report.doctor_id || null,
+        title: report.title || null,
         diagnosis: report.diagnosis || null,
         summary: report.summary || null,
-        pdfPath: report.pdf_path || null,
+        pdfPath: report.pdf_url || report.pdf_path || null,
         patientName: report.patient_name || null,
         patientEmail: report.patient_email || null,
         createdAt: report.created_at || null,
@@ -38,9 +40,9 @@ const normalizeReport = (report) => {
  * @param {string} payload.pdfPath
  * @returns {Object}
  */
-export const createMedicalReport = ({ patientId, diagnosis, summary, pdfPath }) => {
+export const createMedicalReport = ({ patientId, doctorId, title, diagnosis, summary, pdfPath }) => {
     try {
-        const validPatientId = validateId(patientId, "Patient ID");
+        const validPatientId = validateStringId(patientId, "Patient ID");
         const normalizedDiagnosis = sanitize(diagnosis);
         const normalizedSummary = sanitize(summary);
         const normalizedPdfPath =
@@ -60,6 +62,8 @@ export const createMedicalReport = ({ patientId, diagnosis, summary, pdfPath }) 
 
         const result = createReport(
             validPatientId,
+            doctorId,
+            title,
             normalizedDiagnosis,
             normalizedSummary,
             normalizedPdfPath
@@ -122,7 +126,7 @@ export const getMedicalReportDetails = ({ reportId }) => {
  */
 export const getPatientMedicalReports = ({ patientId }) => {
     try {
-        const validPatientId = validateId(patientId, "Patient ID");
+        const validPatientId = validateStringId(patientId, "Patient ID");
         const reports = getReportsByPatientId(validPatientId) || [];
 
         return {
@@ -155,7 +159,7 @@ export const getMedicalReportsByUserId = ({ userId }) => {
             throw createError("Patient profile not found", 404);
         }
 
-        const reports = getReportsByPatientId(patient.id) || [];
+        const reports = getReportsByPatientId(patient.patient_id) || [];
 
         return {
             success: true,
@@ -297,7 +301,7 @@ export const removeMedicalReport = ({ reportId }) => {
 export const verifyReportOwnershipByPatientId = ({ reportId, patientId }) => {
     try {
         const validReportId = validateId(reportId, "Report ID");
-        const validPatientId = validateId(patientId, "Patient ID");
+        const validPatientId = validateStringId(patientId, "Patient ID");
 
         const report = getReportById(validReportId);
 
@@ -305,7 +309,7 @@ export const verifyReportOwnershipByPatientId = ({ reportId, patientId }) => {
             throw createError("Report not found", 404);
         }
 
-        if (Number(report.patient_id) !== validPatientId) {
+        if (String(report.patient_id) !== validPatientId) {
             throw createError("You are not authorized to access this report", 403);
         }
 
@@ -346,7 +350,7 @@ export const verifyReportOwnershipByUserId = ({ reportId, userId }) => {
             throw createError("Report not found", 404);
         }
 
-        if (Number(report.patient_id) !== Number(patient.id)) {
+        if (String(report.patient_id) !== String(patient.patient_id)) {
             throw createError("You are not authorized to access this report", 403);
         }
 

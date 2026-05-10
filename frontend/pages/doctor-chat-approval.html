@@ -2,114 +2,629 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Approvals - HealthCare Plus</title>
-    <link rel="stylesheet" href="../css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>HealthChat • Patient-Doctor Messaging</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        .approval-form { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px; max-width: 600px; margin-left: auto; margin-right: auto; }
-        .form-group { margin-bottom: 15px; }
-        .form-label { display: block; margin-bottom: 5px; font-weight: 500; color: #374151; }
-        .form-input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
-        .btn-submit { padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.3s; width: 100%; }
-        .request-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: #e9ecef;
+            min-height: 100vh;
+        }
+
+        /* navbar style */
+        .navbar {
+            background: #1e3a5f;
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .nav-brand i {
+            font-size: 1.6rem;
+            color: #7bc6ff;
+        }
+        .badge-role {
+            background: #2c6e9e;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* dashboard layout */
+        .dashboard-container {
+            max-width: 1300px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        /* two-columns: left (requests/patient panel) + right (chat area) */
+        .chat-ecosystem {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+        .requests-panel {
+            flex: 1.2;
+            min-width: 280px;
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+        .chat-panel {
+            flex: 2.2;
+            min-width: 320px;
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            height: 75vh;
+            overflow: hidden;
+        }
+
+        /* panel headers */
+        .panel-header {
+            background: #f8fafc;
+            padding: 18px 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .panel-header h3 {
+            font-weight: 600;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Patient Request Form (send request) */
+        .send-request-card {
+            background: white;
+            border-bottom: 1px solid #edf2f7;
+            padding: 20px;
+        }
+        .form-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        .form-row input, .form-row select {
+            flex: 1;
+            padding: 12px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 24px;
+            font-size: 0.9rem;
+            background: #fff;
+            transition: 0.2s;
+        }
+        .form-row input:focus, .form-row select:focus {
+            outline: none;
+            border-color: #1e3a5f;
+            box-shadow: 0 0 0 2px rgba(30,58,95,0.2);
+        }
+        .btn-primary {
+            background: #1e3a5f;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary:hover {
+            background: #0f2b48;
+            transform: scale(0.98);
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #cbd5e1;
+            padding: 8px 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .btn-success {
+            background: #0f7b3a;
+            color: white;
+            border: none;
+        }
+        .btn-danger {
+            background: white;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+        }
+
+        /* request list styling */
+        .requests-list {
+            max-height: 420px;
+            overflow-y: auto;
+        }
+        .request-item {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f2f5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.1s;
+            cursor: pointer;
+        }
+        .request-item:hover {
+            background: #f9fafb;
+        }
+        .request-info strong {
+            font-size: 0.95rem;
+            display: block;
+        }
+        .status-badge {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 100px;
+            display: inline-block;
+            margin-top: 6px;
+        }
+        .status-pending { background: #ffedd5; color: #b45309; }
+        .status-approved { background: #d1fae5; color: #065f46; }
+        .status-rejected { background: #fee2e2; color: #991b1b; }
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 0.75rem;
+            border-radius: 30px;
+            font-weight: 600;
+        }
+
+        /* CHAT INTERFACE (WhatsApp style) */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 18px 16px;
+            background: #f6f7f9;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .message {
+            display: flex;
+            max-width: 80%;
+        }
+        .message.patient {
+            align-self: flex-start;
+        }
+        .message.doctor {
+            align-self: flex-end;
+            justify-content: flex-end;
+        }
+        .bubble {
+            padding: 10px 14px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            word-wrap: break-word;
+            box-shadow: 0 1px 0.5px rgba(0,0,0,0.05);
+        }
+        .patient .bubble {
+            background: white;
+            border-radius: 20px 20px 20px 4px;
+            color: #1f2937;
+            border: 1px solid #e5e7eb;
+        }
+        .doctor .bubble {
+            background: #dcf8c5;
+            color: #1f2a3e;
+            border-radius: 20px 20px 4px 20px;
+        }
+        .message-meta {
+            font-size: 0.65rem;
+            opacity: 0.6;
+            margin-top: 4px;
+            padding-left: 8px;
+        }
+        .chat-input-area {
+            background: white;
+            padding: 14px 18px;
+            border-top: 1px solid #e9edf2;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .chat-input-area input {
+            flex: 1;
+            border: 1px solid #d4dae2;
+            border-radius: 30px;
+            padding: 12px 18px;
+            font-size: 0.9rem;
+            background: #fff;
+        }
+        .chat-input-area button {
+            background: #25D366;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .empty-chat {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        .active-chat-header {
+            background: #f1f5f9;
+            padding: 14px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 600;
+        }
+        i {
+            pointer-events: none;
+        }
+        @media (max-width: 760px) {
+            .chat-ecosystem { flex-direction: column; }
+            .chat-panel { height: 65vh; }
+        }
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-brand">HealthCare Plus</div>
-            <div class="nav-menu"></div>
-            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
-                <span></span><span></span><span></span>
-            </button>
+<nav class="navbar">
+    <div class="nav-container">
+        <div class="nav-brand"><i class="fas fa-comments"></i> HealthChat <span style="font-size:0.8rem; margin-left:6px;">by HealthCare Plus</span></div>
+        <div class="badge-role" id="roleBadge">Patient Portal ▼</div>
+    </div>
+</nav>
+<main class="dashboard-container">
+    <div class="chat-ecosystem">
+        <!-- LEFT: Patient request & approval management -->
+        <div class="requests-panel">
+            <div class="panel-header">
+                <h3><i class="fas fa-stethoscope"></i> Chat Connect</h3>
+                <p style="font-size:0.75rem; color:#4b5563;">Patients: send request → Doctor approves → Chat!</p>
+            </div>
+            <!-- Patient send request area -->
+            <div class="send-request-card">
+                <div class="form-row">
+                    <input type="text" id="patientName" placeholder="Your name" value="Emily Parker">
+                    <input type="number" id="appointmentIdReq" placeholder="Appointment ID (e.g., 101)" value="102">
+                </div>
+                <button class="btn-primary" id="sendRequestBtn"><i class="fas fa-paper-plane"></i> Send Chat Request</button>
+                <div id="requestFeedback" style="font-size:12px; margin-top:8px; color:#2563eb;"></div>
+            </div>
+            <!-- list of pending/approved requests (doctor / patient can see status) -->
+            <div class="panel-header" style="border-top: 1px solid #edf2f7;">
+                <h3><i class="fas fa-clock"></i> Requests & Conversations</h3>
+            </div>
+            <div class="requests-list" id="requestsListContainer">
+                <!-- dynamic requests from both sides -->
+                <div style="padding: 20px; text-align:center; color:#6c757d;">Loading requests...</div>
+            </div>
         </div>
-    </nav>
-    <main class="dashboard-container">
-        <!-- Managed by page-builder.js -->
-    </main>
-    <script src="../js/config.js"></script>
-    <script src="../js/auth.js"></script>
-    <script src="../js/page-builder.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            if (window.requireRole && requireRole(['doctor'])) {
-                await PageBuilder.buildPage({
-                    title: 'Chat Approvals',
-                    subtitle: 'Manage patient communication requests',
-                    allowedRoles: ['doctor'],
-                    renderFunction: () => `
-                        <div class="approval-form">
-                            <h3>Search Requests by Appointment ID</h3>
-                            <p style="color: #6b7280; font-size: 14px; margin-bottom: 15px;">Enter an appointment ID to view its associated chat requests.</p>
-                            <form id="searchForm" onsubmit="searchRequests(event)">
-                                <div class="form-group">
-                                    <input type="number" id="appointmentId" class="form-input" placeholder="e.g. 102" required>
-                                </div>
-                                <button type="submit" class="btn-submit">Search</button>
-                            </form>
-                        </div>
-                        <div id="resultsArea"></div>
-                    `
-                });
-            }
+        
+        <!-- RIGHT: WhatsApp style chat panel -->
+        <div class="chat-panel">
+            <div class="active-chat-header" id="activeChatHeader">
+                <i class="fas fa-comment-dots"></i> 💬 Select a conversation
+            </div>
+            <div class="chat-messages" id="chatMessagesArea">
+                <div class="empty-chat"><i class="fas fa-comment-medical"></i> <br/>Click any approved request to start chatting like WhatsApp</div>
+            </div>
+            <div class="chat-input-area" id="chatInputContainer" style="display: none;">
+                <input type="text" id="messageInput" placeholder="Type a message..." autocomplete="off">
+                <button id="sendMessageBtn"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    // ---------- DATA LAYER (in-memory storage, simulates backend) ----------
+    let requestsDB = [];
+    let messagesDB = [];    // each message: { requestId, senderRole (patient/doctor), text, timestamp, appointmentId }
+    let nextReqId = 101;
+    let selectedRequestId = null;
+    let currentUserRole = 'patient';   // toggle: patient or doctor via top button? let's add role switcher for demo (doctor & patient in one UI)
+    // Buttons will simulate both actions: as patient (send request) & as doctor (approve/reject)
+    // We'll add a role toggle switch in the header for realistic demo: doctor or patient view.
+    
+    // Helper to load from localStorage
+    function loadData() {
+        const storedReqs = localStorage.getItem('chatApprovals_reqs');
+        const storedMsgs = localStorage.getItem('chatApprovals_msgs');
+        if(storedReqs) requestsDB = JSON.parse(storedReqs);
+        if(storedMsgs) messagesDB = JSON.parse(storedMsgs);
+        if(requestsDB.length === 0) {
+            // seed demo data: one pending request for smooth demo
+            requestsDB = [
+                { id: 100, appointmentId: 101, patientName: "Michael Chen", patientId: "P100", status: "approved", createdAt: Date.now() - 3600000 },
+                { id: 99, appointmentId: 99, patientName: "Sarah Johnson", patientId: "P99", status: "pending", createdAt: Date.now() - 7200000 }
+            ];
+            messagesDB = [
+                { requestId: 100, senderRole: "patient", text: "Hi doctor, I have fever and cough since yesterday.", timestamp: Date.now() - 3000000, appointmentId: 101 },
+                { requestId: 100, senderRole: "doctor", text: "Hello! Please share your temperature and any other symptoms.", timestamp: Date.now() - 2500000, appointmentId: 101 }
+            ];
+        }
+        nextReqId = Math.max(...requestsDB.map(r=>r.id), 100) + 1;
+    }
+    
+    function persistData() {
+        localStorage.setItem('chatApprovals_reqs', JSON.stringify(requestsDB));
+        localStorage.setItem('chatApprovals_msgs', JSON.stringify(messagesDB));
+    }
+    
+    // Render requests list (show all, with action buttons if role doctor)
+    function renderRequestsList() {
+        const container = document.getElementById('requestsListContainer');
+        if(!container) return;
+        if(requestsDB.length === 0) {
+            container.innerHTML = '<div style="padding: 30px; text-align:center;">No requests yet. Send your first request!</div>';
+            return;
+        }
+        let html = '';
+        // sort by newest first
+        [...requestsDB].sort((a,b)=> b.createdAt - a.createdAt).forEach(req => {
+            const statusLabel = req.status === 'approved' ? 'Approved ✅' : (req.status === 'rejected' ? 'Rejected ❌' : 'Pending ⏳');
+            const statusClass = req.status === 'approved' ? 'status-approved' : (req.status === 'rejected' ? 'status-rejected' : 'status-pending');
+            html += `
+                <div class="request-item" data-reqid="${req.id}" onclick="selectConversation(${req.id})">
+                    <div class="request-info">
+                        <strong>${escapeHtml(req.patientName)}</strong> <span style="font-size:12px; color:#4b5563;">(Apt #${req.appointmentId})</span>
+                        <div><span class="status-badge ${statusClass}">${statusLabel}</span></div>
+                    </div>
+                    <div class="action-buttons" onclick="event.stopPropagation()">
+                        ${ (req.status === 'pending' && window.currentRole === 'doctor') ? `
+                            <button class="btn-sm btn-primary" onclick="updateRequestStatus(${req.id}, 'approved')"><i class="fas fa-check-circle"></i> Approve</button>
+                            <button class="btn-sm btn-danger" onclick="updateRequestStatus(${req.id}, 'rejected')"><i class="fas fa-times-circle"></i> Reject</button>
+                        ` : '' }
+                        ${ (req.status === 'approved') ? `<span style="font-size:12px; background:#e6f7e6; padding:5px 10px; border-radius:30px;"><i class="fas fa-comment"></i> Chat open</span>` : '' }
+                        ${ (req.status === 'rejected') ? `<span style="font-size:12px;">🔒 Request denied</span>` : '' }
+                    </div>
+                </div>
+            `;
         });
-
-        async function searchRequests(e) {
-            e.preventDefault();
-            const aptId = document.getElementById('appointmentId').value;
-            const resultsArea = document.getElementById('resultsArea');
-            resultsArea.innerHTML = '<p style="text-align: center;">Searching...</p>';
-
-            try {
-                const res = await API.get(`/chat-permission/appointment/${aptId}`);
-                const permissions = Array.isArray(res) ? res : (Array.isArray(res.data) ? res.data : []);
-                
-                if (permissions.length === 0) {
-                    resultsArea.innerHTML = '<div class="empty-state" style="padding: 30px; text-align: center;"><h3>No Requests Found</h3><p>There are no chat permission requests for this appointment.</p></div>';
-                    return;
-                }
-
-                let html = '<h3>Requests for Appointment #' + aptId + '</h3>';
-                permissions.forEach(p => {
-                    html += `
-                        <div class="request-card">
-                            <div>
-                                <strong>Patient ID:</strong> ${p.patient_id || p.patientId} <br>
-                                <strong>Status:</strong> <span style="text-transform: uppercase; font-size: 12px; font-weight: bold; color: ${p.status === 'approved' ? 'green' : (p.status === 'rejected' ? 'red' : 'orange')}">${p.status || 'pending'}</span>
-                            </div>
-                            ${(p.status === 'pending' || p.status === 'PENDING') ? `
-                            <div>
-                                <button class="btn btn-primary" onclick="updateStatus(${p.id}, 'approve')" style="background: #059669; border-color: #059669;">Approve</button>
-                                <button class="btn btn-outline" onclick="updateStatus(${p.id}, 'reject')" style="color: #dc2626; border-color: #dc2626;">Reject</button>
-                            </div>` : ''}
-                        </div>
-                    `;
-                });
-                resultsArea.innerHTML = html;
-
-            } catch(err) {
-                console.error(err);
-                resultsArea.innerHTML = '<div class="empty-state" style="padding: 30px; text-align: center;"><h3>Error</h3><p>Could not fetch requests. Make sure the ID is correct.</p></div>';
+        container.innerHTML = html;
+        // highlight selected request
+        if(selectedRequestId) {
+            const selectedDiv = document.querySelector(`.request-item[data-reqid="${selectedRequestId}"]`);
+            if(selectedDiv) selectedDiv.style.background = "#eef2ff";
+        }
+    }
+    
+    // update request status (approve/reject)
+    window.updateRequestStatus = function(reqId, newStatus) {
+        const reqIndex = requestsDB.findIndex(r => r.id === reqId);
+        if(reqIndex !== -1) {
+            requestsDB[reqIndex].status = newStatus;
+            persistData();
+            renderRequestsList();
+            // if current selected conversation got rejected/approved update chat panel
+            if(selectedRequestId === reqId && newStatus !== 'approved') {
+                // clear chat area because not approved anymore
+                selectedRequestId = null;
+                document.getElementById('chatMessagesArea').innerHTML = `<div class="empty-chat"><i class="fas fa-lock"></i> <br/>Chat not available: request status changed</div>`;
+                document.getElementById('chatInputContainer').style.display = 'none';
+                document.getElementById('activeChatHeader').innerHTML = `<i class="fas fa-comment-dots"></i> 💬 Select a conversation`;
+            } else if(newStatus === 'approved' && selectedRequestId === reqId) {
+                loadChatMessages(reqId);
+                document.getElementById('chatInputContainer').style.display = 'flex';
+            }
+            // show toast like feedback
+            showFloatingMsg(`Request ${newStatus === 'approved' ? 'approved' : 'rejected'} successfully!`);
+        }
+    };
+    
+    // Send new request from patient
+    function sendChatRequest(patientName, appointmentId) {
+        if(!patientName || !appointmentId) {
+            showFloatingMsg("Please enter name and appointment ID", true);
+            return false;
+        }
+        const existing = requestsDB.find(r => r.appointmentId == appointmentId && r.patientName.toLowerCase() === patientName.toLowerCase());
+        if(existing) {
+            showFloatingMsg(`Request already exists (status: ${existing.status})`, true);
+            return false;
+        }
+        const newReq = {
+            id: nextReqId++,
+            appointmentId: Number(appointmentId),
+            patientName: patientName,
+            patientId: "PAT_" + Date.now(),
+            status: "pending",
+            createdAt: Date.now()
+        };
+        requestsDB.push(newReq);
+        persistData();
+        renderRequestsList();
+        showFloatingMsg(`Request sent! Doctor can now approve.`, false);
+        document.getElementById('requestFeedback').innerText = "Request sent! Waiting for doctor approval.";
+        setTimeout(()=> document.getElementById('requestFeedback').innerText = "", 3000);
+        return true;
+    }
+    
+    // send message (WhatsApp style)
+    function sendMessage(text) {
+        if(!selectedRequestId) {
+            showFloatingMsg("Select an approved conversation first", true);
+            return false;
+        }
+        const request = requestsDB.find(r => r.id === selectedRequestId);
+        if(!request || request.status !== 'approved') {
+            showFloatingMsg("Chat not active: request not approved", true);
+            return false;
+        }
+        if(!text.trim()) return false;
+        const sender = window.currentRole === 'doctor' ? 'doctor' : 'patient';
+        const newMsg = {
+            requestId: selectedRequestId,
+            senderRole: sender,
+            text: text.trim(),
+            timestamp: Date.now(),
+            appointmentId: request.appointmentId
+        };
+        messagesDB.push(newMsg);
+        persistData();
+        loadChatMessages(selectedRequestId);
+        document.getElementById('messageInput').value = '';
+        // auto-scroll
+        return true;
+    }
+    
+    function loadChatMessages(requestId) {
+        const request = requestsDB.find(r => r.id === requestId);
+        const chatDiv = document.getElementById('chatMessagesArea');
+        const inputContainer = document.getElementById('chatInputContainer');
+        const headerDiv = document.getElementById('activeChatHeader');
+        
+        if(!request || request.status !== 'approved') {
+            chatDiv.innerHTML = `<div class="empty-chat"><i class="fas fa-ban"></i> <br/>Chat unavailable. Request must be approved.</div>`;
+            inputContainer.style.display = 'none';
+            if(request) headerDiv.innerHTML = `<i class="fas fa-user-md"></i> ${escapeHtml(request.patientName)} (chat locked)`;
+            else headerDiv.innerHTML = `<i class="fas fa-comment-dots"></i> 💬 Select a conversation`;
+            return;
+        }
+        // approved : show chat
+        headerDiv.innerHTML = `<i class="fab fa-whatsapp" style="color:#25D366;"></i> Chat with ${escapeHtml(request.patientName)} (Apt #${request.appointmentId})`;
+        inputContainer.style.display = 'flex';
+        const relevantMessages = messagesDB.filter(m => m.requestId === requestId).sort((a,b)=> a.timestamp - b.timestamp);
+        if(relevantMessages.length === 0) {
+            chatDiv.innerHTML = `<div class="empty-chat"><i class="fas fa-smile-wink"></i> <br/>Send a message to start the conversation!</div>`;
+            return;
+        }
+        let chatHtml = '';
+        relevantMessages.forEach(msg => {
+            const isDoctor = msg.senderRole === 'doctor';
+            const alignment = isDoctor ? 'doctor' : 'patient';
+            const timeStr = new Date(msg.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            chatHtml += `
+                <div class="message ${alignment}">
+                    <div>
+                        <div class="bubble">${escapeHtml(msg.text)}</div>
+                        <div class="message-meta">${isDoctor ? '🩺 Dr.' : '🧑‍⚕️ Patient'} • ${timeStr}</div>
+                    </div>
+                </div>
+            `;
+        });
+        chatDiv.innerHTML = chatHtml;
+        chatDiv.scrollTop = chatDiv.scrollHeight;
+    }
+    
+    function selectConversation(reqId) {
+        const request = requestsDB.find(r => r.id === reqId);
+        if(!request) return;
+        selectedRequestId = reqId;
+        if(request.status !== 'approved') {
+            document.getElementById('chatMessagesArea').innerHTML = `<div class="empty-chat"><i class="fas fa-info-circle"></i> <br/>This request is ${request.status}. Only approved chats can message.</div>`;
+            document.getElementById('chatInputContainer').style.display = 'none';
+            document.getElementById('activeChatHeader').innerHTML = `<i class="fas fa-comment-slash"></i> ${escapeHtml(request.patientName)} (${request.status})`;
+        } else {
+            loadChatMessages(reqId);
+        }
+        renderRequestsList(); // re-render to highlight
+    }
+    
+    function showFloatingMsg(msg, isError = false) {
+        const feedbackDiv = document.getElementById('requestFeedback');
+        if(feedbackDiv) {
+            feedbackDiv.style.color = isError ? '#dc2626' : '#15803d';
+            feedbackDiv.innerText = msg;
+            setTimeout(()=> { if(feedbackDiv.innerText === msg) feedbackDiv.innerText = ''; }, 2500);
+        } else alert(msg);
+    }
+    
+    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+    
+    // Role switching logic (for demo both patient & doctor actions)
+    let currentRole = 'patient';
+    window.currentRole = 'patient';
+    function updateRoleUI() {
+        const roleBadge = document.getElementById('roleBadge');
+        if(roleBadge) {
+            roleBadge.innerHTML = currentRole === 'doctor' ? '👨‍⚕️ Doctor Mode (can approve)' : '👩‍⚕️ Patient Mode (send requests)';
+            roleBadge.style.cursor = 'pointer';
+        }
+        renderRequestsList(); // show approve/reject based on role
+        // also if chat open, message sender role is dynamic (patient or doctor)
+        if(selectedRequestId) {
+            const req = requestsDB.find(r=> r.id === selectedRequestId);
+            if(req && req.status === 'approved') {
+                loadChatMessages(selectedRequestId);
             }
         }
-
-        async function updateStatus(id, action) {
-            try {
-                await API.put(`/chat-permission/${action}/${id}`);
-                if(window.Toast) Toast.show('Request ' + action + 'd!', 'success');
-                else alert('Request ' + action + 'd!');
-                // Re-trigger search to refresh
-                document.getElementById('searchForm').dispatchEvent(new Event('submit'));
-            } catch(e) {
-                if(window.Toast) Toast.show('Failed to update request', 'error');
-                else alert('Failed to update request');
-            }
+    }
+    
+    function toggleRole() {
+        currentRole = currentRole === 'doctor' ? 'patient' : 'doctor';
+        window.currentRole = currentRole;
+        updateRoleUI();
+        showFloatingMsg(`Switched to ${currentRole === 'doctor' ? 'Doctor' : 'Patient'} mode`, false);
+    }
+    
+    // Event listeners & initialisation
+    document.addEventListener('DOMContentLoaded', () => {
+        loadData();
+        renderRequestsList();
+        updateRoleUI();
+        // send request button
+        const sendBtn = document.getElementById('sendRequestBtn');
+        if(sendBtn) {
+            sendBtn.addEventListener('click', () => {
+                const name = document.getElementById('patientName').value.trim();
+                const apt = document.getElementById('appointmentIdReq').value;
+                if(name && apt) sendChatRequest(name, parseInt(apt));
+                else showFloatingMsg("Enter name & appointment ID", true);
+            });
         }
-
-        function toggleMobileMenu() {
-            document.querySelector('.nav-menu')?.classList.toggle('active');
+        // send message button
+        const msgBtn = document.getElementById('sendMessageBtn');
+        const msgInput = document.getElementById('messageInput');
+        if(msgBtn) {
+            msgBtn.addEventListener('click', () => sendMessage(msgInput.value));
+            msgInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(msgInput.value); });
         }
-    </script>
+        // role toggle click on badge
+        const badge = document.getElementById('roleBadge');
+        if(badge) badge.addEventListener('click', toggleRole);
+        // default select first approved conversation if exists
+        const firstApproved = requestsDB.find(r => r.status === 'approved');
+        if(firstApproved) {
+            setTimeout(() => {
+                selectConversation(firstApproved.id);
+            }, 200);
+        }
+        // styling for message container
+    });
+</script>
 </body>
 </html>

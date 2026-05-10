@@ -11,5 +11,6 @@ backend/uploads/
 *.bin
 ai-service/data/vector_db/
 ai-service/data/medical_docs/
+ai-nurse-service/data/vector_db/
 __pycache__/
 *.pyc

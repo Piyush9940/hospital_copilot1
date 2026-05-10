@@ -1,11 +1,11 @@
 import db from "../config/db.js";
-import { createError, validateId, safeJsonStringify } from "../utils/helper.js";
+import { createError, validateId, validateStringId, safeJsonStringify } from "../utils/helper.js";
 
-const APPOINTMENT_STATUSES = ["requested", "confirmed", "cancelled", "completed", "no_show"];
+const APPOINTMENT_STATUSES = ["requested", "confirmed", "cancelled", "completed", "no-show"];
 const PAYMENT_STATUSES = ["pending", "paid", "failed", "refunded"];
-const VIDEO_CALL_STATUSES = ["not_started", "waiting", "active", "ended"];
+const VIDEO_CALL_STATUSES = ["pending", "joined", "completed", "missed"];
 const FACE_VERIFICATION_STATUSES = ["pending", "verified", "failed"];
-const CONSULTATION_TYPES = ["video", "in_person"];
+const CONSULTATION_TYPES = ["video", "audio", "chat", "in-person"];
 
 const getLocalDate = () => {
     const now = new Date();
@@ -53,7 +53,7 @@ export const createAppointment = (data) => {
             throw createError("Appointment data is required", 400);
         }
 
-        const patientId = validateId(data.patientId, "Patient ID");
+        const patientId = validateStringId(data.patientId, "Patient ID");
         const doctorId = validateId(data.doctorId, "Doctor ID");
         const nurseId = data.nurseId ? validateId(data.nurseId, "Nurse ID") : null;
 
@@ -119,7 +119,7 @@ export const createAppointment = (data) => {
             fee,
             paymentStatus,
             "requested",
-            "not_started",
+            "pending",
             "pending"
         );
     } catch (error) {
@@ -142,7 +142,7 @@ export const getAppointmentById = (id) => {
                    n.user_id AS nurse_user_id,
                    nur.name AS nurse_name
             FROM appointments a
-            JOIN patients p ON a.patient_id = p.id
+            JOIN patients p ON a.patient_id = p.patient_id
             JOIN users pat ON p.user_id = pat.id
             JOIN doctors d ON a.doctor_id = d.id
             JOIN users doc ON d.user_id = doc.id
@@ -159,7 +159,7 @@ export const getAppointmentById = (id) => {
 
 export const getAppointmentsByPatientId = (patientId) => {
     try {
-        const validPatientId = validateId(patientId, "Patient ID");
+        const validPatientId = validateStringId(patientId, "Patient ID");
 
         const stmt = db.prepare(`
             SELECT a.*, d.specialization, u.name AS doctor_name
@@ -183,7 +183,7 @@ export const getAppointmentsByDoctorId = (doctorId) => {
         const stmt = db.prepare(`
             SELECT a.*, p.user_id AS patient_user_id, u.name AS patient_name
             FROM appointments a
-            JOIN patients p ON a.patient_id = p.id
+            JOIN patients p ON a.patient_id = p.patient_id
             JOIN users u ON p.user_id = u.id
             WHERE a.doctor_id = ?
             ORDER BY a.appointment_date ASC, a.appointment_time ASC
@@ -309,7 +309,7 @@ export const getTodaysAppointments = (doctorId) => {
         const stmt = db.prepare(`
             SELECT a.*, p.user_id AS patient_user_id, u.name AS patient_name
             FROM appointments a
-            JOIN patients p ON a.patient_id = p.id
+            JOIN patients p ON a.patient_id = p.patient_id
             JOIN users u ON p.user_id = u.id
             WHERE a.doctor_id = ? AND a.appointment_date = ?
             ORDER BY a.appointment_time ASC

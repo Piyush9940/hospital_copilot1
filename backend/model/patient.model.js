@@ -1,5 +1,5 @@
 import db from "../config/db.js";
-import { createError, validateId } from "../utils/helper.js";
+import { createError, validateId, generateHashedPatientId, validateStringId } from "../utils/helper.js";
 
 export const createPatientProfile = (userId, age, gender, history, allergies, medications, bloodGroup, address, dateOfBirth) => {
     try {
@@ -24,8 +24,11 @@ export const createPatientProfile = (userId, age, gender, history, allergies, me
             throw createError("Gender is required", 400);
         }
 
+        const patientIdHash = generateHashedPatientId();
+
         const stmt = db.prepare(`
             INSERT INTO patients (
+                patient_id,
                 user_id,
                 age,
                 gender,
@@ -37,7 +40,7 @@ export const createPatientProfile = (userId, age, gender, history, allergies, me
                 date_of_birth,
                 created_at,
                 updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
             ON CONFLICT(user_id) DO UPDATE SET
                 age = excluded.age,
                 gender = excluded.gender,
@@ -51,6 +54,7 @@ export const createPatientProfile = (userId, age, gender, history, allergies, me
         `);
 
         return stmt.run(
+            patientIdHash,
             validUserId,
             validAge,
             normalizedGender,

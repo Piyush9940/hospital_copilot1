@@ -117,9 +117,11 @@
         </div>
     </div>
 
-    <script src="../js/localization.js?v=2"></script>
-    <script src="../js/config.js?v=2"></script>
-    <script src="../js/auth.js?v=2"></script>
+    <script src="../js/face-api.min.js"></script>
+    <script src="../js/face-auth.js?v=3"></script>
+    <script src="../js/localization.js?v=3"></script>
+    <script src="../js/config.js?v=4"></script>
+    <script src="../js/auth.js?v=4"></script>
 <script>
     if (!window.AuthManager) {
         console.error("AuthManager is not loaded. Check ../js/auth.js path.");
@@ -219,6 +221,8 @@
         }
     });
 
+    let globalDetectInterval = null;
+
     async function startFaceLogin(isTwoStep = false) {
         const videoContainer = document.getElementById('video-container');
         const videoElement = document.getElementById('video-feed');
@@ -226,68 +230,81 @@
         const role = document.querySelector('.role-btn.active').dataset.role;
 
         videoContainer.style.display = 'block';
-        statusText.textContent = 'Initializing camera...';
+        statusText.textContent = 'Initializing camera and face models...';
 
         try {
+            if (typeof window.LoadingOverlay !== 'undefined') window.LoadingOverlay.show();
+            await window.FaceAuth.loadFaceModels();
+            if (typeof window.LoadingOverlay !== 'undefined') window.LoadingOverlay.hide();
+
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
             videoElement.srcObject = stream;
-            statusText.textContent = 'Please look at the camera for 3 seconds...';
+            statusText.textContent = 'Please look at the camera. Detecting face...';
             
-            setTimeout(async () => {
-                statusText.textContent = 'Capturing...';
-                const canvas = document.createElement('canvas');
-                canvas.width = videoElement.videoWidth;
-                canvas.height = videoElement.videoHeight;
-                canvas.getContext('2d').drawImage(videoElement, 0, 0);
-                const faceImageBase64 = canvas.toDataURL('image/jpeg');
-                
-                stream.getTracks().forEach(track => track.stop());
-                videoContainer.style.display = 'none';
+            videoElement.onloadedmetadata = async () => {
+                if (globalDetectInterval) clearInterval(globalDetectInterval);
+                let attempts = 0;
+                globalDetectInterval = setInterval(async () => {
+                    attempts++;
+                    const descriptor = await window.FaceAuth.getFaceDescriptor(videoElement);
+                    if (descriptor) {
+                        clearInterval(globalDetectInterval);
+                        statusText.textContent = 'Face successfully captured! Authenticating...';
+                        
+                        stream.getTracks().forEach(track => track.stop());
+                        videoContainer.style.display = 'none';
 
-                try {
-                    if (typeof window.LoadingOverlay !== 'undefined') window.LoadingOverlay.show();
-                    
-                    let endpoint = "/auth/login";
-                    let payload = {};
-                    
-                    if (isTwoStep) {
-                        payload = {
-                            email: window.currentEmail,
-                            password: window.currentPassword,
-                            faceImageBase64
-                        };
-                    } else {
-                        // Just face login if the backend allows
-                        endpoint = "/auth/face-login";
-                        payload = { faceImageBase64, role };
+                        try {
+                            if (typeof window.LoadingOverlay !== 'undefined') window.LoadingOverlay.show();
+                            
+                            let endpoint = "/auth/login";
+                            let payload = {};
+                            
+                            if (isTwoStep) {
+                                payload = {
+                                    email: window.currentEmail,
+                                    password: window.currentPassword,
+                                    faceDescriptor: descriptor
+                                };
+                            } else {
+                                endpoint = "/auth/face-login";
+                                payload = { faceDescriptor: descriptor, role };
+                            }
+                            
+                            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload)
+                            });
+                            const data = await response.json();
+                            
+                            if (!response.ok || !data.success) {
+                                throw new Error(data.message || "Face login failed");
+                            }
+                            
+                            window.Auth.setSession(data.data.token, data.data.user, role);
+                            if (typeof window.Toast !== 'undefined') window.Toast.show("Face login successful!", "success");
+                            setTimeout(() => window.AuthManager.redirectBasedOnRole(), 700);
+                            
+                        } catch (error) {
+                            console.error("Face login error:", error);
+                            if (typeof window.Toast !== 'undefined') window.Toast.show(error.message || "Face login failed", "error");
+                        } finally {
+                            if (typeof window.LoadingOverlay !== 'undefined') window.LoadingOverlay.hide();
+                        }
+                    } else if (attempts > 30) {
+                        clearInterval(globalDetectInterval);
+                        statusText.textContent = 'Failed to detect face. Please try again.';
+                        stream.getTracks().forEach(track => track.stop());
+                        setTimeout(() => { videoContainer.style.display = 'none'; }, 3000);
                     }
-                    
-                    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    const data = await response.json();
-                    
-                    if (!response.ok || !data.success) {
-                        throw new Error(data.message || "Face login failed");
-                    }
-                    
-                    window.Auth.setSession(data.data.token, data.data.user, role);
-                    if (typeof window.Toast !== 'undefined') window.Toast.show("Face login successful!", "success");
-                    setTimeout(() => window.AuthManager.redirectBasedOnRole(), 700);
-                    
-                } catch (error) {
-                    console.error("Face login error:", error);
-                    if (typeof window.Toast !== 'undefined') window.Toast.show(error.message || "Face login failed", "error");
-                } finally {
-                    if (typeof window.LoadingOverlay !== 'undefined') window.LoadingOverlay.hide();
-                }
-            }, 3000);
+                }, 500);
+            };
             
         } catch (e) {
             console.error("Camera error:", e);
-            statusText.textContent = 'Failed to access camera.';
+            statusText.textContent = 'Failed to access camera or load models.';
+            if (typeof window.LoadingOverlay !== 'undefined') window.LoadingOverlay.hide();
         }
     }
 </script>

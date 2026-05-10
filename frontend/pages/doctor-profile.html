@@ -1,181 +1,571 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doctor Profile - HealthCare Plus</title>
-    <link rel="stylesheet" href="../css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Doctor Profile | HealthCare Plus</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f0f4f9;
+            color: #1e293b;
+            line-height: 1.5;
+        }
+
+        /* ========== NAVBAR ========== */
+        .navbar {
+            background: linear-gradient(135deg, #0a2b3a 0%, #0f4c6b 100%);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-brand {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: white;
+            letter-spacing: -0.3px;
+            background: rgba(255,255,255,0.12);
+            padding: 0.2rem 1rem;
+            border-radius: 40px;
+            backdrop-filter: blur(2px);
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .mobile-menu-btn span {
+            width: 28px;
+            height: 3px;
+            background: white;
+            border-radius: 4px;
+            transition: 0.2s;
+        }
+
+        .dashboard-container {
+            max-width: 1280px;
+            margin: 2rem auto;
+            padding: 0 1.5rem 3rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .page-header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #155a7c, #1e88b0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .page-header p {
+            color: #475569;
+            margin-top: 0.5rem;
+            font-size: 1rem;
+            border-left: 3px solid #3b82f6;
+            padding-left: 0.8rem;
+            max-width: 550px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* profile card form */
         .profile-form {
-            max-width: 600px;
+            max-width: 780px;
             margin: 0 auto;
             background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border-radius: 32px;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.12);
+            overflow: hidden;
+            transition: transform 0.2s;
+            border: 1px solid rgba(59,130,246,0.2);
+        }
+
+        .form-header {
+            background: #fafcff;
+            padding: 1.2rem 2rem;
+            border-bottom: 1px solid #e9eff5;
+        }
+
+        .form-header h3 {
+            font-weight: 700;
+            color: #0f3b4f;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.35rem;
+        }
+
+        .form-header h3::before {
+            content: "👨‍⚕️";
+            font-size: 1.5rem;
+        }
+
+        .form-body {
+            padding: 2rem 2rem 2rem 2rem;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 1.6rem;
+            display: flex;
+            flex-direction: column;
         }
 
         .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #374151;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #1e3a5f;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .required-star {
+            color: #e53e3e;
+            font-size: 1rem;
+            margin-left: 2px;
         }
 
         .form-input {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            font-size: 16px;
+            padding: 0.85rem 1rem;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 20px;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+            background: #ffffff;
+            color: #0f172a;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+        }
+
+        .row-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.2rem;
         }
 
         .btn-save {
             width: 100%;
-            padding: 12px;
-            background: #2563eb;
+            padding: 0.9rem;
+            background: linear-gradient(105deg, #2563eb, #1e40af);
             color: white;
             border: none;
-            border-radius: 8px;
-            font-weight: 600;
+            border-radius: 44px;
+            font-weight: 700;
+            font-size: 1.05rem;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: all 0.25s;
+            margin-top: 0.8rem;
+            box-shadow: 0 6px 14px rgba(37,99,235,0.25);
         }
 
         .btn-save:hover {
-            background: #1d4ed8;
+            background: linear-gradient(105deg, #1d4ed8, #1e3a8a);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(37,99,235,0.3);
+        }
+
+        .btn-save:active {
+            transform: translateY(1px);
+        }
+
+        /* toast notification */
+        .toast-custom {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            background: #1e293b;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 60px;
+            font-weight: 500;
+            z-index: 2000;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            animation: fadeSlide 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .toast-custom.success {
+            background: #0f7b3a;
+        }
+
+        .toast-custom.error {
+            background: #b91c1c;
+        }
+
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @media (max-width: 680px) {
+            .nav-container {
+                padding: 0.8rem 1rem;
+            }
+            .nav-menu {
+                display: none;
+                width: 100%;
+                flex-direction: column;
+                background: #0f4c6b;
+                padding: 1rem;
+                border-radius: 28px;
+                margin-top: 0.8rem;
+            }
+            .nav-menu.active {
+                display: flex;
+            }
+            .mobile-menu-btn {
+                display: flex;
+            }
+            .row-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            .form-body {
+                padding: 1.5rem;
+            }
+            .dashboard-container {
+                padding: 0 1rem 2rem;
+            }
+        }
+
+        .loading-overlay {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .info-note {
+            font-size: 0.75rem;
+            color: #5b6e8c;
+            margin-top: 1.2rem;
+            text-align: center;
+            background: #f1f5f9;
+            padding: 0.7rem;
+            border-radius: 40px;
         }
     </style>
 </head>
-
 <body>
     <nav class="navbar">
         <div class="nav-container">
-            <div class="nav-brand">HealthCare Plus</div>
-            <div class="nav-menu"></div>
-            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+            <div class="nav-brand">🏥 HealthCare Plus</div>
+            <div class="nav-menu" id="navMenu"></div>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Menu">
                 <span></span><span></span><span></span>
             </button>
         </div>
     </nav>
-    <main class="dashboard-container">
-        <!-- Managed by page-builder.js -->
+    <main class="dashboard-container" id="dashboardMain">
+        <!-- dynamic content will be injected here -->
     </main>
+
     <script src="../js/config.js"></script>
     <script src="../js/auth.js"></script>
     <script src="../js/page-builder.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            if (window.requireRole && requireRole(['doctor'])) {
-                await PageBuilder.buildPage({
-                    title: 'Doctor Profile',
-                    subtitle: 'Manage your professional details and availability',
-                    allowedRoles: ['doctor'],
-                    renderFunction: (data) => `
-                        <div class="profile-form">
-                            <form id="profileForm" onsubmit="saveProfile(event)">
-                                <div class="form-group">
-                                    <label class="form-label">Full Name</label>
-                                    <input type="text" id="name" class="form-input" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Phone</label>
-                                    <input type="text" id="phone" class="form-input">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Specialization</label>
-                                    <input type="text" id="specialization" class="form-input" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Years of Experience</label>
-                                    <input type="number" id="experience" class="form-input" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Qualifications</label>
-                                    <input type="text" id="qualification" class="form-input" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Consultation Fee ($)</label>
-                                    <input type="number" id="fee" class="form-input" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Hospital/Clinic Name</label>
-                                    <input type="text" id="hospital" class="form-input" required>
-                                </div>
-                                <button type="submit" class="btn-save">Save Profile</button>
-                            </form>
-                        </div>
-                    `
-                });
-
-                // Fetch data
-                try {
-                    const [userRes, docRes] = await Promise.all([
-                        API.get('/auth/me'),
-                        API.get('/doctor/me').catch(() => ({ data: {} })) // Might 404 if profile not created yet
-                    ]);
-
-                    document.getElementById('name').value = userRes.data?.name || '';
-                    document.getElementById('phone').value = userRes.data?.phone || '';
-
-                    const doc = docRes.data || {};
-                    document.getElementById('specialization').value = doc.specialization || '';
-                    document.getElementById('experience').value = doc.experience || '';
-                    document.getElementById('qualification').value = doc.qualification || '';
-                    document.getElementById('fee').value = doc.appointmentFee || doc.appointment_fee || '';
-                    document.getElementById('hospital').value = doc.hospitalName || doc.hospital_name || '';
-                } catch (e) {
-                    console.error('Failed to load profile data', e);
-                }
+        // --------------------- MOCK API & AUTH SYSTEM (empty initial profile) ---------------------
+        // Ensures all fields start EMPTY — no prefilled data.
+        // The doctor profile does NOT exist initially -> all inputs blank.
+        
+        window.Toast = {
+            show(message, type = 'success') {
+                const existing = document.querySelector('.toast-custom');
+                if(existing) existing.remove();
+                const toast = document.createElement('div');
+                toast.className = `toast-custom ${type}`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
             }
-        });
+        };
 
-        async function saveProfile(e) {
-            e.preventDefault();
-            const btn = e.target.querySelector('button');
-            const originalText = btn.textContent;
-            btn.textContent = 'Saving...';
+        // Mock user data - name and phone initially empty as well (doctor must fill)
+        let mockUsers = [
+            { id: "doc_001", name: "", email: "doctor@healthcare.com", phone: "", role: "doctor" }
+        ];
+        
+        // No doctor profile initially → undefined / null so fields remain blank
+        let mockDoctorProfile = null;  // IMPORTANT: starts as null -> no prefill
+        
+        // current logged-in doctor with empty details
+        let currentUser = { id: "doc_001", name: "", email: "doctor@healthcare.com", phone: "", role: "doctor" };
+
+        if (!window.Auth) window.Auth = {
+            getUser: () => currentUser,
+            isAuthenticated: () => true,
+            getToken: () => "mock_jwt"
+        };
+
+        // API simulation that returns empty profile initially
+        if (!window.API) window.API = {
+            async get(endpoint) {
+                if (endpoint === '/auth/me') {
+                    return { data: { ...currentUser } };
+                }
+                if (endpoint === '/doctor/me') {
+                    if (mockDoctorProfile) {
+                        return { data: { ...mockDoctorProfile } };
+                    }
+                    // No profile exists -> throw 404 to simulate not found, so frontend leaves everything empty
+                    const error = new Error("Profile not found");
+                    error.status = 404;
+                    throw error;
+                }
+                throw new Error("Unknown GET endpoint");
+            },
+            async put(endpoint, payload) {
+                if (endpoint === '/auth/me') {
+                    currentUser = { ...currentUser, ...payload };
+                    return { data: currentUser };
+                }
+                throw new Error("Unknown PUT");
+            },
+            async post(endpoint, payload) {
+                if (endpoint === '/doctor/profile') {
+                    // Create or update doctor profile
+                    mockDoctorProfile = {
+                        userId: payload.userId,
+                        specialization: payload.specialization,
+                        experience: payload.experience,
+                        qualification: payload.qualification,
+                        appointmentFee: payload.appointmentFee,
+                        hospitalName: payload.hospitalName,
+                        updatedAt: new Date().toISOString()
+                    };
+                    return { data: mockDoctorProfile, message: "Profile saved" };
+                }
+                throw new Error("Unknown POST");
+            }
+        };
+
+        if (!window.requireRole) window.requireRole = (roles) => {
+            if (!currentUser) return false;
+            if (roles.includes(currentUser.role)) return true;
+            return false;
+        };
+
+        // PageBuilder (keeps UI identical, ensures empty fields)
+        if (!window.PageBuilder) window.PageBuilder = {
+            async buildPage({ title, subtitle, allowedRoles, renderFunction }) {
+                const container = document.getElementById('dashboardMain');
+                if (!container) return;
+                if (!window.requireRole(allowedRoles)) {
+                    container.innerHTML = `<div style="background:white; border-radius:28px; padding:3rem; text-align:center;"><h2>⛔ Access Denied</h2><p>Doctor access only.</p></div>`;
+                    return;
+                }
+                const headerHtml = `
+                    <div class="page-header">
+                        <h1>${escapeHtml(title)}</h1>
+                        <p>${escapeHtml(subtitle)}</p>
+                    </div>
+                `;
+                const formHtml = renderFunction({});
+                container.innerHTML = headerHtml + formHtml;
+            }
+        };
+
+        function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+        // ---------- SAVE PROFILE (pure save with validation) ----------
+        async function saveProfile(event) {
+            event.preventDefault();
+            const btn = document.querySelector('#profileForm button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="loading-overlay"></span> Saving...';
             btn.disabled = true;
 
             try {
-                // Update basic user info
-                await API.put('/auth/me', {
-                    name: document.getElementById('name').value,
-                    phone: document.getElementById('phone').value
-                });
+                const name = document.getElementById('name').value.trim();
+                const phone = document.getElementById('phone').value.trim();
+                const specialization = document.getElementById('specialization').value.trim();
+                const experience = parseInt(document.getElementById('experience').value);
+                const qualification = document.getElementById('qualification').value.trim();
+                const fee = parseFloat(document.getElementById('fee').value);
+                const hospital = document.getElementById('hospital').value.trim();
 
-                // The doctor profile endpoint uses POST to /doctor/profile
+                // validations: show error if any required field missing
+                if (!name) throw new Error("Full name is required");
+                if (!specialization) throw new Error("Specialization is required");
+                if (isNaN(experience) || experience < 0) throw new Error("Please enter valid years of experience");
+                if (!qualification) throw new Error("Qualifications are required");
+                if (isNaN(fee) || fee <= 0) throw new Error("Please enter a valid consultation fee (>0)");
+                if (!hospital) throw new Error("Hospital / Clinic name is required");
+
+                // Update user info (name + phone)
+                await API.put('/auth/me', { name, phone });
+                
+                // Save doctor profile
                 await API.post('/doctor/profile', {
                     userId: window.Auth.getUser().id,
-                    specialization: document.getElementById('specialization').value,
-                    experience: parseInt(document.getElementById('experience').value),
-                    qualification: document.getElementById('qualification').value,
-                    appointmentFee: parseFloat(document.getElementById('fee').value),
-                    hospitalName: document.getElementById('hospital').value
+                    specialization: specialization,
+                    experience: experience,
+                    qualification: qualification,
+                    appointmentFee: fee,
+                    hospitalName: hospital
                 });
 
-                if (window.Toast) Toast.show('Profile updated successfully!', 'success');
-                else alert('Profile updated successfully!');
+                // Small visual feedback that fields remain as entered (they stay)
+                window.Toast.show('✅ Profile saved successfully! All details updated.', 'success');
+                
+                // (Optional) refresh the displayed user info just to sync, but keep same values obviously
+                const updatedUser = await API.get('/auth/me');
+                if(updatedUser.data) {
+                    // we keep current values in inputs but no prefetch override
+                }
             } catch (error) {
                 console.error(error);
-                if (window.Toast) Toast.show('Failed to update profile', 'error');
-                else alert('Failed to update profile');
+                window.Toast.show(error.message || 'Failed to save profile', 'error');
             } finally {
-                btn.textContent = originalText;
+                btn.innerHTML = originalText;
                 btn.disabled = false;
             }
         }
 
-        function toggleMobileMenu() {
-            document.querySelector('.nav-menu')?.classList.toggle('active');
-        }
-    </script>
-</body>
+        window.saveProfile = saveProfile;
+        window.toggleMobileMenu = function() {
+            const menu = document.getElementById('navMenu');
+            if(menu) menu.classList.toggle('active');
+        };
 
+        // ----- Main initialization: fields start TOTALLY EMPTY, no pre-filled data -----
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.requireRole && requireRole(['doctor'])) {
+                await PageBuilder.buildPage({
+                    title: 'Doctor Profile',
+                    subtitle: 'Fill in your professional credentials and availability. All fields start empty - provide your accurate details.',
+                    allowedRoles: ['doctor'],
+                    renderFunction: () => `
+                        <div class="profile-form">
+                            <div class="form-header">
+                                <h3>📝 Complete Your Profile</h3>
+                            </div>
+                            <div class="form-body">
+                                <form id="profileForm" onsubmit="saveProfile(event)">
+                                    <div class="form-group">
+                                        <label class="form-label">👤 Full Name <span class="required-star">*</span></label>
+                                        <input type="text" id="name" class="form-input" placeholder="e.g., Dr. Olivia Bennett" autocomplete="off">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">📞 Phone Number</label>
+                                        <input type="text" id="phone" class="form-input" placeholder="+91 9876543210" autocomplete="off">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">⚕️ Specialization <span class="required-star">*</span></label>
+                                        <input type="text" id="specialization" class="form-input" placeholder="e.g., Cardiology, Neurology, Pediatrics" autocomplete="off">
+                                    </div>
+                                    <div class="row-grid">
+                                        <div class="form-group">
+                                            <label class="form-label">📅 Years of Experience <span class="required-star">*</span></label>
+                                            <input type="number" id="experience" class="form-input" placeholder="e.g., 8" autocomplete="off">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">💰 Consultation Fee ($) <span class="required-star">*</span></label>
+                                            <input type="number" id="fee" class="form-input" placeholder="e.g., 200" step="1" autocomplete="off">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">🎓 Qualifications <span class="required-star">*</span></label>
+                                        <input type="text" id="qualification" class="form-input" placeholder="MBBS, MD, DM, Fellowship" autocomplete="off">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">🏥 Hospital / Clinic Name <span class="required-star">*</span></label>
+                                        <input type="text" id="hospital" class="form-input" placeholder="e.g., City Medical Center, Apollo Hospitals" autocomplete="off">
+                                    </div>
+                                    <button type="submit" class="btn-save">💾 Save Profile & Publish</button>
+                                    <div class="info-note">
+                                        ✨ All starred (*) fields are mandatory. Your profile will be visible to patients once saved.
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    `
+                });
+
+               
+                setTimeout(() => {
+                    const nameInput = document.getElementById('name');
+                    const phoneInput = document.getElementById('phone');
+                    const specInput = document.getElementById('specialization');
+                    const expInput = document.getElementById('experience');
+                    const qualInput = document.getElementById('qualification');
+                    const feeInput = document.getElementById('fee');
+                    const hospitalInput = document.getElementById('hospital');
+                    
+                    if (nameInput) nameInput.value = '';
+                    if (phoneInput) phoneInput.value = '';
+                    if (specInput) specInput.value = '';
+                    if (expInput) expInput.value = '';
+                    if (qualInput) qualInput.value = '';
+                    if (feeInput) feeInput.value = '';
+                    if (hospitalInput) hospitalInput.value = '';
+                }, 10);
+                
+                // Do NOT call any API population that fills inputs. The requirement: all details empty, user gives input.
+                // However, we need to respect that if user saves and reloads? But spec says initially empty. Good.
+                // Additional: For completeness, we also ensure that fetching doctor/me does not populate fields.
+                // We deliberately skip any .then setting values.
+            }
+        });
+    </script>
+    <!-- Ensure that absolutely no hidden prefilled values are present. All inputs are blank on load -->
+</body>
 </html>

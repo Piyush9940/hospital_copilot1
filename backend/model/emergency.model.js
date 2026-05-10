@@ -1,13 +1,13 @@
 import db from "../config/db.js";
 import { createError, validateId } from "../utils/helper.js";
 
-const ALERT_STATUSES = ["pending", "acknowledged", "resolved"];
+const ALERT_STATUSES = ["active", "acknowledged", "resolved", "false-alarm"];
 
-export const createEmergencyAlert = (patientId, message, status = "pending") => {
+export const createEmergencyAlert = (patientId, message, status = "active") => {
     try {
-        const validPatientId = validateId(patientId, "Patient ID");
+        const validPatientId = patientId; // It's a string, e.g. PAT-123
         const normalizedMessage = typeof message === "string" ? message.trim() : "";
-        const normalizedStatus = typeof status === "string" ? status.trim() : "pending";
+        const normalizedStatus = typeof status === "string" ? status.trim() : "active";
 
         if (!normalizedMessage) {
             throw createError("Emergency message is required", 400);
@@ -33,9 +33,9 @@ export const getPendingAlerts = () => {
         const stmt = db.prepare(`
             SELECT e.*, u.name AS patient_name, u.email AS patient_email
             FROM emergency_alerts e
-            JOIN patients p ON e.patient_id = p.id
+            JOIN patients p ON e.patient_id = p.patient_id
             JOIN users u ON p.user_id = u.id
-            WHERE e.status = 'pending'
+            WHERE e.status = 'active'
             ORDER BY e.created_at DESC
         `);
 
@@ -56,7 +56,7 @@ export const getAlertsByStatus = (status) => {
         const stmt = db.prepare(`
             SELECT e.*, u.name AS patient_name, u.email AS patient_email
             FROM emergency_alerts e
-            JOIN patients p ON e.patient_id = p.id
+            JOIN patients p ON e.patient_id = p.patient_id
             JOIN users u ON p.user_id = u.id
             WHERE e.status = ?
             ORDER BY e.created_at DESC
@@ -70,7 +70,7 @@ export const getAlertsByStatus = (status) => {
 
 export const getAlertsByPatientId = (patientId) => {
     try {
-        const validPatientId = validateId(patientId, "Patient ID");
+        const validPatientId = patientId; // It's a string
 
         const stmt = db.prepare(`
             SELECT *

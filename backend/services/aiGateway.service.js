@@ -4,7 +4,7 @@ import FormData from "form-data";
 import { createError, sanitize } from "../utils/helper.js";
 
 const AI_NURSE_BASE_URL =
-    process.env.AI_NURSE_BASE_URL || "https://piyush9940-hospital-copilot-ai-service.hf.space";
+    process.env.AI_NURSE_BASE_URL || "http://127.0.0.1:7860";
 
 const AI_NURSE_TIMEOUT = Number(process.env.AI_NURSE_TIMEOUT || 120000);
 
@@ -86,6 +86,7 @@ export const chatWithAiNurse = async ({
     history = [],
     context = {},
     language = "en",
+    attachments = [],
 }) => {
     try {
         const normalizedMessage = sanitize(message);
@@ -103,6 +104,7 @@ export const chatWithAiNurse = async ({
                 typeof language === "string" && language.trim()
                     ? language.trim()
                     : "en",
+            attachments: Array.isArray(attachments) ? attachments : [],
         };
 
         console.log("chatWithAiNurse called");

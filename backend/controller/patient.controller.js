@@ -39,6 +39,7 @@ const normalizePatient = (patient) => {
 
     return {
         id: patient.id || null,
+        patientId: patient.patient_id || null,
         userId: patient.user_id || null,
         age: patient.age ?? null,
         gender: patient.gender || null,

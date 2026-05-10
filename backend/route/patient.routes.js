@@ -27,6 +27,7 @@ const router = express.Router();
 router.post(
     "/profile",
     authMiddleware,
+    roleMiddleware("patient"),
     [
         body("userId").notEmpty().withMessage("userId is required"),
         body("age").notEmpty().withMessage("age is required"),

@@ -470,11 +470,7 @@
                 <label><i class="fas fa-user-injured"></i> Patient Name *</label>
                 <select class="form-input" id="patientSelect">
                     <option value="">-- Select patient --</option>
-                    <option>Emily Rodriguez</option>
-                    <option>James O'Connor</option>
-                    <option>Olivia Chen</option>
-                    <option>William Harper</option>
-                    <option>Isabella Martinez</option>
+                    <option value="1" disabled>Loading patients...</option>
                 </select>
             </div>
             <div class="form-group">
@@ -533,7 +529,7 @@
     <script>
         class ReportsManager {
             constructor() {
-                this.reports = [];
+                this.patients = [];
                 this.init();
             }
 
@@ -541,16 +537,36 @@
                 if (window.requireRole && !requireRole(['doctor', 'nurse', 'admin'])) return;
                 
                 try {
-                    const res = await API.get('/reports');
-                    this.reports = res?.data || res || [];
+                    // Fetch both reports and patients concurrently
+                    const [reportsRes, patientsRes] = await Promise.all([
+                        API.get('/reports'),
+                        API.get('/patient')
+                    ]);
+                    this.reports = reportsRes?.data || reportsRes || [];
+                    this.patients = patientsRes?.data || patientsRes || [];
+                    this.populatePatientSelect();
                 } catch (e) {
-                    console.error('Failed to fetch reports', e);
+                    console.error('Failed to fetch data', e);
                     this.reports = [];
                 }
                 
                 this.renderReports();
                 this.attachEventListeners();
                 this.setupDashboardToggle();
+            }
+
+            populatePatientSelect() {
+                const patientSelect = document.getElementById('patientSelect');
+                if (!patientSelect || !this.patients.length) {
+                    if (patientSelect) patientSelect.innerHTML = '<option value="">-- No patients found --</option>';
+                    return;
+                }
+                
+                patientSelect.innerHTML = '<option value="">-- Select patient --</option>' + 
+                    this.patients.map(p => {
+                        const name = p.name || p.user_name || 'Unknown Patient';
+                        return `<option value="${p.id || p.patient_id}">${name}</option>`;
+                    }).join('');
             }
 
             attachEventListeners() {
@@ -695,9 +711,10 @@
                 
                 // Construct summary from prescription and notes
                 const summary = `Prescription: ${prescription || 'N/A'}\nNotes: ${notes || '—'}`;
-                // Assuming patient value is an ID or we match it; here we just use what's typed or selected
-                // If it's a demo string, we map it to 1 for fallback, or use the real select value if implemented
-                const patientId = 1; // Replace with dynamic patientId picker value
+                
+                // Get the actual selected patient ID
+                const patientId = document.getElementById('patientSelect').value;
+                const patientName = document.getElementById('patientSelect').options[document.getElementById('patientSelect').selectedIndex].text;
 
                 try {
                     const newReport = await API.post('/reports', {
@@ -709,7 +726,7 @@
                     // Format response into local model
                     const localReport = {
                         id: newReport?.data?.id || Date.now(),
-                        patient: patient,
+                        patient: patientName,
                         type: typeKey,
                         diagnosis: diagnosis,
                         prescription: prescription || 'N/A',

@@ -52,7 +52,7 @@ export const register = async (req, res, next) => {
             typeof req.body?.profileImage === "string" && req.body.profileImage.trim()
                 ? req.body.profileImage.trim()
                 : null;
-        const faceImageBase64 = req.body?.faceImageBase64 || null;
+        const faceDescriptorInput = req.body?.faceDescriptor || null;
         let faceDescriptor = null;
 
         if (!name) throw createError("Name is required", 400);
@@ -72,31 +72,8 @@ export const register = async (req, res, next) => {
             throw createError("User with this email already exists", 409);
         }
         
-        if (faceImageBase64) {
-            try {
-                const base64Data = faceImageBase64.replace(/^data:image\/\w+;base64,/, "");
-                const buffer = Buffer.from(base64Data, 'base64');
-                const blob = new Blob([buffer], { type: 'image/jpeg' });
-                const formData = new FormData();
-                formData.append('file', blob, 'face.jpg');
-                
-                const aiResponse = await fetch(`${process.env.AI_SERVICE_URL || 'https://piyush9940-hospital-copilot-ai-service.hf.space'}/face/register`, {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                if (!aiResponse.ok) {
-                    throw new Error("Face registration failed from AI service");
-                }
-                
-                const aiData = await aiResponse.json();
-                if (aiData.success && aiData.embedding) {
-                    faceDescriptor = { path: null, embedding: aiData.embedding };
-                }
-            } catch (err) {
-                console.error("Face registration error:", err);
-                throw createError("Failed to process face image: " + err.message, 400);
-            }
+        if (faceDescriptorInput && Array.isArray(faceDescriptorInput)) {
+            faceDescriptor = { path: null, embedding: faceDescriptorInput };
         }
 
         const saltRounds = Number(process.env.BCRYPT_SALT_ROUNDS || 10);
@@ -165,9 +142,15 @@ export const login = async (req, res, next) => {
         const email = validateEmail(req.body?.email);
         const password =
             typeof req.body?.password === "string" ? req.body.password.trim() : "";
+        const requestedRole =
+            typeof req.body?.role === "string" ? req.body.role.trim().toLowerCase() : "";
 
         if (!password) {
             throw createError("Password is required", 400);
+        }
+
+        if (!["patient", "doctor", "nurse"].includes(requestedRole)) {
+            throw createError("Please select a valid role before logging in", 400);
         }
 
         const user = findUserByEmail(email);
@@ -180,41 +163,27 @@ export const login = async (req, res, next) => {
             throw createError("Your account is inactive", 403);
         }
 
+        if (String(user.role || "").toLowerCase() !== requestedRole) {
+            throw createError(
+                `This account is registered as ${user.role}. Please choose the ${user.role} role to log in.`,
+                403
+            );
+        }
+
         const isPasswordValid = await bcrypt.compare(password, user.password);
 
         if (!isPasswordValid) {
             throw createError("Invalid email or password", 401);
         }
 
-        if (user.face_registered === 1) {
-            const faceImageBase64 = req.body?.faceImageBase64;
-            if (!faceImageBase64) {
-                return res.status(200).json({
-                    success: true,
-                    requiresFace: true,
-                    message: "Face verification required. Please look at the camera."
-                });
-            }
-            
+        const faceDescriptorInput = req.body?.faceDescriptor;
+        if (user.face_registered === 1 && Array.isArray(faceDescriptorInput)) {
             try {
-                const base64Data = faceImageBase64.replace(/^data:image\/\w+;base64,/, "");
-                const buffer = Buffer.from(base64Data, 'base64');
-                const blob = new Blob([buffer], { type: 'image/jpeg' });
-                const formData = new FormData();
-                formData.append('file', blob, 'face.jpg');
-                formData.append('target_embedding', user.face_embedding_json);
+                const storedEmbedding = JSON.parse(user.face_embedding_json);
+                const distance = calculateEuclideanDistance(faceDescriptorInput, storedEmbedding);
                 
-                const verifyResponse = await fetch(`${process.env.AI_SERVICE_URL || 'https://piyush9940-hospital-copilot-ai-service.hf.space'}/face/verify`, {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                if (!verifyResponse.ok) {
-                    throw new Error("Face verification failed from AI service");
-                }
-                
-                const verifyData = await verifyResponse.json();
-                if (!verifyData.success || !verifyData.match) {
+                // Using 0.6 threshold for face-api.js
+                if (distance > 0.6) {
                     throw createError("Face verification failed: Not a match", 401);
                 }
             } catch (err) {
@@ -253,75 +222,49 @@ export const login = async (req, res, next) => {
     }
 };
 
-const calculateCosineSimilarity = (emb1, emb2) => {
-    if (emb1.length !== emb2.length) return 0;
-    let dotProduct = 0;
-    let normA = 0;
-    let normB = 0;
+const calculateEuclideanDistance = (emb1, emb2) => {
+    if (emb1.length !== emb2.length) return Infinity;
+    let sum = 0;
     for (let i = 0; i < emb1.length; i++) {
-        dotProduct += emb1[i] * emb2[i];
-        normA += emb1[i] * emb1[i];
-        normB += emb2[i] * emb2[i];
+        const diff = emb1[i] - emb2[i];
+        sum += diff * diff;
     }
-    if (normA === 0 || normB === 0) return 0;
-    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+    return Math.sqrt(sum);
 };
 
 export const faceLogin = async (req, res, next) => {
     try {
-        const faceImageBase64 = req.body?.faceImageBase64;
+        const faceDescriptorInput = req.body?.faceDescriptor;
         const role = typeof req.body?.role === "string" ? req.body.role.trim().toLowerCase() : "";
 
-        if (!faceImageBase64) {
-            throw createError("Face image is required", 400);
+        if (!faceDescriptorInput || !Array.isArray(faceDescriptorInput)) {
+            throw createError("Face descriptor is required", 400);
         }
         if (!ALLOWED_ROLES.includes(role)) {
             throw createError(`Invalid role. Allowed values: ${ALLOWED_ROLES.join(", ")}`, 400);
         }
 
-        // 1. Get embedding from AI service
-        let currentEmbedding = null;
-        try {
-            const base64Data = faceImageBase64.replace(/^data:image\/\w+;base64,/, "");
-            const buffer = Buffer.from(base64Data, 'base64');
-            const blob = new Blob([buffer], { type: 'image/jpeg' });
-            const formData = new FormData();
-            formData.append('file', blob, 'face.jpg');
-            
-            const aiResponse = await fetch(`${process.env.AI_SERVICE_URL || 'https://piyush9940-hospital-copilot-ai-service.hf.space'}/face/register`, {
-                method: 'POST',
-                body: formData
-            });
-            
-            if (!aiResponse.ok) {
-                throw new Error("AI service failed to process face image");
-            }
-            
-            const aiData = await aiResponse.json();
-            if (!aiData.success || !aiData.embedding) {
-                throw new Error("No embedding returned from AI service");
-            }
-            currentEmbedding = aiData.embedding;
-        } catch (err) {
-            console.error("Face login extraction error:", err);
-            throw createError("Failed to extract face features: " + err.message, 400);
-        }
+        const currentEmbedding = faceDescriptorInput;
 
         // 2. Fetch users with faces
         const usersStmt = db.prepare('SELECT id, email, role, face_embedding_json FROM users WHERE role = ? AND is_active = 1 AND face_embedding_json IS NOT NULL');
         const users = usersStmt.all(role);
 
-        // 3. Find best match using Cosine Similarity
+        if (!users.length) {
+            throw createError(`No face-registered ${role} account was found`, 404);
+        }
+
+        // 3. Find best match using Euclidean Distance
         let bestMatch = null;
-        let maxSimilarity = -1;
-        const SIMILARITY_THRESHOLD = 0.50; // Buffalo_L threshold
+        let minDistance = Infinity;
+        const DISTANCE_THRESHOLD = 0.60; // face-api.js threshold
 
         for (const u of users) {
             try {
                 const storedEmbedding = JSON.parse(u.face_embedding_json);
-                const similarity = calculateCosineSimilarity(currentEmbedding, storedEmbedding);
-                if (similarity > maxSimilarity) {
-                    maxSimilarity = similarity;
+                const distance = calculateEuclideanDistance(currentEmbedding, storedEmbedding);
+                if (distance < minDistance) {
+                    minDistance = distance;
                     bestMatch = u;
                 }
             } catch(e) {
@@ -329,7 +272,7 @@ export const faceLogin = async (req, res, next) => {
             }
         }
 
-        if (!bestMatch || maxSimilarity < SIMILARITY_THRESHOLD) {
+        if (!bestMatch || minDistance > DISTANCE_THRESHOLD) {
             throw createError("Face not recognized", 401);
         }
 

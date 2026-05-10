@@ -85,8 +85,8 @@ class PageBuilder {
 
     async fetchPageData() {
         const endpoints = {
-            'appointment-list.html': '/doctors',
-            'appointment-book.html': '/doctors/:id',
+            'appointment-list.html': '/doctor/list',
+            'appointment-book.html': '/doctor/:id',
             'patient-reports.html': '/reports?patientId=me',
             'patient-vitals.html': '/vitals?patientId=me',
             'doctor-appointments.html': '/doctor-appointments',

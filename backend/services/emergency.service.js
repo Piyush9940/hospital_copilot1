@@ -10,9 +10,9 @@ import {
 
 import { getPatientByUserId } from "../model/patient.model.js";
 import { sendEmergencyAlertSms } from "../config/twilio.js";
-import { createError, validateId, sanitize } from "../utils/helper.js";
+import { createError, validateId, validateStringId, sanitize } from "../utils/helper.js";
 
-const ALLOWED_ALERT_STATUSES = ["pending", "acknowledged", "resolved"];
+const ALLOWED_ALERT_STATUSES = ["active", "acknowledged", "resolved", "false-alarm"];
 
 /**
  * Normalize alert object
@@ -61,10 +61,10 @@ const validateAlertStatus = (status) => {
 export const createEmergencyAlertRecord = ({
     patientId,
     message,
-    status = "pending",
+    status = "active",
 }) => {
     try {
-        const validPatientId = validateId(patientId, "Patient ID");
+        const validPatientId = validateStringId(patientId, "Patient ID");
         const normalizedMessage = sanitize(message);
         const normalizedStatus = validateAlertStatus(status);
 
@@ -124,9 +124,9 @@ export const createEmergencyAlertByUserId = ({ userId, message }) => {
         }
 
         return createEmergencyAlertRecord({
-            patientId: patient.id,
+            patientId: patient.patient_id,
             message,
-            status: "pending",
+            status: "active",
         });
     } catch (error) {
         throw createError(
@@ -192,7 +192,7 @@ export const getEmergencyAlertsByStatus = ({ status }) => {
  */
 export const getPatientEmergencyAlerts = ({ patientId }) => {
     try {
-        const validPatientId = validateId(patientId, "Patient ID");
+        const validPatientId = validateStringId(patientId, "Patient ID");
         const alerts = getAlertsByPatientId(validPatientId) || [];
 
         return {
@@ -224,7 +224,7 @@ export const getEmergencyAlertsByUserId = ({ userId }) => {
             throw createError("Patient profile not found", 404);
         }
 
-        const alerts = getAlertsByPatientId(patient.id) || [];
+        const alerts = getAlertsByPatientId(patient.patient_id) || [];
 
         return {
             success: true,

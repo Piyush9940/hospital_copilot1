@@ -1,9 +1,11 @@
 import db from "../config/db.js";
-import { createError, validateId } from "../utils/helper.js";
+import { createError, validateId, validateStringId } from "../utils/helper.js";
 
-export const createReport = (patientId, diagnosis, summary, pdfPath) => {
+export const createReport = (patientId, doctorId, title, diagnosis, summary, pdfPath) => {
     try {
-        const validPatientId = validateId(patientId, "Patient ID");
+        const validPatientId = validateStringId(patientId, "Patient ID");
+        const validDoctorId = validateId(doctorId, "Doctor ID");
+        const normalizedTitle = typeof title === "string" ? title.trim() : "Medical Report";
         const normalizedDiagnosis = typeof diagnosis === "string" ? diagnosis.trim() : "";
         const normalizedSummary = typeof summary === "string" ? summary.trim() : "";
         const normalizedPdfPath = typeof pdfPath === "string" ? pdfPath.trim() : "";
@@ -13,11 +15,11 @@ export const createReport = (patientId, diagnosis, summary, pdfPath) => {
         if (!normalizedPdfPath) throw createError("PDF path is required", 400);
 
         const stmt = db.prepare(`
-            INSERT INTO reports (patient_id, diagnosis, summary, pdf_path, created_at, updated_at)
-            VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            INSERT INTO reports (patient_id, doctor_id, title, diagnosis, summary, pdf_url, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         `);
 
-        return stmt.run(validPatientId, normalizedDiagnosis, normalizedSummary, normalizedPdfPath);
+        return stmt.run(validPatientId, validDoctorId, normalizedTitle, normalizedDiagnosis, normalizedSummary, normalizedPdfPath);
     } catch (error) {
         throw createError(error.message || "Failed to create report", error.statusCode || 500);
     }
@@ -25,7 +27,7 @@ export const createReport = (patientId, diagnosis, summary, pdfPath) => {
 
 export const getReportsByPatientId = (patientId) => {
     try {
-        const validPatientId = validateId(patientId, "Patient ID");
+        const validPatientId = validateStringId(patientId, "Patient ID");
 
         const stmt = db.prepare(`
             SELECT *
@@ -61,7 +63,7 @@ export const getAllReports = () => {
         const stmt = db.prepare(`
             SELECT r.*, u.name AS patient_name, u.email AS patient_email
             FROM reports r
-            JOIN patients p ON r.patient_id = p.id
+            JOIN patients p ON r.patient_id = p.patient_id
             JOIN users u ON p.user_id = u.id
             ORDER BY r.created_at DESC
         `);
@@ -83,7 +85,7 @@ export const updateReport = (id, diagnosis, summary, pdfPath) => {
             UPDATE reports
             SET diagnosis = COALESCE(?, diagnosis),
                 summary = COALESCE(?, summary),
-                pdf_path = COALESCE(?, pdf_path),
+                pdf_url = COALESCE(?, pdf_url),
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
         `);

@@ -2,7 +2,7 @@ import { getPatientByUserId, getAllPatients } from "../model/patient.model.js";
 import { getLatestVitals, getVitalsByPatientId } from "../model/vital.model.js";
 import { getReportsByPatientId } from "../model/report.model.js";
 import { getAppointmentById } from "../model/appointment.model.js";
-import { createError, validateId, safeJsonParse } from "../utils/helper.js";
+import { createError, validateId, validateStringId, safeJsonParse } from "../utils/helper.js";
 
 /**
  * Normalize text field into array
@@ -43,7 +43,7 @@ const normalizePatientProfile = (patient) => {
   }
 
   return {
-    patientId: patient.id || null,
+    patientId: patient.patient_id || null,
     userId: patient.user_id || null,
     age: patient.age ?? null,
     gender: patient.gender || null,
@@ -83,7 +83,7 @@ const normalizeReports = (reports = [], limit = 5) => {
     reportId: report.id || null,
     diagnosis: report.diagnosis || null,
     summary: report.summary || null,
-    pdfPath: report.pdf_path || null,
+    pdfPath: report.pdf_url || report.pdf_path || null,
     createdAt: report.created_at || null,
   }));
 };
@@ -135,7 +135,7 @@ export const getPatientProfileContext = (userId) => {
  */
 export const getLatestVitalsContext = (patientId) => {
   try {
-    const validPatientId = validateId(patientId, "Patient ID");
+    const validPatientId = validateStringId(patientId, "Patient ID");
     const vitals = getLatestVitals(validPatientId);
 
     return normalizeVitals(vitals);
@@ -153,7 +153,7 @@ export const getLatestVitalsContext = (patientId) => {
  */
 export const getVitalsHistoryContext = (patientId, limit = 10) => {
   try {
-    const validPatientId = validateId(patientId, "Patient ID");
+    const validPatientId = validateStringId(patientId, "Patient ID");
     const validLimit = Number(limit);
 
     if (!Number.isInteger(validLimit) || validLimit <= 0 || validLimit > 100) {
@@ -184,7 +184,7 @@ export const getVitalsHistoryContext = (patientId, limit = 10) => {
  */
 export const getRecentReportsContext = (patientId, limit = 5) => {
   try {
-    const validPatientId = validateId(patientId, "Patient ID");
+    const validPatientId = validateStringId(patientId, "Patient ID");
     const validLimit = Number(limit);
 
     if (!Number.isInteger(validLimit) || validLimit <= 0 || validLimit > 20) {
@@ -253,9 +253,9 @@ export const buildPatientContext = ({
     }
 
     const profile = normalizePatientProfile(patient);
-    const latestVitals = getLatestVitalsContext(patient.id);
-    const vitalsHistory = getVitalsHistoryContext(patient.id, vitalsHistoryLimit);
-    const reports = getRecentReportsContext(patient.id, reportLimit);
+    const latestVitals = getLatestVitalsContext(patient.patient_id);
+    const vitalsHistory = getVitalsHistoryContext(patient.patient_id, vitalsHistoryLimit);
+    const reports = getRecentReportsContext(patient.patient_id, reportLimit);
     const appointment = appointmentId ? getAppointmentContext(appointmentId) : null;
 
     return {
@@ -327,7 +327,7 @@ export const listAllPatientsContext = () => {
     const patients = getAllPatients() || [];
 
     return patients.map((patient) => ({
-      patientId: patient.id || null,
+      patientId: patient.patient_id || null,
       userId: patient.user_id || null,
       name: patient.name || null,
       email: patient.email || null,

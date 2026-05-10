@@ -29,7 +29,7 @@ router.post(
   authMiddleware,
   roleMiddleware("patient"),
   [
-    body("patientId").notEmpty().withMessage("patientId is required"),
+    body("patientId").optional({ nullable: true, checkFalsy: true }),
     body("doctorId").notEmpty().withMessage("doctorId is required"),
     body("appointmentDate").notEmpty().withMessage("appointmentDate is required"),
     body("appointmentTime").notEmpty().withMessage("appointmentTime is required"),

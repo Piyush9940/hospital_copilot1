@@ -209,6 +209,10 @@ const Auth = {
 // Auth Manager
 // ===============================
 class AuthManager {
+    static getUser() {
+        return Auth.getUser();
+    }
+
     static extractAuth(response, fallbackRole = "") {
         const token =
             response?.token ||
@@ -241,6 +245,7 @@ class AuthManager {
             const response = await API.post("/auth/login", {
                 email: safeTrim(email),
                 password: String(password || ""),
+                role: safeTrim(role),
             });
 
             const { token, user } = this.extractAuth(response, role);
@@ -285,7 +290,7 @@ class AuthManager {
                 password,
                 role,
                 phone,
-                faceImageBase64: userData?.faceImageBase64 || null,
+                faceDescriptor: userData?.faceDescriptor || null,
             };
 
             console.log("Register payload:", registerPayload);
@@ -297,6 +302,7 @@ class AuthManager {
                 const loginResponse = await API.post("/auth/login", {
                     email,
                     password,
+                    role,
                 });
                 const extracted = this.extractAuth(loginResponse, role);
                 token = extracted.token;
@@ -433,6 +439,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "doctor-chat-approval.html": ["doctor"],
         "doctor-reports.html": ["doctor"],
         "doctor-video-call.html": ["doctor"],
+        "doctor-emergency.html": ["doctor"],
 
         "nurse-dashboard.html": ["nurse"],
         "nurse-patient-queue.html": ["nurse"],

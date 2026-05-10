@@ -16,7 +16,7 @@ export const APPOINTMENT_STATUS = Object.freeze({
   CONFIRMED: "confirmed",
   CANCELLED: "cancelled",
   COMPLETED: "completed",
-  NO_SHOW: "no_show",
+  NO_SHOW: "no-show",
 });
 
 /**
@@ -24,7 +24,7 @@ export const APPOINTMENT_STATUS = Object.freeze({
  */
 export const APPOINTMENT_TYPE = Object.freeze({
   VIDEO: "video",
-  IN_PERSON: "in_person",
+  IN_PERSON: "in-person",
 });
 
 /**
@@ -52,10 +52,11 @@ export const FACE_VERIFICATION_STATUS = Object.freeze({
  * VIDEO CALL STATUS
  */
 export const VIDEO_CALL_STATUS = Object.freeze({
-  NOT_STARTED: "not_started",
-  WAITING: "waiting",
-  ACTIVE: "active",
-  ENDED: "ended",
+  NOT_STARTED: "pending",
+  WAITING: "joined",
+  ACTIVE: "joined",
+  ENDED: "completed",
+  MISSED: "missed",
 });
 
 /**
@@ -130,6 +131,7 @@ export const PAGINATION = Object.freeze({
 export const FILE_LIMITS = Object.freeze({
   IMAGE_MAX_SIZE: 5 * 1024 * 1024,
   PDF_MAX_SIZE: 10 * 1024 * 1024,
+  DOCUMENT_MAX_SIZE: 100 * 1024 * 1024,
 });
 
 /**
@@ -137,7 +139,13 @@ export const FILE_LIMITS = Object.freeze({
  */
 export const ALLOWED_FILE_TYPES = Object.freeze({
   IMAGES: ["image/jpeg", "image/png", "image/jpg"],
-  DOCUMENTS: ["application/pdf"],
+  DOCUMENTS: [
+    "application/pdf",
+    "application/dicom",
+    "application/octet-stream",
+    "application/zip",
+    "application/x-zip-compressed",
+  ],
 });
 
 /**

@@ -2,716 +2,242 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>HealthCare Plus | Smart Booking & Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Book Appointment | HealthCare Plus</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(145deg, #f0f9ff 0%, #e6f0fa 100%);
             min-height: 100vh;
-            color: #1e293b;
+            font-family: Inter, system-ui, sans-serif;
+            color: #102033;
+            background: #eef6f8;
         }
         .navbar {
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(12px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-            border-bottom: 1px solid rgba(37, 99, 235, 0.15);
+            background: #ffffff;
+            border-bottom: 1px solid #dbe7ee;
             position: sticky;
             top: 0;
-            z-index: 100;
+            z-index: 10;
         }
         .nav-container {
-            max-width: 1280px;
+            max-width: 1120px;
             margin: 0 auto;
-            padding: 1rem 2rem;
+            padding: 1rem 1.25rem;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
+            justify-content: space-between;
         }
         .nav-brand {
-            font-size: 1.8rem;
+            font-size: 1.35rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #1e3c72, #2b4f8c);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-        .nav-brand i {
-            background: none;
-            color: #2563eb;
+            color: #0f766e;
         }
         .nav-links {
             display: flex;
-            gap: 1.5rem;
-            align-items: center;
+            gap: .85rem;
+            flex-wrap: wrap;
         }
-        .nav-link {
+        .nav-links a {
+            color: #475569;
             text-decoration: none;
-            font-weight: 600;
-            color: #334155;
-            transition: 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            font-weight: 700;
+            font-size: .9rem;
         }
-        .nav-link:hover, .nav-link.active {
-            color: #2563eb;
-        }
-        .dashboard-badge {
-            background: #2563eb10;
-            padding: 8px 16px;
-            border-radius: 40px;
-            font-weight: 600;
-        }
-        .booking-container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1.5rem 3rem;
-        }
-        /* Smart Assistant Card */
-        .smart-assistant {
-            background: linear-gradient(135deg, #1e293b, #0f172a);
-            border-radius: 1.5rem;
-            padding: 1rem 1.5rem;
-            margin-bottom: 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 1rem;
-            box-shadow: 0 15px 35px -12px rgba(0,0,0,0.2);
-        }
-        .assistant-content {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            color: white;
-        }
-        .assistant-icon {
-            font-size: 2.2rem;
-            background: #3b82f6;
-            width: 55px;
-            height: 55px;
-            border-radius: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: pulseGlow 2s infinite;
-        }
-        .assistant-text h3 {
-            font-size: 1.2rem;
-            margin-bottom: 4px;
-        }
-        .assistant-text p {
-            opacity: 0.8;
-            font-size: 0.85rem;
-        }
-        .smart-suggestion {
-            background: #ffffff20;
-            backdrop-filter: blur(8px);
-            padding: 8px 20px;
-            border-radius: 60px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .smart-suggestion:hover {
-            background: #3b82f6;
-            transform: scale(1.02);
-        }
-        @keyframes pulseGlow {
-            0% { box-shadow: 0 0 0 0 #3b82f680; }
-            70% { box-shadow: 0 0 0 12px #3b82f600; }
-            100% { box-shadow: 0 0 0 0 #3b82f600; }
-        }
-        .booking-progress {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 2.5rem;
-            position: relative;
-            flex-wrap: wrap;
-            gap: 0.8rem;
-        }
-        .booking-progress::before {
-            content: '';
-            position: absolute;
-            top: 28px;
-            left: 40px;
-            right: 40px;
-            height: 3px;
-            background: #e2e8f0;
-            border-radius: 4px;
-            z-index: 1;
-        }
-        @media (max-width: 640px) {
-            .booking-progress::before { display: none; }
-        }
-        .progress-step {
-            position: relative;
-            z-index: 2;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.6rem;
-            flex: 1;
-            cursor: pointer;
-        }
-        .step-circle {
-            width: 56px;
-            height: 56px;
-            border-radius: 60px;
-            background: white;
-            border: 3px solid #cbd5e1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            transition: all 0.3s;
-        }
-        .progress-step.active .step-circle {
-            background: linear-gradient(145deg, #2563eb, #1d4ed8);
-            border-color: white;
-            color: white;
-            box-shadow: 0 8px 20px #2563eb50;
-        }
-        .progress-step.completed .step-circle {
-            background: #10b981;
-            border-color: #10b981;
-            color: white;
-        }
-        .booking-card {
-            background: rgba(255,255,255,0.97);
-            border-radius: 2rem;
-            padding: 2rem;
-            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.15);
-            transition: all 0.3s;
-        }
-        .doctor-selection {
+        .page-shell {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 2rem 1.25rem 3rem;
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.8rem;
-            margin: 2rem 0;
+            grid-template-columns: minmax(0, 1fr) 360px;
+            gap: 1.5rem;
+            align-items: start;
         }
-        .doctor-option {
-            background: white;
-            border-radius: 1.5rem;
-            padding: 1.2rem;
-            border: 1px solid #eef2ff;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            text-align: center;
+        .panel {
+            background: #ffffff;
+            border: 1px solid #dbe7ee;
+            border-radius: 16px;
+            box-shadow: 0 18px 42px rgba(15, 23, 42, .08);
         }
-        .doctor-option:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 20px 30px -12px rgba(37,99,235,0.2);
-            border-color: #3b82f6;
-        }
-        .doctor-option.selected {
-            border: 2px solid #2563eb;
-            background: #f8faff;
-            box-shadow: 0 12px 24px -12px #2563eb40;
-        }
-        .doctor-img {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            margin: 0 auto 1rem;
-            object-fit: cover;
-            background: linear-gradient(145deg, #d9e6ff, #f0f4ff);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            box-shadow: 0 8px 18px rgba(0,0,0,0.05);
-        }
-        .doctor-fee {
-            font-size: 1.6rem;
-            font-weight: 800;
-            color: #2563eb;
-        }
-        .datetime-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 0.8rem;
-            margin-top: 1rem;
-        }
-        .time-slot {
-            padding: 0.8rem;
-            text-align: center;
-            background: #f9fafb;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 1rem;
-            cursor: pointer;
-            font-weight: 600;
-            transition: 0.2s;
-        }
-        .time-slot.selected {
-            background: #2563eb;
-            color: white;
-            border-color: #2563eb;
-        }
-        .time-slot.booked {
-            background: #f1f5f9;
-            color: #94a3b8;
-            cursor: not-allowed;
-            text-decoration: line-through;
-        }
-        .symptoms-input {
-            width: 100%;
-            min-height: 120px;
-            padding: 1rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 1.2rem;
-            font-family: inherit;
-        }
-        .symptoms-input:focus {
-            border-color: #3b82f6;
-            outline: none;
-        }
-        .upload-area {
-            border: 2px dashed #cbd5e1;
-            border-radius: 1.2rem;
+        .hero {
             padding: 1.5rem;
-            text-align: center;
-            cursor: pointer;
-            transition: 0.2s;
+            margin-bottom: 1rem;
         }
-        .upload-area:hover {
-            border-color: #2563eb;
-            background: #f8fafc;
+        .hero h1 {
+            font-size: clamp(1.8rem, 4vw, 2.45rem);
+            line-height: 1.1;
+            color: #0f172a;
+            margin-bottom: .55rem;
         }
-        .summary-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 0.8rem;
-            margin: 1.5rem 0;
+        .hero p {
+            color: #64748b;
+            line-height: 1.55;
+            max-width: 720px;
         }
-        .summary-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 1rem;
-            background: #f8fafc;
-            border-radius: 1rem;
-            border-left: 4px solid #3b82f6;
-        }
-        .summary-item.total {
-            background: linear-gradient(135deg, #ecfdf5, #e6f7ff);
-            border-left-color: #10b981;
-            font-weight: 800;
-        }
-        .btn-container {
-            display: flex;
+        .book-form {
+            padding: 1.5rem;
+            display: grid;
             gap: 1rem;
-            justify-content: flex-end;
-            margin-top: 2rem;
         }
-        .btn-secondary-outline {
-            padding: 0.8rem 2rem;
-            background: white;
-            border: 2px solid #cbd5e1;
-            border-radius: 2rem;
-            font-weight: 700;
-            cursor: pointer;
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
         }
-        .save-btn {
-            padding: 0.8rem 2.2rem;
-            background: linear-gradient(105deg, #2563eb, #1e40af);
-            border: none;
-            border-radius: 2rem;
-            color: white;
-            font-weight: 700;
+        .form-group.full { grid-column: 1 / -1; }
+        .form-label {
+            display: block;
+            font-size: .82rem;
+            font-weight: 800;
+            color: #334155;
+            margin-bottom: .45rem;
+        }
+        .form-input {
+            width: 100%;
+            min-height: 46px;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 10px;
+            padding: .75rem .85rem;
+            font: inherit;
+            background: #f8fafc;
+            color: #102033;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #0f766e;
+            box-shadow: 0 0 0 4px rgba(15, 118, 110, .12);
+            background: #ffffff;
+        }
+        textarea.form-input {
+            min-height: 116px;
+            resize: vertical;
+        }
+        .btn-submit {
+            width: 100%;
+            border: 0;
+            border-radius: 12px;
+            padding: .95rem 1rem;
+            background: #0f766e;
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 1rem;
             cursor: pointer;
-            transition: 0.2s;
+            transition: transform .18s ease, background .18s ease;
+        }
+        .btn-submit:hover { transform: translateY(-1px); background: #115e59; }
+        .btn-submit:disabled { opacity: .65; cursor: not-allowed; transform: none; }
+        .side-card {
+            padding: 1.25rem;
+            position: sticky;
+            top: 88px;
+        }
+        .side-card h2 {
+            font-size: 1rem;
+            color: #0f172a;
+            margin-bottom: .75rem;
+        }
+        .step-list {
+            display: grid;
+            gap: .8rem;
+            color: #475569;
+            font-size: .92rem;
+            line-height: 1.45;
+        }
+        .step-list div {
+            border-left: 3px solid #99f6e4;
+            padding-left: .75rem;
         }
         .toast-message {
             position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: #1e293b;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 60px;
-            z-index: 2000;
-            animation: slideInRight 0.3s ease;
+            left: 50%;
+            bottom: 1.5rem;
+            transform: translateX(-50%);
+            max-width: min(92vw, 520px);
+            background: #0f172a;
+            color: #fff;
+            border-radius: 999px;
+            padding: .8rem 1rem;
+            font-weight: 700;
+            z-index: 1000;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, .25);
         }
-        @keyframes slideInRight {
-            from { opacity: 0; transform: translateX(100px); }
-            to { opacity: 1; transform: translateX(0); }
+        @media (max-width: 860px) {
+            .page-shell { grid-template-columns: 1fr; }
+            .side-card { position: static; }
         }
-        .fade-step {
-            animation: fadePop 0.35s ease-out;
-        }
-        @keyframes fadePop {
-            from { opacity: 0; transform: scale(0.98); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        .file-list { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
-        .badge-file { background: #eef2ff; padding: 4px 12px; border-radius: 30px; font-size: 0.75rem; }
-        @media (max-width: 700px) {
-            .booking-card { padding: 1.5rem; }
-            .step-circle { width: 44px; height: 44px; font-size: 1rem; }
+        @media (max-width: 620px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .nav-container { align-items: flex-start; flex-direction: column; gap: .65rem; }
         }
     </style>
 </head>
 <body>
     <nav class="navbar">
         <div class="nav-container">
-            <div class="nav-brand"><i class="fas fa-heartbeat"></i> HealthCare Plus</div>
+            <div class="nav-brand">HealthCare Plus</div>
             <div class="nav-links">
-                <a href="#" class="nav-link" id="dashboardLinkBtn"><i class="fas fa-chart-line"></i> Dashboard</a>
-                <a href="#" class="nav-link active"><i class="fas fa-calendar-check"></i> Book Now</a>
+                <a href="appointment-list.html">Find Doctor</a>
+                <a href="patient-dashboard.html">Dashboard</a>
             </div>
         </div>
     </nav>
 
-    <div class="booking-container">
-        <!-- Smart Booking Assistant -->
-        <div class="smart-assistant" id="smartAssistant">
-            <div class="assistant-content">
-                <div class="assistant-icon"><i class="fas fa-robot"></i></div>
-                <div class="assistant-text">
-                    <h3><i class="fas fa-magic"></i> Smart Booking AI</h3>
-                    <p>I'll help you find the perfect doctor & slot</p>
-                </div>
-            </div>
-            <div class="smart-suggestion" id="smartSuggestionBtn">
-                <i class="fas fa-bolt"></i> Suggest Best Slot
-            </div>
-        </div>
-
-        <div class="booking-progress">
-            <div class="progress-step active" id="step1Label"><div class="step-circle">1</div><span>Doctor</span></div>
-            <div class="progress-step" id="step2Label"><div class="step-circle">2</div><span>Date & Time</span></div>
-            <div class="progress-step" id="step3Label"><div class="step-circle">3</div><span>Symptoms</span></div>
-            <div class="progress-step" id="step4Label"><div class="step-circle">4</div><span>Confirm</span></div>
-        </div>
-
-        <div class="booking-card">
-            <div id="section-doctor" class="step-section">
-                <h2><i class="fas fa-user-md"></i> Select Doctor (with photos)</h2>
-                <div class="doctor-selection" id="doctorList"></div>
-            </div>
-            <div id="section-datetime" class="step-section" style="display: none;">
-                <h2><i class="fas fa-calendar-alt"></i> Select Date & Time</h2>
-                <div class="form-group">
-                    <label><i class="far fa-calendar-check"></i> Appointment Date</label>
-                    <input type="date" class="form-input" id="appointmentDate" min="">
-                </div>
-                <label>Available Time Slots</label>
-                <div class="datetime-grid" id="timeSlots"></div>
-            </div>
-            <div id="section-symptoms" class="step-section" style="display: none;">
-                <h2><i class="fas fa-notes-medical"></i> Describe Symptoms</h2>
-                <textarea class="symptoms-input" id="symptoms" placeholder="e.g., Persistent headache, dizziness, fatigue..."></textarea>
-                <div class="form-group" style="margin-top: 1rem;">
-                    <label><i class="fas fa-paperclip"></i> Upload Reports (optional)</label>
-                    <div class="upload-area" id="uploadArea"><i class="fas fa-cloud-upload-alt fa-2x"></i><p>Click to upload images/PDFs</p></div>
-                    <input type="file" id="fileUpload" style="display:none" multiple accept=".jpg,.jpeg,.png,.pdf">
-                    <div id="filePreview" class="file-list"></div>
-                </div>
-            </div>
-            <div id="section-confirm" class="step-section" style="display: none;">
-                <h2><i class="fas fa-clipboard-list"></i> Review & Confirm</h2>
-                <div class="summary-grid" id="appointmentSummary"></div>
+    <main class="page-shell">
+        <section>
+            <div class="panel hero">
+                <h1>Book Appointment</h1>
+                <p>Select a doctor, choose a time, and continue to payment. Your patient profile is linked automatically from your login.</p>
             </div>
 
-            <div class="btn-container">
-                <button class="btn-secondary-outline" id="prevBtn" style="display: none;"><i class="fas fa-arrow-left"></i> Back</button>
-                <button class="save-btn" id="nextBtn">Next <i class="fas fa-arrow-right"></i></button>
+            <form id="bookForm" class="panel book-form">
+                <div class="form-grid">
+                    <div class="form-group full">
+                        <label class="form-label" for="doctor">Doctor</label>
+                        <select id="doctor" class="form-input" required>
+                            <option value="">Loading doctors...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="date">Date</label>
+                        <input type="date" id="date" class="form-input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="time">Time</label>
+                        <input type="time" id="time" class="form-input" required>
+                    </div>
+
+                    <div class="form-group full">
+                        <label class="form-label" for="type">Consultation Type</label>
+                        <select id="type" class="form-input" required>
+                            <option value="video">Video Call</option>
+                            <option value="in_person">In Person</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group full">
+                        <label class="form-label" for="symptoms">Symptoms / Reason</label>
+                        <textarea id="symptoms" class="form-input" required placeholder="Describe symptoms or the reason for consultation"></textarea>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">Continue to Payment</button>
+            </form>
+        </section>
+
+        <aside class="panel side-card">
+            <h2>What Happens Next</h2>
+            <div class="step-list">
+                <div>Appointment request is saved with the selected doctor.</div>
+                <div>You complete payment on the next screen.</div>
+                <div>The booking appears in your dashboard after payment.</div>
             </div>
-        </div>
-    </div>
+        </aside>
+    </main>
 
     <script src="../js/config.js"></script>
     <script src="../js/auth.js"></script>
-    <script>
-        class SmartBookingApp {
-            constructor() {
-                this.currentStep = 1;
-                this.selectedDoctorId = null;
-                this.selectedTime = null;
-                this.uploadedFiles = [];
-                this.doctorsData = [];
-                this.doctorsMap = new Map();
-                this.init();
-            }
-            async init() {
-                this.setupDateInput();
-                document.getElementById('appointmentDate').addEventListener('change', () => this.loadTimeSlots());
-                document.getElementById('uploadArea').addEventListener('click', () => document.getElementById('fileUpload').click());
-                document.getElementById('fileUpload').addEventListener('change', (e) => this.handleFiles(e.target.files));
-                document.getElementById('nextBtn').addEventListener('click', () => this.nextStep());
-                document.getElementById('prevBtn').addEventListener('click', () => this.prevStep());
-                // Smart suggestion
-                document.getElementById('smartSuggestionBtn').addEventListener('click', () => this.smartSuggestion());
-                // Dashboard connection
-                document.getElementById('dashboardLinkBtn').addEventListener('click', (e) => {
-                    e.preventDefault();
-                    window.location.href = 'patient-dashboard.html';
-                });
-                
-                await this.loadDoctors();
-                this.updateUI();
-                
-                // Pre-select doctor if passed in URL
-                const urlParams = new URLSearchParams(window.location.search);
-                const docId = urlParams.get('doctor');
-                if (docId) {
-                    this.selectDoctor(docId);
-                }
-            }
-            async loadDoctors() {
-                try {
-                    const res = await API.get('/doctor/list');
-                    const doctors = res?.doctors || res?.data?.doctors || res?.data || res || [];
-                    this.doctorsData = doctors.map(doc => ({
-                        id: String(doc.id || doc._id || doc.doctorId),
-                        name: doc.name || doc.fullName || [doc.firstName, doc.lastName].filter(Boolean).join(' ').trim() || 'Dr. Doctor',
-                        specialty: doc.specialization || doc.department || 'General',
-                        fee: Number(doc.fee || doc.consultationFee || doc.appointmentFee || 500),
-                        rating: Number(doc.rating || 4.7),
-                        experience: Number(doc.experience || doc.yearsOfExperience || 5),
-                        img: doc.image || doc.avatar || `https://ui-avatars.com/api/?background=2563eb&color=fff&name=${(doc.name || 'D').charAt(0)}`
-                    }));
-                    this.doctorsMap = new Map(this.doctorsData.map(d => [d.id, d]));
-                    this.renderDoctors();
-                } catch(error) {
-                    console.error("Failed to load doctors", error);
-                    this.showToast("Failed to load doctors. Please try again.", "error");
-                }
-            }
-            renderDoctors() {
-                const container = document.getElementById('doctorList');
-                if (this.doctorsData.length === 0) {
-                    container.innerHTML = '<p>No doctors available at the moment.</p>';
-                    return;
-                }
-                container.innerHTML = this.doctorsData.map(doc => `
-                    <div class="doctor-option" data-id="${doc.id}">
-                        <img class="doctor-img" src="${doc.img}" alt="${doc.name}" onerror="this.src='https://ui-avatars.com/api/?background=2563eb&color=fff&name=${doc.name.charAt(0)}'">
-                        <h3>${doc.name.startsWith('Dr.') ? doc.name : 'Dr. ' + doc.name}</h3>
-                        <p style="color:#4b5563">${doc.specialty}</p>
-                        <div class="doctor-fee">₹${doc.fee}</div>
-                        <p>⭐ ${doc.rating} • ${doc.experience}+ yrs</p>
-                        <small><i class="fas fa-check-circle" style="color:#10b981"></i> Available</small>
-                    </div>
-                `).join('');
-                document.querySelectorAll('.doctor-option').forEach(el => {
-                    el.addEventListener('click', () => this.selectDoctor(el.dataset.id));
-                });
-            }
-            selectDoctor(id) {
-                if(!this.doctorsMap.has(id)) return;
-                document.querySelectorAll('.doctor-option').forEach(d => d.classList.remove('selected'));
-                const el = document.querySelector(`.doctor-option[data-id="${id}"]`);
-                if(el) el.classList.add('selected');
-                this.selectedDoctorId = id;
-                this.showToast(`${this.doctorsMap.get(id).name} selected`, 'success');
-                if(this.currentStep === 1) {
-                    setTimeout(() => this.smartSuggestion(), 300);
-                }
-            }
-            setupDateInput() {
-                const today = new Date().toISOString().split('T')[0];
-                const dateInput = document.getElementById('appointmentDate');
-                dateInput.min = today;
-                dateInput.value = today;
-                this.loadTimeSlots();
-            }
-            loadTimeSlots() {
-                const slots = ['09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM', '02:00 PM', '02:30 PM', '03:00 PM', '03:30 PM', '04:00 PM', '04:30 PM'];
-                // Randomly mock some booked slots for realism
-                const bookedSlots = ['10:00 AM', '03:00 PM'];
-                const container = document.getElementById('timeSlots');
-                container.innerHTML = slots.map(time => `<div class="time-slot ${bookedSlots.includes(time) ? 'booked' : ''}" data-time="${time}">${time}</div>`).join('');
-                document.querySelectorAll('.time-slot:not(.booked)').forEach(el => {
-                    el.addEventListener('click', () => {
-                        document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
-                        el.classList.add('selected');
-                        this.selectedTime = el.dataset.time;
-                        this.showToast(`Slot ${this.selectedTime} selected`, 'info');
-                    });
-                });
-                if(this.selectedTime) {
-                    const matching = [...document.querySelectorAll('.time-slot')].find(t => t.dataset.time === this.selectedTime && !t.classList.contains('booked'));
-                    if(matching) matching.classList.add('selected');
-                }
-            }
-            handleFiles(files) {
-                this.uploadedFiles.push(...Array.from(files));
-                const preview = document.getElementById('filePreview');
-                preview.innerHTML = this.uploadedFiles.map(f => `<span class="badge-file"><i class="fas fa-file"></i> ${f.name.substring(0,20)}</span>`).join('');
-                this.showToast(`${this.uploadedFiles.length} file(s) attached`, 'info');
-            }
-            smartSuggestion() {
-                if(!this.selectedDoctorId && this.currentStep === 1 && this.doctorsData.length > 0) {
-                    // suggest best doctor (highest rating)
-                    const bestDoc = this.doctorsData.reduce((prev, curr) => (curr.rating > prev.rating ? curr : prev), this.doctorsData[0]);
-                    this.selectDoctor(bestDoc.id);
-                    this.showToast(`✨ Smart pick: ${bestDoc.name} (⭐${bestDoc.rating}) recommended`, 'success');
-                } 
-                else if(this.currentStep === 2 && this.selectedTime == null) {
-                    const availableSlots = [...document.querySelectorAll('.time-slot:not(.booked)')];
-                    if(availableSlots.length) {
-                        const earlySlot = availableSlots.find(s => s.dataset.time.includes('09')) || availableSlots[0];
-                        if(earlySlot) earlySlot.click();
-                        this.showToast(`🤖 AI suggests ${this.selectedTime || 'morning slot'} for less wait`, 'info');
-                    }
-                }
-                else if(this.currentStep === 3 && !document.getElementById('symptoms').value.trim()) {
-                    const symptomField = document.getElementById('symptoms');
-                    symptomField.value = "Experiencing occasional discomfort, need expert consultation.";
-                    this.showToast("📝 Smart fill: Added basic symptom description", "info");
-                }
-                else if (this.currentStep === 4) {
-                    this.showToast("All looks great! Proceed to confirm", "info");
-                }
-            }
-            validateStep() {
-                if(this.currentStep === 1 && !this.selectedDoctorId) { this.showToast('Please select a doctor', 'error'); return false; }
-                if(this.currentStep === 2 && !this.selectedTime) { this.showToast('Please select a time slot', 'error'); return false; }
-                if(this.currentStep === 3) {
-                    const sym = document.getElementById('symptoms').value.trim();
-                    if(!sym) { this.showToast('Please describe symptoms', 'error'); return false; }
-                    this.buildSummary();
-                }
-                return true;
-            }
-            buildSummary() {
-                const doc = this.doctorsMap.get(this.selectedDoctorId);
-                const date = document.getElementById('appointmentDate').value;
-                const sym = document.getElementById('symptoms').value;
-                const summaryDiv = document.getElementById('appointmentSummary');
-                summaryDiv.innerHTML = `
-                    <div class="summary-item"><span><i class="fas fa-user-md"></i> Doctor</span><strong>${doc.name} (${doc.specialty})</strong></div>
-                    <div class="summary-item"><span><i class="fas fa-calendar-day"></i> Date</span><strong>${date}</strong></div>
-                    <div class="summary-item"><span><i class="far fa-clock"></i> Time</span><strong>${this.selectedTime}</strong></div>
-                    <div class="summary-item"><span><i class="fas fa-stethoscope"></i> Symptoms</span><strong>${sym.substring(0,70)}${sym.length>70?'…':''}</strong></div>
-                    ${this.uploadedFiles.length ? `<div class="summary-item"><span><i class="fas fa-paperclip"></i> Attachments</span><strong>${this.uploadedFiles.length} file(s)</strong></div>` : ''}
-                    <div class="summary-item total"><span>Total Fee</span><strong>₹${doc.fee}</strong></div>
-                `;
-            }
-            nextStep() {
-                if(!this.validateStep()) return;
-                if(this.currentStep === 4) {
-                    this.confirmBooking();
-                    return;
-                }
-                if(this.currentStep < 4) {
-                    this.currentStep++;
-                    this.updateUI();
-                    const sectionMap = ['doctor','datetime','symptoms','confirm'][this.currentStep-1];
-                    const el = document.getElementById(`section-${sectionMap}`);
-                    if(el) el.classList.add('fade-step');
-                    setTimeout(() => el?.classList.remove('fade-step'), 300);
-                    if(this.currentStep === 2 && !this.selectedTime) this.smartSuggestion();
-                    if(this.currentStep === 3) this.smartSuggestion();
-                }
-            }
-            prevStep() {
-                if(this.currentStep > 1) {
-                    this.currentStep--;
-                    this.updateUI();
-                    const sectionMap = ['doctor','datetime','symptoms','confirm'][this.currentStep-1];
-                    const el = document.getElementById(`section-${sectionMap}`);
-                    if(el) el.classList.add('fade-step');
-                    setTimeout(() => el?.classList.remove('fade-step'), 300);
-                }
-            }
-            updateUI() {
-                const sections = ['doctor', 'datetime', 'symptoms', 'confirm'];
-                sections.forEach((sec, idx) => {
-                    const el = document.getElementById(`section-${sec}`);
-                    if(el) el.style.display = (idx+1 === this.currentStep) ? 'block' : 'none';
-                });
-                for(let i=1;i<=4;i++) {
-                    const stepDiv = document.getElementById(`step${i}Label`);
-                    if(stepDiv) {
-                        stepDiv.classList.remove('active','completed');
-                        if(i < this.currentStep) stepDiv.classList.add('completed');
-                        if(i === this.currentStep) stepDiv.classList.add('active');
-                    }
-                }
-                document.getElementById('prevBtn').style.display = this.currentStep > 1 ? 'inline-flex' : 'none';
-                const nextBtn = document.getElementById('nextBtn');
-                if(this.currentStep === 4) {
-                    nextBtn.innerHTML = 'Confirm & Pay <i class="fas fa-lock"></i>';
-                } else {
-                    nextBtn.innerHTML = 'Next <i class="fas fa-arrow-right"></i>';
-                }
-            }
-            async confirmBooking() {
-                const nextBtn = document.getElementById('nextBtn');
-                const originalHtml = nextBtn.innerHTML;
-                nextBtn.innerHTML = 'Booking... <i class="fas fa-spinner fa-spin"></i>';
-                nextBtn.disabled = true;
-
-                try {
-                    const doctor = this.doctorsMap.get(this.selectedDoctorId);
-                    const user = Auth.getUser();
-                    
-                    if (!user) {
-                        throw new Error("Please log in to book an appointment.");
-                    }
-
-                    const payload = {
-                        doctorId: doctor.id,
-                        patientId: user.id,
-                        appointmentDate: document.getElementById('appointmentDate').value,
-                        appointmentTime: this.selectedTime,
-                        consultationType: 'video', // Defaulting to video for smart booking, can be extended later
-                        symptoms: document.getElementById('symptoms').value,
-                        fee: doctor.fee
-                    };
-
-                    const res = await API.post('/appointments', payload);
-                    this.showToast('✅ Booking confirmed! Redirecting to Payment...', 'success');
-                    
-                    const aptId = res?.data?.id || res?.appointment?.id || res?.id || 'PENDING';
-                    
-                    setTimeout(() => {
-                        const params = new URLSearchParams({
-                            appointmentId: aptId,
-                            fee: payload.fee,
-                            doctor: doctor.name,
-                            specialty: doctor.specialty,
-                            date: payload.appointmentDate,
-                            time: payload.appointmentTime
-                        });
-                        window.location.href = `appointment-payment.html?${params.toString()}`;
-                    }, 1500);
-                } catch (error) {
-                    console.error("Booking error:", error);
-                    this.showToast(error.message || 'Failed to book appointment', 'error');
-                    nextBtn.innerHTML = originalHtml;
-                    nextBtn.disabled = false;
-                }
-            }
-            showToast(msg, type) {
-                const toast = document.createElement('div');
-                toast.className = 'toast-message';
-                toast.innerHTML = `<i class="fas ${type==='success'?'fa-check-circle':type==='error'?'fa-exclamation-triangle':'fa-info-circle'}"></i> ${msg}`;
-                document.body.appendChild(toast);
-                setTimeout(() => toast.remove(), 2800);
-            }
-        }
-        document.addEventListener('DOMContentLoaded', () => {
-            if (window.requireRole && window.requireRole(['patient'])) {
-                new SmartBookingApp();
-            } else if (!window.requireRole) {
-                // For direct access without auth layout
-                new SmartBookingApp();
-            }
-        });
-    </script>
+    <script src="../js/book-appointment.js"></script>
 </body>
 </html>

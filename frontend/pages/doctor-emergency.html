@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Emergency Dashboard | Hospital Copilot</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/emergency.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="doctor-mode">
+    <div class="dashboard-wrapper">
+        <header class="doc-header">
+            <div class="logo">
+                <i class="fa-solid fa-truck-medical"></i> Doctor Emergency Dispatch
+            </div>
+            <div class="doc-profile">
+                <span id="docName">Doctor</span>
+                <img src="https://ui-avatars.com/api/?name=Doctor&background=0D8ABC&color=fff" alt="Doc">
+            </div>
+        </header>
+
+        <main class="doc-main">
+            <!-- Pending Requests Section -->
+            <section class="requests-section" id="requestsSection">
+                <h2><i class="fa-solid fa-bell fa-shake text-warning"></i> Incoming Emergencies</h2>
+                <div class="requests-grid" id="requestsGrid">
+                    <!-- Dynamic Requests -->
+                    <div class="empty-state">No active emergencies at the moment.</div>
+                </div>
+            </section>
+
+            <!-- Past Emergencies Section -->
+            <section class="past-emergencies-section" id="pastEmergenciesSection" style="margin-top: 2rem;">
+                <h2><i class="fa-solid fa-clock-rotate-left"></i> Past Emergencies</h2>
+                <div class="requests-grid" id="pastRequestsGrid">
+                    <div class="empty-state">No past emergencies found.</div>
+                </div>
+            </section>
+
+            <!-- Active Emergency View (Hidden initially) -->
+            <section class="active-emergency-section hidden" id="activeEmergencySection">
+                <div class="active-header">
+                    <h2><i class="fa-solid fa-heart-pulse"></i> Active Emergency Handling</h2>
+                    <button id="endEmergencyBtn" class="btn-danger-outline">End Emergency</button>
+                </div>
+
+                <div class="active-grid">
+                    <!-- Patient Info & Summary -->
+                    <div class="panel patient-summary-panel">
+                        <h3>AI Patient Summary</h3>
+                        <div id="aiSummaryContent" class="summary-content">
+                            <i class="fa-solid fa-circle-notch fa-spin"></i> Generating critical summary...
+                        </div>
+                    </div>
+
+                    <!-- RAG Query System -->
+                    <div class="panel rag-panel">
+                        <h3><i class="fa-solid fa-robot"></i> AI Medical Assistant (RAG)</h3>
+                        <div class="chat-container" id="ragChatBox">
+                            <div class="chat-msg system">Ask any question regarding the patient's medical history, allergies, or current condition.</div>
+                        </div>
+                        <div class="chat-input-area">
+                            <input type="text" id="ragQueryInput" placeholder="e.g. What allergies does the patient have?">
+                            <button id="ragQueryBtn"><i class="fa-solid fa-paper-plane"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Patient Medical Reports -->
+                <div class="active-grid" style="margin-top: 1.5rem; grid-template-columns: 1fr;">
+                    <div class="panel patient-reports-panel">
+                        <h3><i class="fa-solid fa-file-medical"></i> Patient Medical Reports</h3>
+                        <div id="patientReportsContent" class="reports-content" style="max-height: 300px; overflow-y: auto; padding-top: 1rem;">
+                            <i class="fa-solid fa-circle-notch fa-spin"></i> Loading previous medical reports...
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="../js/config.js?v=10"></script>
+    <script src="../js/auth.js?v=5"></script>
+    <script src="../js/doctor-emergency.js?v=11"></script>
+</body>
+</html>

@@ -77,7 +77,19 @@ export const validateId = (id, fieldName = "ID") => {
     return num;
 };
 
+export const validateStringId = (id, fieldName = "ID") => {
+    if (!id || typeof id !== 'string' || !id.trim()) {
+        throw createError(`${fieldName} is required and must be a valid string`, 400);
+    }
+    return id.trim();
+};
+
 export const generateId = () => crypto.randomUUID();
+
+export const generateHashedPatientId = () => {
+    const uuid = crypto.randomUUID();
+    return crypto.createHash('sha256').update(uuid).digest('hex');
+};
 
 export const generateRandomString = (length = 16) => {
     if (!Number.isInteger(length) || length <= 0) {

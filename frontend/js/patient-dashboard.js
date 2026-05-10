@@ -277,11 +277,12 @@
             const specialization = appointment.specialization || appointment.doctor?.specialization || 'Specialist';
             const date = appointment.date || appointment.appointmentDate || 'N/A';
             const time = appointment.time || appointment.appointmentTime || 'N/A';
-            const status = String(appointment.status || 'pending').toLowerCase();
-            const type = String(appointment.type || 'video').toLowerCase();
+            const status = String(appointment.status || appointment.appointmentStatus || 'pending').toLowerCase();
+            const type = String(appointment.type || appointment.consultationType || 'video').toLowerCase().replace('_', '-');
+            const isVideo = type === 'video';
 
             return `
-                <div class="appointment-item" onclick="window.location.href='appointment-confirmation.html?id=${id}'">
+                <div class="appointment-item" onclick="window.location.href='appointment-confirmation.html?appointmentId=${id}'">
                     <div class="appointment-info">
                         <h4>${doctorName}</h4>
                         <p>${specialization}</p>
@@ -290,6 +291,7 @@
                             <span>🕐 ${time}</span>
                             <span class="badge ${type}">${type}</span>
                         </div>
+                        ${isVideo ? `<button class="btn btn-primary" style="margin-top:.75rem;" onclick="event.stopPropagation(); window.location.href='appointment-video-call.html?id=${id}'">Video Call</button>` : ''}
                     </div>
                     <div class="appointment-status ${status}">${status}</div>
                 </div>

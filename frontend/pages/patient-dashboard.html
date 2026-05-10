@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,17 +10,18 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-brand">
                 <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                    <circle cx="16" cy="16" r="14" stroke="url(#navGradient)" stroke-width="2"/>
-                    <path d="M10 16L14 20L22 12" stroke="url(#navGradient)" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="16" cy="16" r="14" stroke="url(#navGradient)" stroke-width="2" />
+                    <path d="M10 16L14 20L22 12" stroke="url(#navGradient)" stroke-width="2" stroke-linecap="round" />
                     <defs>
                         <linearGradient id="navGradient" x1="0" y1="0" x2="32" y2="32">
-                            <stop offset="0%" stop-color="#2563eb"/>
-                            <stop offset="100%" stop-color="#10b981"/>
+                            <stop offset="0%" stop-color="#2563eb" />
+                            <stop offset="100%" stop-color="#10b981" />
                         </linearGradient>
                     </defs>
                 </svg>
@@ -32,15 +34,21 @@
                 <a href="appointment-list.html" class="nav-link">Book Appointment</a>
                 <a href="patient-reports.html" class="nav-link">Reports</a>
                 <a href="patient-vitals.html" class="nav-link">Vitals</a>
+                <a href="patient-diagnosis.html" class="nav-link">Diagnosis</a>
                 <a href="ai-nurse.html" class="nav-link">AI Nurse</a>
-                <a href="patient-emergency.html" class="nav-link emergency-link">Emergency</a>
+                <a href="medical-scan-detection.html" class="nav-link">Medical Scans</a>
+                <a href="skin-detection.html" class="nav-link">Skin Detection</a>
+                <a href="emergency.html" class="nav-link emergency-link">Emergency</a>
+                
 
                 <div class="user-menu">
                     <button class="user-menu-btn" onclick="toggleUserMenu()">
                         <div class="avatar" id="userAvatar"></div>
                         <span id="userName"></span>
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            <path fill-rule="evenodd"
+                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                clip-rule="evenodd" />
                         </svg>
                     </button>
                     <div class="user-dropdown" id="userDropdown">
@@ -67,8 +75,10 @@
                     <p class="welcome-subtitle">Your health journey continues here</p>
                 </div>
                 <div class="quick-actions">
-                    <button class="btn btn-primary" onclick="window.location.href='appointment-list.html'">Book Appointment</button>
-                    <button class="btn btn-secondary" onclick="window.location.href='ai-nurse.html'">Ask AI Nurse</button>
+                    <button class="btn btn-primary" onclick="window.location.href='appointment-list.html'">Book
+                        Appointment</button>
+                    <button class="btn btn-secondary" onclick="window.location.href='ai-nurse.html'">Ask AI
+                        Nurse</button>
                 </div>
             </div>
 
@@ -109,7 +119,7 @@
                 </div>
             </div>
 
-            <div class="stat-card glass-container" onclick="window.location.href='patient-emergency.html'">
+            <div class="stat-card glass-container" onclick="window.location.href='emergency.html'">
                 <div class="stat-info">
                     <h4>Emergency Ready</h4>
                     <div class="stat-value">24/7</div>
@@ -152,6 +162,14 @@
                         <div class="qa-icon">🤖</div>
                         <span>AI Nurse Chat</span>
                     </div>
+                    <div class="quick-access-item" onclick="window.location.href='medical-scan-detection.html'">
+                        <div class="qa-icon">🩻</div>
+                        <span>Medical Scans</span>
+                    </div>
+                    <div class="quick-access-item" onclick="window.location.href='skin-detection.html'">
+                        <div class="qa-icon">🔍</div>
+                        <span>Skin Diagnosis</span>
+                    </div>
                     <div class="quick-access-item" onclick="window.location.href='patient-chat-history.html'">
                         <div class="qa-icon">💬</div>
                         <span>Chat History</span>
@@ -160,7 +178,7 @@
                         <div class="qa-icon">⚙️</div>
                         <span>Settings</span>
                     </div>
-                    <div class="quick-access-item emergency-item" onclick="window.location.href='patient-emergency.html'">
+                    <div class="quick-access-item emergency-item" onclick="window.location.href='emergency.html'">
                         <div class="qa-icon">🚨</div>
                         <span>Emergency SOS</span>
                     </div>
@@ -173,4 +191,5 @@
     <script src="../js/auth.js"></script>
     <script src="../js/patient-dashboard.js"></script>
 </body>
+
 </html>

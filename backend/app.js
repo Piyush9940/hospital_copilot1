@@ -19,11 +19,13 @@ import paymentRoutes from "./route/payment.routes.js";
 import reportRoutes from "./route/report.routes.js";
 import vitalRoutes from "./route/vital.routes.js";
 import emergencyRoutes from "./route/emergency.routes.js";
+import emergencySystemRoutes from "./route/emergencySystemRoutes.js";
 import aiNurseRoutes from "./route/aiNurse.routes.js";
 import faceVerificationRoutes from "./route/faceVerification.routes.js";
 import chatPermissionRoutes from "./route/chatPermission.routes.js";
 import videoCallRoutes from "./route/videoCall.routes.js";
 import skinRoutes from "./route/skin.route.js";
+import medicalScanRoutes from "./route/medicalScan.routes.js";
 
 import { createError } from "./utils/helper.js";
 import errorMiddleware from "./middleware/error.middleware.js";
@@ -92,11 +94,13 @@ app.use("/api/payment", paymentRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/vitals", vitalRoutes);
 app.use("/api/emergency", emergencyRoutes);
+app.use("/api/v2/emergency", emergencySystemRoutes);
 app.use("/api/ai-nurse", aiNurseRoutes);
 app.use("/api/face-verification", faceVerificationRoutes);
 app.use("/api/chat-permission", chatPermissionRoutes);
 app.use("/api/video-call", videoCallRoutes);
 app.use("/api/skin", skinRoutes);
+app.use("/api/medical-scans", medicalScanRoutes);
 
 app.use((req, res, next) => {
     return next(

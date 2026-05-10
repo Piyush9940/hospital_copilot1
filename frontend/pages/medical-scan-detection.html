@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Medical Scan Detection | Hospital Copilot</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        body { background: #f6f8fb; }
+        .scan-shell { max-width: 980px; margin: 32px auto; padding: 0 18px; }
+        .scan-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 24px; box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08); }
+        .scan-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 22px; flex-wrap: wrap; }
+        .scan-header h1 { color: #0f172a; font-size: 1.7rem; margin-bottom: 6px; }
+        .scan-header p { color: #64748b; max-width: 680px; line-height: 1.5; }
+        .form-grid { display: grid; grid-template-columns: 260px 1fr; gap: 18px; align-items: stretch; }
+        .scan-type-list { display: grid; gap: 10px; }
+        .scan-type { border: 1px solid #dbe3ef; background: #f8fafc; color: #1e293b; padding: 12px; border-radius: 10px; text-align: left; cursor: pointer; font-weight: 700; }
+        .scan-type.active { background: #e0f2fe; border-color: #0284c7; color: #075985; }
+        .upload-box { border: 2px dashed #94a3b8; background: #f8fafc; border-radius: 12px; padding: 26px; text-align: center; min-height: 210px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+        .upload-box.dragover { border-color: #0284c7; background: #eff6ff; }
+        .upload-box input { display: none; }
+        .file-name { color: #334155; font-weight: 700; word-break: break-word; }
+        .actions { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+        .primary-btn, .secondary-btn { border: none; border-radius: 10px; padding: 11px 16px; cursor: pointer; font-weight: 800; }
+        .primary-btn { background: #0f766e; color: white; }
+        .primary-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .secondary-btn { background: #e2e8f0; color: #0f172a; }
+        .result-box { display: none; margin-top: 20px; background: #f8fafc; border: 1px solid #dbe3ef; border-radius: 12px; padding: 18px; }
+        .result-box h2 { margin-bottom: 12px; color: #0f172a; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+        .result-card { background: white; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; }
+        .result-card span { display: block; color: #64748b; font-size: 0.78rem; text-transform: uppercase; font-weight: 800; margin-bottom: 5px; }
+        .result-card strong { color: #111827; white-space: pre-wrap; }
+        .json-block { margin-top: 14px; max-height: 240px; overflow: auto; background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 10px; font-size: 0.8rem; white-space: pre-wrap; }
+        .notice { margin-top: 14px; padding: 12px; background: #fffbeb; border-left: 4px solid #f59e0b; color: #78350f; border-radius: 8px; font-size: 0.92rem; }
+        @media (max-width: 760px) { .form-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">Hospital Copilot</div>
+            <div class="nav-menu">
+                <a href="patient-dashboard.html" class="nav-link">Dashboard</a>
+                <a href="patient-reports.html" class="nav-link">Reports</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="scan-shell">
+        <section class="scan-panel">
+            <div class="scan-header">
+                <div>
+                    <h1>AI Medical Scan Detection</h1>
+                    <p>Upload ultrasound, X-Ray, MRI, or CT scan files. Hospital Copilot will call the Path Labs AI API, convert the JSON result into a PDF, and save it in your patient reports.</p>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="scan-type-list" id="scanTypes">
+                    <button type="button" class="scan-type active" data-type="ultrasound">Ultrasound</button>
+                    <button type="button" class="scan-type" data-type="xray">X-Ray</button>
+                    <button type="button" class="scan-type" data-type="mri">MRI 2D/3D</button>
+                    <button type="button" class="scan-type" data-type="ct">CT 2D/3D</button>
+                </div>
+
+                <div>
+                    <div class="upload-box" id="uploadBox">
+                        <input id="scanFile" type="file" accept="image/*,.pdf,.dcm,.dicom,.nii,.nii.gz,.zip,application/octet-stream">
+                        <h3>Drop scan file here or click to browse</h3>
+                        <p>Images, PDF, DICOM, NIfTI, or ZIP depending on scan type.</p>
+                        <div class="file-name" id="fileName">No file selected</div>
+                    </div>
+
+                    <div class="actions">
+                        <button type="button" class="primary-btn" id="analyzeBtn">Analyze and Save Report</button>
+                        <button type="button" class="secondary-btn" onclick="window.location.href='patient-reports.html'">Open Patient Reports</button>
+                    </div>
+                    <div class="notice">AI scan results are preliminary and should be reviewed by a qualified doctor.</div>
+                </div>
+            </div>
+
+            <div class="result-box" id="resultBox">
+                <h2>Saved Report Result</h2>
+                <div class="result-grid">
+                    <div class="result-card"><span>Scan Type</span><strong id="resultScanType">-</strong></div>
+                    <div class="result-card"><span>Prediction</span><strong id="resultPrediction">-</strong></div>
+                    <div class="result-card"><span>Confidence</span><strong id="resultConfidence">-</strong></div>
+                    <div class="result-card"><span>Report</span><strong><a id="pdfLink" href="#" target="_blank">Open PDF</a></strong></div>
+                </div>
+                <div class="result-card" style="margin-top: 12px;"><span>Summary</span><strong id="resultSummary">-</strong></div>
+                <pre class="json-block" id="rawJson"></pre>
+            </div>
+        </section>
+    </main>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        if (window.requireRole && !requireRole(["patient", "doctor"])) {
+            throw new Error("Unauthorized");
+        }
+
+        let selectedType = "ultrasound";
+        let selectedFile = null;
+
+        const uploadBox = document.getElementById("uploadBox");
+        const fileInput = document.getElementById("scanFile");
+        const fileName = document.getElementById("fileName");
+        const analyzeBtn = document.getElementById("analyzeBtn");
+        const resultBox = document.getElementById("resultBox");
+
+        document.querySelectorAll(".scan-type").forEach((button) => {
+            button.addEventListener("click", () => {
+                document.querySelectorAll(".scan-type").forEach((item) => item.classList.remove("active"));
+                button.classList.add("active");
+                selectedType = button.dataset.type;
+            });
+        });
+
+        uploadBox.addEventListener("click", () => fileInput.click());
+        uploadBox.addEventListener("dragover", (event) => {
+            event.preventDefault();
+            uploadBox.classList.add("dragover");
+        });
+        uploadBox.addEventListener("dragleave", () => uploadBox.classList.remove("dragover"));
+        uploadBox.addEventListener("drop", (event) => {
+            event.preventDefault();
+            uploadBox.classList.remove("dragover");
+            setSelectedFile(event.dataTransfer.files?.[0]);
+        });
+        fileInput.addEventListener("change", (event) => setSelectedFile(event.target.files?.[0]));
+
+        function setSelectedFile(file) {
+            selectedFile = file || null;
+            fileName.textContent = selectedFile ? selectedFile.name : "No file selected";
+        }
+
+        analyzeBtn.addEventListener("click", async () => {
+            if (!selectedFile) {
+                alert("Please select a scan file first.");
+                return;
+            }
+
+            analyzeBtn.disabled = true;
+            analyzeBtn.textContent = "Analyzing and saving...";
+
+            try {
+                const formData = new FormData();
+                formData.append("scanType", selectedType);
+                formData.append("file", selectedFile);
+
+                const response = await fetch(`${API_BASE_URL}/medical-scans/analyze`, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${window.Auth.getToken()}`
+                    },
+                    body: formData
+                });
+
+                const payload = await response.json();
+                if (!response.ok || !payload.success) {
+                    throw new Error(payload.message || "Scan analysis failed");
+                }
+
+                renderResult(payload.data);
+            } catch (error) {
+                console.error(error);
+                alert(error.message || "Scan analysis failed");
+            } finally {
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = "Analyze and Save Report";
+            }
+        });
+
+        function renderResult(data) {
+            const baseUrl = CONFIG.NODE_API.replace("/api", "");
+            document.getElementById("resultScanType").textContent = data.scanLabel || data.scanType || "-";
+            document.getElementById("resultPrediction").textContent = data.prediction?.condition || "-";
+            document.getElementById("resultConfidence").textContent = data.prediction?.confidence || "N/A";
+            document.getElementById("resultSummary").textContent = data.prediction?.summary || "-";
+            document.getElementById("rawJson").textContent = JSON.stringify(data.rawResult || {}, null, 2);
+
+            const pdfUrl = data.pdfUrl?.startsWith("http") ? data.pdfUrl : `${baseUrl}${data.pdfUrl}`;
+            const pdfLink = document.getElementById("pdfLink");
+            pdfLink.href = pdfUrl;
+            pdfLink.textContent = "Open saved PDF report";
+            resultBox.style.display = "block";
+            resultBox.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    </script>
+</body>
+</html>

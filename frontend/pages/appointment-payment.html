@@ -266,12 +266,13 @@
             constructor() {
                 const params = new URLSearchParams(window.location.search);
                 this.aptId = params.get('appointmentId') || params.get('aptId') || '';
+                this.consultationType = params.get('type') || 'video';
                 this.baseAmount = parseFloat(params.get('fee')) || 500;
                 this.tax = parseFloat((this.baseAmount * 0.18).toFixed(2));
                 this.platformFee = 20;
                 this.totalAmount = this.baseAmount + this.tax + this.platformFee;
                 
-                this.selectedMethod = null;
+                this.selectedMethod = 'upi';
                 this.isProcessing = false;
                 this.timerSeconds = 599;
                 this.timerInterval = null;
@@ -298,7 +299,7 @@
                 
                 if (this.aptId) {
                     const el = document.getElementById('appointmentId');
-                    if (el) el.innerText = `#${this.aptId.substring(0,8).toUpperCase()}`;
+                    if (el) el.innerText = `#${this.aptId}`;
                 }
                 if (doctorName) {
                     const doctorEl = document.querySelector('.payment-header p');
@@ -324,6 +325,16 @@
                 if(params.get('fee')) this.baseAmount = parseInt(params.get('fee'));
                 document.getElementById('summaryFee').innerHTML = fee;
                 document.getElementById('payBtnText').innerText = `Pay ${fee} Securely`;
+                document.getElementById('summaryDoctor').innerHTML = `<i class="fas fa-user-md"></i> ${params.get('doctor') || 'Doctor'}`;
+                document.getElementById('summarySpecialty').innerHTML = `<i class="fas fa-heartbeat"></i> ${params.get('specialty') || 'Specialist'}`;
+                document.getElementById('summaryDate').innerHTML = `<i class="fas fa-calendar-alt"></i> ${params.get('date') || 'Selected date'}`;
+                document.getElementById('summaryTime').innerHTML = `<i class="fas fa-clock"></i> ${params.get('time') || 'Selected time'}`;
+                document.getElementById('appointmentId').innerHTML = this.aptId ? `#${this.aptId}` : '#PENDING';
+                document.getElementById('summaryFee').innerHTML = `₹${this.totalAmount.toFixed(2)}`;
+                document.getElementById('displayAmount').innerText = `₹ ${this.baseAmount.toFixed(2)}`;
+                document.getElementById('displayTax').innerText = `₹ ${this.tax.toFixed(2)}`;
+                document.getElementById('displayTotal').innerText = `₹ ${this.totalAmount.toFixed(2)}`;
+                document.getElementById('payBtnText').innerText = `Pay ₹${this.totalAmount.toFixed(2)} Securely`;
             }
 
             startTimer() {
@@ -481,12 +492,14 @@
 
             async verifyAndRedirect(txnId, paymentData) {
                 this.showToast("✅ Payment Verified! Redirecting to confirmation...", "success");
-                const aptIdRaw = document.getElementById('appointmentId').innerText;
-                const aptId = aptIdRaw.replace('#CARD-9823-HEALTH', '').replace('#', '').trim() || new URLSearchParams(window.location.search).get('appointmentId') || new URLSearchParams(window.location.search).get('aptId') || '';
+                const aptId = this.aptId;
 
                 if (aptId && window.API) {
                     try {
-                        await API.put(`/appointments/${aptId}/payment-status`, { paymentStatus: 'paid' });
+                        await API.put(`/appointments/${aptId}/payment-status`, {
+                            paymentStatus: 'paid',
+                            paymentId: txnId
+                        });
                     } catch (e) {
                         console.error('Failed to update payment status', e);
                     }
@@ -496,9 +509,10 @@
                     const params = new URLSearchParams({
                         status: 'confirmed',
                         reference: txnId,
-                        appointment: aptId,
-                        amount: this.baseAmount,
+                        appointmentId: aptId,
+                        amount: this.totalAmount.toFixed(2),
                         method: this.selectedMethod,
+                        type: this.consultationType,
                         payer: paymentData.name || paymentData.cardholderName || "Patient"
                     });
                     window.location.href = `appointment-confirmation.html?${params.toString()}`;

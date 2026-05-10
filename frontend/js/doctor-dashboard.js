@@ -57,7 +57,7 @@ class DoctorDashboard {
                 doctorId
                     ? API.get(`/appointments/doctor/${doctorId}`).catch(() => [])
                     : Promise.resolve([]),
-                API.get('/emergency/pending').catch(() => []),
+                API.get('/v2/emergency/pending').catch(() => []),
                 doctorId 
                     ? API.get(`/doctor/${doctorId}/dashboard-summary`).catch(() => ({}))
                     : Promise.resolve({}),
@@ -72,12 +72,27 @@ class DoctorDashboard {
                 appointmentsRes ||
                 [];
 
-            const alerts =
+            let alerts =
+                alertsRes?.emergencies ||
+                alertsRes?.data?.emergencies ||
                 alertsRes?.alerts ||
                 alertsRes?.data?.alerts ||
                 alertsRes?.data ||
                 alertsRes ||
                 [];
+            
+            // Map v2 emergencies to standard alert format
+            if (Array.isArray(alerts) && alerts.length > 0 && alerts[0].status !== undefined) {
+                alerts = alerts.map(em => ({
+                    id: em.id,
+                    patientId: em.patient_id,
+                    message: em.summary || "Emergency triggered",
+                    status: em.status,
+                    patientName: em.patient_name || em.patientName,
+                    createdAt: em.created_at || em.createdAt,
+                    priority: "high"
+                }));
+            }
 
             const stats =
                 statsRes?.stats ||
@@ -393,7 +408,7 @@ function viewReport(id) {
 }
 
 function handleAlert(id) {
-    window.location.href = `patient-emergency.html?alert=${id}`;
+    window.location.href = `doctor-emergency.html`;
 }
 
 function startVideoCall() {

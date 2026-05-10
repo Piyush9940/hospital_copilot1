@@ -22,18 +22,97 @@
     </main>
     <script src="../js/config.js"></script>
     <script src="../js/auth.js"></script>
-    <script src="../js/page-builder.js"></script>
     <script>
+        function getParam(name) {
+            return new URLSearchParams(window.location.search).get(name) || "";
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function renderConfirmation(appointment = null) {
+            const appointmentId = getParam("appointmentId") || getParam("appointment") || getParam("id") || appointment?.id || "";
+            const reference = getParam("reference") || appointment?.paymentId || appointment?.payment_id || "N/A";
+            const amount = getParam("amount") || appointment?.fee || "N/A";
+            const method = getParam("method") || "payment";
+            const status = getParam("status") || appointment?.paymentStatus || appointment?.payment_status || "confirmed";
+            const doctor = appointment?.doctorName || appointment?.doctor_name || getParam("doctor") || "Doctor";
+            const date = appointment?.appointmentDate || appointment?.appointment_date || getParam("date") || "Scheduled date";
+            const time = appointment?.appointmentTime || appointment?.appointment_time || getParam("time") || "Scheduled time";
+            const consultationType = appointment?.consultationType || appointment?.consultation_type || getParam("type") || "video";
+            const canStartVideo = appointmentId && String(consultationType).toLowerCase().replace("_", "-") === "video";
+
+            document.querySelector(".dashboard-container").innerHTML = `
+                <section class="glass-container" style="max-width:760px;margin:2rem auto;padding:2rem;">
+                    <div style="text-align:center;margin-bottom:1.5rem;">
+                        <div style="width:78px;height:78px;border-radius:50%;background:#dcfce7;color:#15803d;display:grid;place-items:center;margin:0 auto 1rem;font-size:2rem;">✓</div>
+                        <h1 style="margin-bottom:.4rem;">Appointment Confirmed</h1>
+                        <p style="color:#64748b;">Your booking and payment details are ready.</p>
+                    </div>
+                    <div style="display:grid;gap:.8rem;">
+                        ${row("Appointment ID", appointmentId || "N/A")}
+                        ${row("Payment Reference", reference)}
+                        ${row("Payment Status", status)}
+                        ${row("Amount", `₹${amount}`)}
+                        ${row("Method", method.toUpperCase())}
+                        ${row("Doctor", doctor)}
+                        ${row("Date", date)}
+                        ${row("Time", time)}
+                        ${row("Consultation Type", formatConsultationType(consultationType))}
+                    </div>
+                    <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.5rem;justify-content:center;">
+                        ${canStartVideo ? `<button class="btn btn-primary" onclick="window.location.href='appointment-video-call.html?id=${encodeURIComponent(appointmentId)}'">Start Video Call</button>` : ""}
+                        <button class="btn btn-primary" onclick="window.location.href='patient-dashboard.html'">Dashboard</button>
+                        <button class="btn btn-outline" onclick="window.location.href='appointment-list.html'">Book Another</button>
+                    </div>
+                </section>
+            `;
+        }
+
+        function row(label, value) {
+            return `
+                <div style="display:flex;justify-content:space-between;gap:1rem;border:1px solid #e2e8f0;border-radius:12px;padding:.85rem 1rem;background:#fff;">
+                    <span style="color:#64748b;font-weight:600;">${escapeHtml(label)}</span>
+                    <strong style="text-align:right;color:#0f172a;">${escapeHtml(value)}</strong>
+                </div>
+            `;
+        }
+
+        function formatConsultationType(type) {
+            const normalized = String(type || "").replace(/[_-]/g, " ").trim();
+            if (!normalized) return "N/A";
+            return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
-            if (window.requireRole && requireRole(['patient'])) {
-                await PageBuilder.buildPage({
-                    title: 'APPOINTMENT CONFIRMATION',
-                    subtitle: 'This page is currently under construction.',
-                    allowedRoles: ['patient'],
-                    renderFunction: () => '<div class="empty-state" style="padding: 50px; text-align: center;"><h2>Coming Soon</h2><p>This feature is being developed.</p><button class="btn btn-outline" onclick="window.history.back()">Go Back</button></div>'
-                });
+            if (window.requireRole && !requireRole(['patient'])) return;
+
+            const appointmentId = getParam("appointmentId") || getParam("appointment") || getParam("id");
+            if (appointmentId && window.API) {
+                try {
+                    const response = await API.get(`/appointments/${appointmentId}`);
+                    const appointment =
+                        response?.data?.data ||
+                        response?.data?.appointment ||
+                        response?.data ||
+                        response?.appointment ||
+                        response;
+                    renderConfirmation(appointment || null);
+                    return;
+                } catch (error) {
+                    console.warn("Could not load appointment details:", error);
+                }
             }
+
+            renderConfirmation();
         });
+
         function toggleMobileMenu() {
             document.querySelector('.nav-menu')?.classList.toggle('active');
         }

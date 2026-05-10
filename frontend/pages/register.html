@@ -237,10 +237,12 @@
         </div>
     </div>
 
-<script src="../js/config.js?v=2"></script>
-<script src="../js/auth.js?v=2"></script>
+<script src="../js/face-api.min.js"></script>
+<script src="../js/face-auth.js?v=3"></script>
+<script src="../js/config.js?v=4"></script>
+<script src="../js/auth.js?v=4"></script>
 <script>
-    let registeredFaceImageBase64 = null;
+    let registeredFaceDescriptor = null;
 
     if (!window.AuthManager) {
         console.error("AuthManager is not loaded. Check ../js/auth.js path.");
@@ -353,8 +355,8 @@
                 userData.department = document.getElementById('department').value;
             }
 
-            if (registeredFaceImageBase64) {
-                userData.faceImageBase64 = registeredFaceImageBase64;
+            if (registeredFaceDescriptor) {
+                userData.faceDescriptor = registeredFaceDescriptor;
             }
 
             console.log("Submitting register payload:", userData);
@@ -382,6 +384,8 @@
         }
     });
 
+    let globalDetectInterval = null;
+
     async function startFaceRegistration() {
         const videoContainer = document.getElementById('video-container');
         const videoElement = document.getElementById('video-feed');
@@ -389,33 +393,48 @@
         const btn = document.getElementById('btn-face-register');
 
         videoContainer.style.display = 'block';
-        statusText.textContent = 'Initializing camera...';
+        statusText.textContent = 'Initializing camera and face models...';
 
         try {
+            if (typeof window.LoadingOverlay !== 'undefined') window.LoadingOverlay.show();
+            await window.FaceAuth.loadFaceModels();
+            if (typeof window.LoadingOverlay !== 'undefined') window.LoadingOverlay.hide();
+            
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
             videoElement.srcObject = stream;
-            statusText.textContent = 'Please look at the camera for 3 seconds...';
+            statusText.textContent = 'Please look at the camera. Detecting face...';
             
-            setTimeout(() => {
-                statusText.textContent = 'Face successfully captured!';
-                statusText.style.color = '#10b981';
-                
-                const canvas = document.createElement('canvas');
-                canvas.width = videoElement.videoWidth;
-                canvas.height = videoElement.videoHeight;
-                canvas.getContext('2d').drawImage(videoElement, 0, 0);
-                registeredFaceImageBase64 = canvas.toDataURL('image/jpeg');
-                
-                stream.getTracks().forEach(track => track.stop());
-                setTimeout(() => {
-                    videoContainer.style.display = 'none';
-                    btn.innerHTML = '<i class="fas fa-check" style="color:#10b981;"></i> Face Registered';
-                    btn.disabled = true;
-                }, 1500);
-            }, 3000);
+            videoElement.onloadedmetadata = async () => {
+                if (globalDetectInterval) clearInterval(globalDetectInterval);
+                let attempts = 0;
+                globalDetectInterval = setInterval(async () => {
+                    attempts++;
+                    const descriptor = await window.FaceAuth.getFaceDescriptor(videoElement);
+                    if (descriptor) {
+                        clearInterval(globalDetectInterval);
+                        statusText.textContent = 'Face successfully captured!';
+                        statusText.style.color = '#10b981';
+                        
+                        registeredFaceDescriptor = descriptor;
+                        
+                        stream.getTracks().forEach(track => track.stop());
+                        setTimeout(() => {
+                            videoContainer.style.display = 'none';
+                            btn.innerHTML = '<i class="fas fa-check" style="color:#10b981;"></i> Face Registered';
+                            btn.disabled = true;
+                        }, 1500);
+                    } else if (attempts > 30) {
+                        clearInterval(globalDetectInterval);
+                        statusText.textContent = 'Failed to detect face. Please try again.';
+                        stream.getTracks().forEach(track => track.stop());
+                        setTimeout(() => { videoContainer.style.display = 'none'; }, 3000);
+                    }
+                }, 500);
+            };
         } catch (e) {
             console.error("Camera error:", e);
-            statusText.textContent = 'Failed to access camera.';
+            statusText.textContent = 'Failed to access camera or load models.';
+            if (typeof window.LoadingOverlay !== 'undefined') window.LoadingOverlay.hide();
         }
     }
 </script>

@@ -80,6 +80,7 @@ try {
     console.log("   11. chat_sessions");
     console.log("   12. chat_messages");
     console.log("   13. video_calls");
+    console.log("   14. emergencies");
     console.log("\n📁 Database file: backend/database/hospital.db");
 } catch (error) {
     console.error("❌ Error creating/updating database:", error.message);

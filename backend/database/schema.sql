@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TABLE IF NOT EXISTS patients (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    patient_id TEXT PRIMARY KEY,
     user_id INTEGER NOT NULL UNIQUE,
     gender TEXT CHECK(gender IN ('Male', 'Female', 'Other')),
     age INTEGER,
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS nurses (
 CREATE TABLE IF NOT EXISTS appointments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     appointment_code TEXT UNIQUE NOT NULL,
-    patient_id INTEGER NOT NULL,
+    patient_id TEXT NOT NULL,
     doctor_id INTEGER NOT NULL,
     nurse_id INTEGER,
     symptoms TEXT NOT NULL,
@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS appointments (
     cancelled_by TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id) ON DELETE CASCADE,
     FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE,
     FOREIGN KEY (nurse_id) REFERENCES nurses(id) ON DELETE SET NULL
 );
@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS appointments (
 CREATE TABLE IF NOT EXISTS chat_permissions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     appointment_id INTEGER NOT NULL,
-    patient_id INTEGER NOT NULL,
+    patient_id TEXT NOT NULL,
     doctor_id INTEGER NOT NULL,
     status TEXT CHECK(status IN ('pending', 'approved', 'rejected', 'expired')) DEFAULT 'pending',
     requested_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -100,13 +100,13 @@ CREATE TABLE IF NOT EXISTS chat_permissions (
     expires_at DATETIME,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE CASCADE,
-    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id) ON DELETE CASCADE,
     FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS reports (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    patient_id INTEGER NOT NULL,
+    patient_id TEXT NOT NULL,
     doctor_id INTEGER NOT NULL,
     appointment_id INTEGER,
     title TEXT NOT NULL,
@@ -118,7 +118,7 @@ CREATE TABLE IF NOT EXISTS reports (
     is_shared INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id) ON DELETE CASCADE,
     FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE,
     FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE SET NULL
 );
@@ -126,7 +126,7 @@ CREATE TABLE IF NOT EXISTS reports (
 CREATE TABLE IF NOT EXISTS skin_predictions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
-    patient_id INTEGER,
+    patient_id TEXT,
     image_path TEXT NOT NULL,
     predicted_class TEXT NOT NULL,
     confidence REAL NOT NULL,
@@ -136,12 +136,12 @@ CREATE TABLE IF NOT EXISTS skin_predictions (
     disclaimer TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE SET NULL
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS vitals (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    patient_id INTEGER NOT NULL,
+    patient_id TEXT NOT NULL,
     appointment_id INTEGER,
     temperature REAL,
     heart_rate INTEGER,
@@ -152,13 +152,13 @@ CREATE TABLE IF NOT EXISTS vitals (
     recorded_by TEXT CHECK(recorded_by IN ('patient', 'nurse', 'doctor', 'system')) DEFAULT 'system',
     recorded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id) ON DELETE CASCADE,
     FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS emergency_alerts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    patient_id INTEGER NOT NULL,
+    patient_id TEXT NOT NULL,
     doctor_id INTEGER,
     appointment_id INTEGER,
     message TEXT NOT NULL,
@@ -171,7 +171,7 @@ CREATE TABLE IF NOT EXISTS emergency_alerts (
     resolution_notes TEXT,
     location TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id) ON DELETE CASCADE,
     FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE SET NULL,
     FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE SET NULL,
     FOREIGN KEY (acknowledged_by) REFERENCES users(id) ON DELETE SET NULL,
@@ -180,7 +180,7 @@ CREATE TABLE IF NOT EXISTS emergency_alerts (
 
 CREATE TABLE IF NOT EXISTS nurse_notes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    patient_id INTEGER NOT NULL,
+    patient_id TEXT NOT NULL,
     nurse_id INTEGER NOT NULL,
     appointment_id INTEGER,
     note TEXT NOT NULL,
@@ -188,7 +188,7 @@ CREATE TABLE IF NOT EXISTS nurse_notes (
     is_urgent INTEGER DEFAULT 0,
     attachments TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id) ON DELETE CASCADE,
     FOREIGN KEY (nurse_id) REFERENCES nurses(id) ON DELETE CASCADE,
     FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE SET NULL
 );
@@ -196,7 +196,7 @@ CREATE TABLE IF NOT EXISTS nurse_notes (
 CREATE TABLE IF NOT EXISTS chat_sessions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
-    patient_id INTEGER,
+    patient_id TEXT,
     title TEXT DEFAULT 'New Conversation',
     summary TEXT,
     session_type TEXT DEFAULT 'ai_nurse',
@@ -206,7 +206,7 @@ CREATE TABLE IF NOT EXISTS chat_sessions (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE SET NULL
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS chat_messages (
@@ -251,3 +251,32 @@ CREATE INDEX IF NOT EXISTS idx_chat_sessions_user_id ON chat_sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_chat_messages_session_id ON chat_messages(session_id);
 CREATE INDEX IF NOT EXISTS idx_video_calls_appointment_id ON video_calls(appointment_id);
 CREATE INDEX IF NOT EXISTS idx_video_calls_updated_at ON video_calls(updated_at);
+
+CREATE TABLE IF NOT EXISTS emergencies (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    patient_id TEXT NOT NULL,
+    doctor_id INTEGER,
+    status TEXT CHECK(status IN ('pending', 'accepted', 'rejected')) DEFAULT 'pending',
+    latitude REAL,
+    longitude REAL,
+    location_address TEXT,
+    summary TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id) ON DELETE CASCADE,
+    FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS doctor_assignments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    patient_id TEXT NOT NULL,
+    doctor_id INTEGER NOT NULL,
+    status TEXT DEFAULT 'active',
+    assigned_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id) ON DELETE CASCADE,
+    FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_emergencies_patient_id ON emergencies(patient_id);
+CREATE INDEX IF NOT EXISTS idx_emergencies_doctor_id ON emergencies(doctor_id);
+CREATE INDEX IF NOT EXISTS idx_emergencies_status ON emergencies(status);

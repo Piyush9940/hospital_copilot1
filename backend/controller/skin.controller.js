@@ -1,5 +1,15 @@
 import { createError } from "../utils/helper.js";
 import db from "../config/db.js";
+import { getPatientByUserId } from "../model/patient.model.js";
+
+const resolvePatientId = (req) => {
+    if (req.user?.role === "patient") {
+        const patient = getPatientByUserId(req.user.id);
+        return patient?.patient_id || null;
+    }
+
+    return req.body?.patient_id || req.body?.patientId || null;
+};
 
 export const predictSkinDisease = async (req, res, next) => {
     try {
@@ -14,7 +24,7 @@ export const predictSkinDisease = async (req, res, next) => {
         const formData = new FormData();
         formData.append('file', blob, 'skin.jpg');
 
-        const aiResponse = await fetch(`${process.env.AI_SERVICE_URL || 'https://piyush9940-hospital-copilot-ai-service.hf.space'}/skin/predict`, {
+        const aiResponse = await fetch(`${process.env.AI_SERVICE_URL || 'http://127.0.0.1:7860'}/skin/predict`, {
             method: 'POST',
             body: formData
         });
@@ -24,9 +34,13 @@ export const predictSkinDisease = async (req, res, next) => {
         }
 
         const predictionData = await aiResponse.json();
+        const prediction = predictionData?.data || predictionData;
 
-        // Save result in DB if patient_id is provided
-        const patientId = req.body?.patient_id;
+        if (!prediction?.predicted_class) {
+            throw createError("Skin prediction response is missing predicted_class", 502);
+        }
+
+        const patientId = resolvePatientId(req);
         if (patientId) {
             const stmt = db.prepare(`
                 INSERT INTO skin_predictions (
@@ -39,18 +53,18 @@ export const predictSkinDisease = async (req, res, next) => {
                 req.user.id,
                 patientId,
                 'base64_image', // In a real app, save to S3/disk and store path
-                predictionData.predicted_class,
-                predictionData.confidence,
-                JSON.stringify(predictionData.top_3_predictions),
-                predictionData.description,
-                predictionData.precautions,
-                predictionData.disclaimer
+                prediction.predicted_class,
+                prediction.confidence,
+                JSON.stringify(prediction.top_3_predictions || []),
+                prediction.description,
+                prediction.precautions,
+                prediction.disclaimer
             );
         }
 
         return res.status(200).json({
             success: true,
-            data: predictionData
+            data: prediction
         });
     } catch (error) {
         console.error("Skin prediction error:", error);

@@ -21,6 +21,7 @@ class EmergencySystem {
     async getLocation() {
         if (!('geolocation' in navigator)) {
             Toast.show('Geolocation is not supported on this device', 'warning');
+            this.showManualLocationInput();
             return null;
         }
 
@@ -37,7 +38,8 @@ class EmergencySystem {
                 },
                 (error) => {
                     console.error('Location error:', error);
-                    Toast.show('Unable to get location. Emergency alert can still be sent.', 'warning');
+                    Toast.show('Unable to get location. Please enter it manually if possible.', 'warning');
+                    this.showManualLocationInput();
                     resolve(null);
                 },
                 {
@@ -69,6 +71,10 @@ class EmergencySystem {
                     profileRes ||
                     null;
             } catch (profileError) {
+                if (profileError.message && profileError.message.toLowerCase().includes('token')) {
+                    setTimeout(() => { Auth.logout(); }, 2000);
+                    throw new Error('Session expired. Please log in again.');
+                }
                 setTimeout(() => { window.location.href = 'patient-profile.html'; }, 2000);
                 throw new Error('Patient profile not found. Please complete patient profile first. Redirecting...');
             }
@@ -81,19 +87,33 @@ class EmergencySystem {
             const vitals = await this.getLatestVitals();
             const contacts = this.getEmergencyContacts();
 
+            let addressStr = "Unknown Location";
+            if (!this.location) {
+                const manualLoc = document.getElementById('manualLocation')?.value?.trim();
+                if (manualLoc) {
+                    addressStr = manualLoc;
+                }
+            } else {
+                addressStr = `Lat: ${this.location.lat}, Lng: ${this.location.lng}`;
+            }
+
+            const medicalContextStr = 
+                `${contacts?.bloodGroup ? `Blood Group: ${contacts.bloodGroup}. ` : ''}` +
+                `${contacts?.allergies ? `Allergies: ${contacts.allergies}. ` : ''}` +
+                `${contacts?.medications ? `Medications: ${contacts.medications}. ` : ''}` +
+                `${vitals?.bp ? `BP: ${vitals.bp}. ` : ''}` +
+                `${vitals?.heartRate ? `HR: ${vitals.heartRate}. ` : ''}` +
+                `${vitals?.spo2 ? `SpO2: ${vitals.spo2}. ` : ''}`;
+
             const payload = {
-                message:
-                    `Emergency alert triggered by patient.` +
-                    `${this.location ? ` Location: ${this.location.lat}, ${this.location.lng}.` : ''}` +
-                    `${contacts?.bloodGroup ? ` Blood Group: ${contacts.bloodGroup}.` : ''}` +
-                    `${contacts?.allergies ? ` Allergies: ${contacts.allergies}.` : ''}` +
-                    `${contacts?.medications ? ` Medications: ${contacts.medications}.` : ''}` +
-                    `${vitals?.bp ? ` BP: ${vitals.bp}.` : ''}` +
-                    `${vitals?.heartRate ? ` HR: ${vitals.heartRate}.` : ''}` +
-                    `${vitals?.spo2 ? ` SpO2: ${vitals.spo2}.` : ''}`
+                patientId: patientProfile.patientId || patientProfile.patient_id,
+                latitude: this.location ? this.location.lat : null,
+                longitude: this.location ? this.location.lng : null,
+                address: addressStr,
+                medicalContext: medicalContextStr.trim() || "No additional medical context provided."
             };
 
-            await API.post('/emergency/my/notify', payload);
+            await API.post('/v2/emergency/trigger', payload);
 
             this.notifyEmergencyContacts();
 
@@ -124,6 +144,13 @@ class EmergencySystem {
                 clearInterval(this.countdownInterval);
                 this.countdownInterval = null;
             }
+        }
+    }
+
+    showManualLocationInput() {
+        const card = document.getElementById('manualLocationCard');
+        if (card) {
+            card.style.display = 'block';
         }
     }
 

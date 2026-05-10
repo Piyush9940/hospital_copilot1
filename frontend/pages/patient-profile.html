@@ -58,6 +58,7 @@
         .nav-brand i {
             background: none;
             -webkit-background-clip: unset;
+            background-clip: unset;
             color: #2563eb;
         }
         .nav-menu {
@@ -651,7 +652,7 @@
 
         async function fetchPatientProfile() {
             try {
-                const response = await window.API.get("/patients/profile");
+                const response = await window.API.get("/patient/me");
                 if (response && response.data) {
                     const data = response.data;
                     profileData.personal.firstName = data.firstName || data.name?.split(' ')[0] || "";
@@ -756,7 +757,9 @@
             profileData.personal.address = document.getElementById("address").value;
             
             try {
-                await window.API.put("/patients/profile", {
+                await window.API.post("/patient/profile", {
+                    userId: profileData.personal.userId || window.AuthManager.getUser().id,
+                    age: calculateAge(profileData.personal.dob) || 30,
                     name: `${profileData.personal.firstName} ${profileData.personal.lastName}`,
                     email: profileData.personal.email,
                     phone: profileData.personal.phone,

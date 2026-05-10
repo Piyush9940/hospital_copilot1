@@ -15,14 +15,22 @@ import {
 } from "../services/appointment.service.js";
 
 import { createError, validateId } from "../utils/helper.js";
+import { getPatientByUserId } from "../model/patient.model.js";
 
 /**
  * Create appointment
  */
 export const createAppointment = async (req, res, next) => {
     try {
+        let patientId = req.body.patientId;
+
+        if (!patientId && req.user?.role === "patient") {
+            const patient = getPatientByUserId(req.user.id);
+            patientId = patient?.patient_id;
+        }
+
         const result = await createAppointmentRequest({
-            patientId: req.body.patientId,
+            patientId,
             doctorId: req.body.doctorId,
             nurseId: req.body.nurseId || null,
             symptoms: req.body.symptoms,
@@ -53,9 +61,7 @@ export const getAppointmentById = async (req, res, next) => {
     try {
         const appointmentId = validateId(req.params.appointmentId, "Appointment ID");
 
-        const result = await getAppointmentDetails({
-            appointmentId,
-        });
+        const result = await getAppointmentDetails(appointmentId);
 
         return res.status(200).json(result);
     } catch (error) {
@@ -75,11 +81,9 @@ export const getAppointmentById = async (req, res, next) => {
  */
 export const getAppointmentsForPatient = async (req, res, next) => {
     try {
-        const patientId = validateId(req.params.patientId, "Patient ID");
+        const patientId = req.params.patientId;
 
-        const result = await getPatientAppointments({
-            patientId,
-        });
+        const result = await getPatientAppointments(patientId);
 
         return res.status(200).json(result);
     } catch (error) {
@@ -100,9 +104,7 @@ export const getAppointmentsForDoctor = async (req, res, next) => {
     try {
         const doctorId = validateId(req.params.doctorId, "Doctor ID");
 
-        const result = await getDoctorAppointments({
-            doctorId,
-        });
+        const result = await getDoctorAppointments(doctorId);
 
         return res.status(200).json(result);
     } catch (error) {

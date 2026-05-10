@@ -7,6 +7,8 @@ from routes.voice_routes import router as voice_router
 from routes.translation_routes import router as translation_router
 from routes.face_routes import router as face_router
 from routes.skin_routes import router as skin_router
+from routes.emergency_routes import router as emergency_router
+from routes.emergency_routes import ai_router
 
 app = FastAPI(
     title="AI Nurse Service",
@@ -27,6 +29,8 @@ app.include_router(voice_router)
 app.include_router(translation_router)
 app.include_router(face_router, prefix="/face", tags=["Face Authentication"])
 app.include_router(skin_router, prefix="/skin", tags=["Skin Disease Detection"])
+app.include_router(emergency_router)
+app.include_router(ai_router)
 
 
 @app.get("/")

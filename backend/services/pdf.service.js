@@ -77,6 +77,108 @@ const writeKeyValueRows = (doc, rows = []) => {
     });
 };
 
+const stringifyPdfValue = (value) => {
+    if (value === undefined || value === null || value === "") return "N/A";
+    if (Array.isArray(value)) return value.filter(Boolean).map(stringifyPdfValue).join("\n");
+    if (typeof value === "object") return JSON.stringify(value, null, 2);
+    return String(value);
+};
+
+const normalizePdfList = (value) => {
+    if (!value) return [];
+    if (Array.isArray(value)) return value.filter(Boolean).map(stringifyPdfValue);
+    if (typeof value === "object") {
+        return Object.entries(value).map(([key, item]) => `${key}: ${stringifyPdfValue(item)}`);
+    }
+    return String(value)
+        .split(/\r?\n|;/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+};
+
+const ensureSpace = (doc, height = 80) => {
+    if (doc.y + height > doc.page.height - doc.page.margins.bottom) {
+        doc.addPage();
+    }
+};
+
+const drawSectionHeading = (doc, title) => {
+    ensureSpace(doc, 58);
+    doc.moveDown(0.7);
+    doc
+        .fillColor("#0f766e")
+        .font("Helvetica-Bold")
+        .fontSize(12)
+        .text(String(title).toUpperCase(), { characterSpacing: 0.3 });
+    doc
+        .moveTo(doc.page.margins.left, doc.y + 5)
+        .lineTo(doc.page.width - doc.page.margins.right, doc.y + 5)
+        .strokeColor("#99f6e4")
+        .lineWidth(1)
+        .stroke();
+    doc.moveDown(0.85);
+};
+
+const drawInfoGrid = (doc, rows = []) => {
+    const contentWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+    const gap = 16;
+    const colWidth = (contentWidth - gap) / 2;
+
+    rows.forEach((row, index) => {
+        if (index % 2 === 0) ensureSpace(doc, 52);
+        const x = doc.page.margins.left + (index % 2) * (colWidth + gap);
+        const y = doc.y;
+
+        doc.fillColor("#64748b").font("Helvetica-Bold").fontSize(7.8).text(String(row.label || "").toUpperCase(), x, y, { width: colWidth });
+        doc.fillColor("#111827").font("Helvetica").fontSize(10.2).text(stringifyPdfValue(row.value), x, y + 13, { width: colWidth, lineGap: 2 });
+
+        if (index % 2 === 1 || index === rows.length - 1) {
+            doc.y = Math.max(doc.y, y + 42);
+        }
+    });
+};
+
+const drawParagraph = (doc, value) => {
+    ensureSpace(doc, 70);
+    doc.fillColor("#1f2937").font("Helvetica").fontSize(10.3).text(stringifyPdfValue(value), {
+        width: doc.page.width - doc.page.margins.left - doc.page.margins.right,
+        lineGap: 4,
+        align: "justify",
+    });
+};
+
+const drawBulletList = (doc, value) => {
+    const items = normalizePdfList(value);
+    if (!items.length) {
+        drawParagraph(doc, "N/A");
+        return;
+    }
+
+    items.forEach((item) => {
+        ensureSpace(doc, 34);
+        const y = doc.y;
+        doc.fillColor("#0f766e").font("Helvetica-Bold").fontSize(10).text("-", doc.page.margins.left, y);
+        doc.fillColor("#1f2937").font("Helvetica").fontSize(10.2).text(item, doc.page.margins.left + 14, y, {
+            width: doc.page.width - doc.page.margins.left - doc.page.margins.right - 14,
+            lineGap: 3,
+        });
+        doc.moveDown(0.25);
+    });
+};
+
+const drawFooterPages = (doc) => {
+    const range = doc.bufferedPageRange();
+    const contentWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+
+    for (let i = range.start; i < range.start + range.count; i += 1) {
+        doc.switchToPage(i);
+        doc.fillColor("#94a3b8").font("Helvetica").fontSize(8).text(`Page ${i + 1} of ${range.count}`, doc.page.margins.left, doc.page.height - 34, {
+            width: contentWidth,
+            align: "right",
+        });
+    }
+};
+
 /**
  * Finalize PDF and return promise
  */
@@ -371,9 +473,115 @@ export const generateVitalSummaryPdf = async ({
     }
 };
 
+export const generateMedicalScanReportPdf = async ({
+    scanLabel,
+    originalFileName = "",
+    prediction = {},
+    result = {},
+    outputDir = DEFAULT_OUTPUT_DIR,
+    fileName = null,
+}) => {
+    try {
+        const normalizedScanLabel = sanitize(scanLabel);
+        if (!normalizedScanLabel) throw createError("Scan label is required", 400);
+
+        const { fullPath, fileName: finalFileName } = resolveOutputPath(outputDir, fileName);
+        const doc = new PDFDocument({
+            margin: 54,
+            size: "A4",
+            bufferPages: true,
+            info: {
+                Title: `${normalizedScanLabel} AI Detection Report`,
+                Author: "Hospital Copilot",
+                Subject: "AI medical scan analysis",
+            },
+        });
+
+        const contentWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+        doc.rect(0, 0, doc.page.width, 98).fill("#0f766e");
+        doc.fillColor("#ffffff").font("Helvetica-Bold").fontSize(21).text(`${normalizedScanLabel} AI Detection Report`, doc.page.margins.left, 28, {
+            width: contentWidth,
+        });
+        doc.font("Helvetica").fontSize(10).text("Hospital Copilot scan analysis summary", doc.page.margins.left, 58, {
+            width: contentWidth,
+        });
+        doc.fontSize(8.5).text(`Generated: ${formatDateTime(new Date())}`, doc.page.margins.left, 76, {
+            width: contentWidth,
+            align: "right",
+        });
+        doc.y = 122;
+
+        drawSectionHeading(doc, "Scan Overview");
+        drawInfoGrid(doc, [
+            { label: "Scan Type", value: normalizedScanLabel },
+            { label: "Uploaded File", value: originalFileName || "N/A" },
+            { label: "Detected / Predicted", value: prediction.condition || `${normalizedScanLabel} Analysis` },
+            { label: "Confidence", value: prediction.confidence || "N/A" },
+        ]);
+
+        drawSectionHeading(doc, "Findings");
+        drawParagraph(doc, prediction.impression || prediction.summary || "No detailed findings were returned by the scan service.");
+
+        drawSectionHeading(doc, "Recommendations");
+        drawBulletList(doc, prediction.recommendation || "Review this AI-assisted result with a qualified clinician.");
+
+        if (result && typeof result === "object") {
+            const compactRows = Object.entries(result)
+                .filter(([key]) => !["image", "file", "raw", "base64"].includes(String(key).toLowerCase()))
+                .slice(0, 10)
+                .map(([key, value]) => ({
+                    label: key.replace(/[_-]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase()),
+                    value,
+                }));
+
+            if (compactRows.length) {
+                drawSectionHeading(doc, "Structured AI Output");
+                drawInfoGrid(doc, compactRows);
+            }
+
+            drawSectionHeading(doc, "Raw JSON Appendix");
+            doc.font("Courier").fontSize(8.2).fillColor("#334155").text(JSON.stringify(result, null, 2), {
+                width: contentWidth,
+                lineGap: 2,
+            });
+        }
+
+        ensureSpace(doc, 76);
+        doc.moveDown(1);
+        const boxY = doc.y;
+        doc.roundedRect(doc.page.margins.left, boxY, contentWidth, 52, 6).fillAndStroke("#f8fafc", "#e2e8f0");
+        doc.fillColor("#475569").font("Helvetica").fontSize(8.8).text(
+            "Disclaimer: This PDF is generated from AI scan output and should be treated as a preliminary aid only. A qualified doctor must review the scan and clinical context before diagnosis or treatment.",
+            doc.page.margins.left + 14,
+            boxY + 13,
+            { width: contentWidth - 28, lineGap: 2 }
+        );
+
+        drawFooterPages(doc);
+        const resultData = await finalizePdf(doc, fullPath);
+
+        return {
+            success: true,
+            message: "Medical scan PDF generated successfully",
+            data: {
+                fileName: finalFileName,
+                filePath: resultData.path,
+                fileSize: resultData.size,
+            },
+        };
+    } catch (error) {
+        throw createError(
+            error.message || "Failed to generate medical scan PDF",
+            error.statusCode || 500,
+            error.details || null
+        );
+    }
+};
+
 export default {
     generateGenericPdf,
     generateMedicalReportPdf,
     generateAppointmentSummaryPdf,
     generateVitalSummaryPdf,
+    generateMedicalScanReportPdf,
 };

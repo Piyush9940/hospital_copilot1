@@ -10,7 +10,9 @@ import {
     verifyReportOwnershipByUserId,
 } from "../services/report.service.js";
 
-import { createError, validateId } from "../utils/helper.js";
+import { createError, validateId, validateStringId, formatDateTime } from "../utils/helper.js";
+import { getPatientByUserId } from "../model/patient.model.js";
+import { getAllDoctors, getDoctorByUserId } from "../model/doctor.model.js";
 import PDFDocument from "pdfkit";
 import fs from "fs";
 import path from "path";
@@ -19,25 +21,192 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const toUploadUrl = (filePath) => {
+    const uploadRoot = path.resolve(__dirname, "../uploads");
+    const relativePath = path.relative(uploadRoot, filePath).split(path.sep).join("/");
+    return `/uploads/${relativePath}`;
+};
+
+const resolveReportDoctorId = (req) => {
+    if (req.body?.doctorId) {
+        return validateId(req.body.doctorId, "Doctor ID");
+    }
+
+    if (req.user?.role === "doctor") {
+        const doctor = getDoctorByUserId(req.user.id);
+        if (doctor?.id) return doctor.id;
+    }
+
+    const [firstDoctor] = getAllDoctors() || [];
+    if (!firstDoctor?.id) {
+        throw createError("A doctor profile is required before uploading reports", 400);
+    }
+
+    return firstDoctor.id;
+};
+
+const safeText = (value, fallback = "N/A") => {
+    if (value === undefined || value === null) return fallback;
+    if (Array.isArray(value)) return value.filter(Boolean).join(", ") || fallback;
+    if (typeof value === "object") return JSON.stringify(value, null, 2);
+    const text = String(value).trim();
+    return text || fallback;
+};
+
+const formatLabel = (key = "") => {
+    return String(key)
+        .replace(/[_-]+/g, " ")
+        .replace(/([a-z])([A-Z])/g, "$1 $2")
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+const normalizeList = (value) => {
+    if (!value) return [];
+    if (Array.isArray(value)) return value.filter((item) => item !== null && item !== undefined);
+    if (typeof value === "string") {
+        return value
+            .split(/\r?\n|;/)
+            .map((item) => item.trim())
+            .filter(Boolean);
+    }
+    if (typeof value === "object") {
+        return Object.entries(value).map(([key, item]) => `${formatLabel(key)}: ${safeText(item)}`);
+    }
+    return [value];
+};
+
+const ensurePdfSpace = (doc, requiredHeight = 90) => {
+    if (doc.y + requiredHeight > doc.page.height - doc.page.margins.bottom) {
+        doc.addPage();
+    }
+};
+
+const writeSectionTitle = (doc, title) => {
+    ensurePdfSpace(doc, 70);
+    doc.moveDown(0.9);
+    doc
+        .fillColor("#0f766e")
+        .font("Helvetica-Bold")
+        .fontSize(13)
+        .text(title.toUpperCase(), { characterSpacing: 0.4 });
+    doc
+        .moveTo(doc.page.margins.left, doc.y + 4)
+        .lineTo(doc.page.width - doc.page.margins.right, doc.y + 4)
+        .strokeColor("#ccfbf1")
+        .lineWidth(1)
+        .stroke();
+    doc.moveDown(0.8);
+};
+
+const writeKeyValueGrid = (doc, rows = []) => {
+    const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+    const gap = 18;
+    const colWidth = (pageWidth - gap) / 2;
+
+    rows.forEach((row, index) => {
+        if (index % 2 === 0) ensurePdfSpace(doc, 54);
+
+        const x = doc.page.margins.left + (index % 2) * (colWidth + gap);
+        const y = doc.y;
+
+        doc
+            .fillColor("#64748b")
+            .font("Helvetica-Bold")
+            .fontSize(8)
+            .text(row.label.toUpperCase(), x, y, { width: colWidth });
+        doc
+            .fillColor("#111827")
+            .font("Helvetica")
+            .fontSize(10.5)
+            .text(safeText(row.value), x, y + 13, { width: colWidth, lineGap: 2 });
+
+        if (index % 2 === 1 || index === rows.length - 1) {
+            doc.y = Math.max(doc.y, y + 44);
+        }
+    });
+};
+
+const writeParagraph = (doc, text) => {
+    ensurePdfSpace(doc, 80);
+    doc
+        .fillColor("#1f2937")
+        .font("Helvetica")
+        .fontSize(10.5)
+        .text(safeText(text, "No information provided."), {
+            width: doc.page.width - doc.page.margins.left - doc.page.margins.right,
+            align: "justify",
+            lineGap: 4,
+        });
+};
+
+const writeBulletList = (doc, items = []) => {
+    const normalized = normalizeList(items);
+    if (!normalized.length) {
+        writeParagraph(doc, "No information provided.");
+        return;
+    }
+
+    normalized.forEach((item) => {
+        ensurePdfSpace(doc, 36);
+        const x = doc.page.margins.left;
+        const y = doc.y;
+
+        doc.fillColor("#0f766e").font("Helvetica-Bold").fontSize(10).text("-", x, y);
+        doc
+            .fillColor("#1f2937")
+            .font("Helvetica")
+            .fontSize(10.5)
+            .text(safeText(item), x + 14, y, {
+                width: doc.page.width - doc.page.margins.left - doc.page.margins.right - 14,
+                lineGap: 3,
+            });
+        doc.moveDown(0.35);
+    });
+};
+
+const writeObjectRows = (doc, value) => {
+    if (!value || typeof value !== "object") {
+        writeParagraph(doc, value);
+        return;
+    }
+
+    const rows = Object.entries(value).map(([key, item]) => ({
+        label: formatLabel(key),
+        value: safeText(item),
+    }));
+    writeKeyValueGrid(doc, rows);
+};
+
 /**
  * Create new medical report
  */
 export const createReport = async (req, res, next) => {
     try {
-        const patientId = validateId(req.body?.patientId, "Patient ID");
+        let patientId = req.body?.patientId;
+        if (!patientId && req.user?.role === 'patient') {
+            const p = getPatientByUserId(req.user.id);
+            if (p) patientId = p.patient_id;
+        }
+
+        const validPatientId = validateStringId(patientId, "Patient ID");
+        const doctorId = resolveReportDoctorId(req);
+        const title = typeof req.body?.title === "string" && req.body.title.trim() ? req.body.title.trim() : "Medical Report";
 
         const diagnosis =
-            typeof req.body?.diagnosis === "string" ? req.body.diagnosis.trim() : "";
+            typeof req.body?.diagnosis === "string" && req.body.diagnosis.trim() ? req.body.diagnosis.trim() : "Self Upload";
 
         const summary =
-            typeof req.body?.summary === "string" ? req.body.summary.trim() : "";
+            typeof req.body?.summary === "string" && req.body.summary.trim() ? req.body.summary.trim() : "Self Uploaded Report";
 
-        const pdfPath =
-            req.file?.path ||
-            (typeof req.body?.pdfPath === "string" ? req.body.pdfPath.trim() : "");
+        let pdfPath = typeof req.body?.pdfPath === "string" ? req.body.pdfPath.trim() : "";
+        if (req.file) {
+            pdfPath = toUploadUrl(req.file.path);
+        }
 
         const result = await createMedicalReport({
-            patientId,
+            patientId: validPatientId,
+            doctorId,
+            title,
             diagnosis,
             summary,
             pdfPath,
@@ -83,7 +252,7 @@ export const getReportById = async (req, res, next) => {
  */
 export const getReportsByPatientId = async (req, res, next) => {
     try {
-        const patientId = validateId(req.params?.patientId, "Patient ID");
+        const patientId = validateStringId(req.params?.patientId, "Patient ID");
 
         const result = await getPatientMedicalReports({
             patientId,
@@ -164,7 +333,7 @@ export const updateReport = async (req, res, next) => {
                 : null;
 
         const pdfPath =
-            req.file?.path ||
+            (req.file ? toUploadUrl(req.file.path) : null) ||
             (typeof req.body?.pdfPath === "string" && req.body.pdfPath.trim()
                 ? req.body.pdfPath.trim()
                 : null);
@@ -269,68 +438,185 @@ export const verifyOwnershipByUser = async (req, res, next) => {
  */
 export const generateReportPDF = async (req, res, next) => {
     try {
-        const { patientInfo, aiNurseSummary, skinResults, recommendations } = req.body;
+        const {
+            patientInfo,
+            aiNurseSummary,
+            skinResults,
+            recommendations,
+            vitals,
+            diagnosis,
+            summary,
+            medications,
+            followUp,
+            notes,
+        } = req.body;
         
         if (!patientInfo) {
             throw createError("Patient info is required", 400);
         }
 
-        const doc = new PDFDocument({ margin: 50 });
+        const doc = new PDFDocument({
+            margin: 54,
+            size: "A4",
+            bufferPages: true,
+            info: {
+                Title: "Medical Report - Hospital Copilot",
+                Author: "Hospital Copilot",
+                Subject: "AI assisted medical report",
+            },
+        });
         
-        // Save to uploads folder temporarily
         const fileName = `report_${Date.now()}.pdf`;
         const uploadsDir = path.join(__dirname, '..', 'uploads');
         if (!fs.existsSync(uploadsDir)) {
-            fs.mkdirSync(uploadsDir);
+            fs.mkdirSync(uploadsDir, { recursive: true });
         }
         
         const filePath = path.join(uploadsDir, fileName);
         const stream = fs.createWriteStream(filePath);
         doc.pipe(stream);
 
-        // Header
-        doc.fontSize(20).text('Medical Report - Hospital Copilot', { align: 'center' });
-        doc.moveDown();
-        
-        // Patient Info
-        doc.fontSize(16).text('Patient Information', { underline: true });
-        doc.fontSize(12).text(`Name: ${patientInfo.name || 'N/A'}`);
-        doc.text(`Age/Gender: ${patientInfo.age || 'N/A'} / ${patientInfo.gender || 'N/A'}`);
-        doc.text(`Blood Group: ${patientInfo.blood_group || 'N/A'}`);
-        doc.moveDown();
+        const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+        const generatedAt = formatDateTime(new Date());
+        const patientName = patientInfo.name || patientInfo.patientName || patientInfo.fullName;
+        const bloodGroup = patientInfo.bloodGroup || patientInfo.blood_group;
+        const patientRows = [
+            { label: "Patient Name", value: patientName },
+            { label: "Age / Gender", value: `${safeText(patientInfo.age)} / ${safeText(patientInfo.gender)}` },
+            { label: "Blood Group", value: bloodGroup },
+            { label: "Patient ID", value: patientInfo.patientId || patientInfo.patient_id || patientInfo.id },
+            { label: "Phone", value: patientInfo.phone },
+            { label: "Generated At", value: generatedAt },
+        ];
 
-        // AI Nurse Summary
+        doc.rect(0, 0, doc.page.width, 96).fill("#0f766e");
+        doc
+            .fillColor("#ffffff")
+            .font("Helvetica-Bold")
+            .fontSize(22)
+            .text("Medical Report", doc.page.margins.left, 28, { width: pageWidth });
+        doc
+            .font("Helvetica")
+            .fontSize(10.5)
+            .text("Hospital Copilot AI Assisted Clinical Summary", doc.page.margins.left, 58, { width: pageWidth });
+        doc
+            .fontSize(9)
+            .text(`Report ID: ${fileName.replace(".pdf", "")}`, doc.page.margins.left, 74, {
+                width: pageWidth,
+                align: "right",
+            });
+        doc.y = 120;
+
+        writeSectionTitle(doc, "Patient Information");
+        writeKeyValueGrid(doc, patientRows);
+
+        if (summary || diagnosis) {
+            writeSectionTitle(doc, "Clinical Summary");
+            if (diagnosis) {
+                writeKeyValueGrid(doc, [{ label: "Diagnosis", value: diagnosis }]);
+                doc.moveDown(0.3);
+            }
+            if (summary) writeParagraph(doc, summary);
+        }
+
         if (aiNurseSummary) {
-            doc.fontSize(16).text('AI Nurse Summary', { underline: true });
-            doc.fontSize(12).text(aiNurseSummary);
-            doc.moveDown();
+            writeSectionTitle(doc, "AI Nurse Summary");
+            writeParagraph(doc, aiNurseSummary);
         }
 
-        // Skin Results
+        if (vitals) {
+            writeSectionTitle(doc, "Vitals");
+            writeObjectRows(doc, vitals);
+        }
+
         if (skinResults) {
-            doc.fontSize(16).text('Skin Disease Detection Results', { underline: true });
-            doc.fontSize(12).text(`Predicted Class: ${skinResults.predicted_class}`);
-            doc.text(`Confidence: ${(skinResults.confidence * 100).toFixed(2)}%`);
-            doc.text(`Description: ${skinResults.description}`);
-            doc.text(`Precautions: ${skinResults.precautions}`);
-            doc.moveDown();
+            const confidence = Number(skinResults.confidence);
+            const confidenceText = Number.isFinite(confidence)
+                ? `${(confidence <= 1 ? confidence * 100 : confidence).toFixed(2)}%`
+                : skinResults.confidence;
+
+            writeSectionTitle(doc, "Skin Detection Results");
+            writeKeyValueGrid(doc, [
+                { label: "Predicted Class", value: skinResults.predicted_class || skinResults.predictedClass },
+                { label: "Confidence", value: confidenceText },
+            ]);
+
+            if (skinResults.description) {
+                doc.moveDown(0.4);
+                writeParagraph(doc, skinResults.description);
+            }
+
+            if (skinResults.precautions) {
+                writeSectionTitle(doc, "Precautions");
+                writeBulletList(doc, skinResults.precautions);
+            }
         }
 
-        // Recommendations
         if (recommendations) {
-            doc.fontSize(16).text('Recommendations', { underline: true });
-            doc.fontSize(12).text(recommendations);
-            doc.moveDown();
+            writeSectionTitle(doc, "Recommendations");
+            writeBulletList(doc, recommendations);
         }
 
-        doc.fontSize(10).text('Disclaimer: This report is partially generated by AI and is not a substitute for professional medical advice.', { align: 'center', color: 'grey' });
+        if (medications) {
+            writeSectionTitle(doc, "Medication Notes");
+            writeBulletList(doc, medications);
+        }
+
+        if (followUp || notes) {
+            writeSectionTitle(doc, "Follow Up");
+            if (followUp) writeParagraph(doc, followUp);
+            if (notes) {
+                doc.moveDown(0.4);
+                writeParagraph(doc, notes);
+            }
+        }
+
+        ensurePdfSpace(doc, 80);
+        doc.moveDown(1.2);
+        doc
+            .roundedRect(doc.page.margins.left, doc.y, pageWidth, 48, 6)
+            .fillAndStroke("#f8fafc", "#e2e8f0");
+        doc
+            .fillColor("#475569")
+            .font("Helvetica")
+            .fontSize(8.8)
+            .text(
+                "Disclaimer: This report may include AI generated assistance and is not a substitute for professional medical advice, diagnosis, or treatment. Please consult a qualified clinician for medical decisions.",
+                doc.page.margins.left + 14,
+                doc.y + 12,
+                { width: pageWidth - 28, lineGap: 2 }
+            );
+
+        const range = doc.bufferedPageRange();
+        for (let i = range.start; i < range.start + range.count; i += 1) {
+            doc.switchToPage(i);
+            doc
+                .fillColor("#94a3b8")
+                .font("Helvetica")
+                .fontSize(8)
+                .text(
+                    `Page ${i + 1} of ${range.count}`,
+                    doc.page.margins.left,
+                    doc.page.height - 34,
+                    { width: pageWidth, align: "right" }
+                );
+        }
 
         doc.end();
+
+        stream.on("error", (error) => {
+            return next(createError(`Failed to write report PDF: ${error.message}`, 500));
+        });
 
         stream.on('finish', () => {
             return res.status(200).json({
                 success: true,
-                pdfUrl: `/uploads/${fileName}`
+                message: "Report PDF generated successfully",
+                pdfUrl: `/uploads/${fileName}`,
+                data: {
+                    fileName,
+                    filePath: `/uploads/${fileName}`,
+                },
             });
         });
         

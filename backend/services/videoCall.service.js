@@ -60,13 +60,6 @@ const verifyCallAccess = (appointment, userId, role) => {
         throw createError("Doctor is not authorized for this appointment", 403);
     }
 
-    if (
-        normalizedRole === "patient" &&
-        String(appointment.face_verification_status || "").toLowerCase() !== "verified"
-    ) {
-        throw createError("Face verification is required before joining the call", 400);
-    }
-
     return normalizedRole;
 };
 

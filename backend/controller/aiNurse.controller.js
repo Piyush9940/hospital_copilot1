@@ -33,14 +33,63 @@ const resolvePatientRecordIdFromUserId = (userId) => {
     const validUserId = validateId(userId, "User ID");
 
     const stmt = db.prepare(`
-        SELECT id
+        SELECT patient_id
         FROM patients
         WHERE user_id = ?
         LIMIT 1
     `);
 
     const row = stmt.get(validUserId);
-    return row?.id || null;
+    return row?.patient_id || null;
+};
+
+const MEDICAL_RELEVANCE_KEYWORDS = [
+    "ache", "allerg", "ambulance", "appointment", "asthma", "blood", "bp",
+    "breath", "burn", "cancer", "cardiac", "chest", "clinic", "cold", "cough",
+    "diagnos", "diabetes", "dizzy", "doctor", "dose", "drug", "emergency",
+    "fever", "fracture", "headache", "health", "heart", "hospital", "injury",
+    "lab", "medical", "medicine", "medication", "nausea", "nurse", "oxygen",
+    "pain", "patient", "prescription", "pulse", "rash", "report", "scan",
+    "skin", "surgery", "symptom", "tablet", "test", "therapy", "treatment",
+    "vaccine", "vital", "vomit", "wound", "xray", "x-ray", "mri", "ct",
+    "ultrasound", "pdf", "discharge", "summary", "pathology", "radiology"
+];
+
+const NON_MEDICAL_REJECTION =
+    "I’m here to help with medical and health-related questions only. Please ask me about symptoms, medicines, reports, vitals, appointments, or other care-related concerns.";
+
+const normalizeAttachmentMetadata = (attachments) => {
+    if (!Array.isArray(attachments)) return [];
+
+    return attachments
+        .map((item) => {
+            if (typeof item === "string") {
+                return { name: item, type: "", size: null };
+            }
+
+            if (!item || typeof item !== "object") return null;
+
+            return {
+                name: typeof item.name === "string" ? item.name : "",
+                type: typeof item.type === "string" ? item.type : "",
+                size: Number.isFinite(Number(item.size)) ? Number(item.size) : null,
+            };
+        })
+        .filter(Boolean);
+};
+
+const isMedicalRelated = (message, attachments = []) => {
+    const haystack = [
+        message,
+        ...attachments.flatMap((item) => [item.name, item.type]),
+    ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+    if (!haystack.trim()) return false;
+
+    return MEDICAL_RELEVANCE_KEYWORDS.some((keyword) => haystack.includes(keyword));
 };
 
 export const healthCheck = async (req, res, next) => {
@@ -71,6 +120,7 @@ export const chat = async (req, res, next) => {
                 ? req.body.language.trim()
                 : "en";
         const appointmentId = req.body?.appointmentId || null;
+        const attachments = normalizeAttachmentMetadata(req.body?.attachments);
 
         if (!message) {
             throw createError("Message is required", 400);
@@ -108,12 +158,46 @@ export const chat = async (req, res, next) => {
             }
         }
 
+        if (!isMedicalRelated(message, attachments)) {
+            await saveConversationPair({
+                sessionId: session.id,
+                userId,
+                userMessage: message,
+                assistantReply: NON_MEDICAL_REJECTION,
+                medicalContext: {
+                    patientContext,
+                    attachments,
+                    refusedReason: "non_medical_query",
+                },
+            });
+
+            return res.status(200).json({
+                success: true,
+                message: "AI Nurse refused non-medical query",
+                data: {
+                    sessionId: session.id,
+                    response: NON_MEDICAL_REJECTION,
+                    reply: NON_MEDICAL_REJECTION,
+                    language,
+                    patientContext,
+                    context: patientContext,
+                    ragResponse: null,
+                    refused: true,
+                    refusalReason: "non_medical_query",
+                },
+            });
+        }
+
         const aiResult = await chatWithAiNurse({
             message,
             patientId: userId,
             history,
-            context: patientContext,
+            context: {
+                ...patientContext,
+                uploadedAttachments: attachments,
+            },
             language,
+            attachments,
         });
 
         const aiData = extractServiceData(aiResult, {});
@@ -123,6 +207,14 @@ export const chat = async (req, res, next) => {
             aiData?.response ||
             aiData?.answer ||
             "No response generated";
+        const ragResponse =
+            aiData?.ragResponse ||
+            aiData?.rag_response ||
+            aiData?.rag ||
+            aiData?.retrieved_context ||
+            aiData?.sources ||
+            aiData?.context ||
+            aiData;
 
         await saveConversationPair({
             sessionId: session.id,
@@ -137,9 +229,12 @@ export const chat = async (req, res, next) => {
             message: "AI Nurse response generated successfully",
             data: {
                 sessionId: session.id,
+                response: reply,
                 reply,
                 language,
+                patientContext: patientContext,
                 context: patientContext,
+                ragResponse,
                 raw: aiData,
             },
         });

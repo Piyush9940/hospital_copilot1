@@ -1,11 +1,11 @@
 import db from "../config/db.js";
-import { createError, validateId } from "../utils/helper.js";
+import { createError, validateId, validateStringId } from "../utils/helper.js";
 
 const VITAL_STATUSES = ["normal", "warning", "critical"];
 
 export const addVital = (patientId, heartRate, spo2, bp, temperature, status) => {
     try {
-        const validPatientId = validateId(patientId, "Patient ID");
+        const validPatientId = validateStringId(patientId, "Patient ID");
         const validHeartRate = Number(heartRate);
         const validSpo2 = Number(spo2);
         const normalizedBp = typeof bp === "string" ? bp.trim() : "";
@@ -59,7 +59,7 @@ export const addVital = (patientId, heartRate, spo2, bp, temperature, status) =>
 
 export const getVitalsByPatientId = (patientId) => {
     try {
-        const validPatientId = validateId(patientId, "Patient ID");
+        const validPatientId = validateStringId(patientId, "Patient ID");
 
         const stmt = db.prepare(`
             SELECT *
@@ -76,7 +76,7 @@ export const getVitalsByPatientId = (patientId) => {
 
 export const getLatestVitals = (patientId) => {
     try {
-        const validPatientId = validateId(patientId, "Patient ID");
+        const validPatientId = validateStringId(patientId, "Patient ID");
 
         const stmt = db.prepare(`
             SELECT *

@@ -6,7 +6,7 @@ import {
     getChatSessionById,
 } from "../model/chat.model.js";
 
-import { createError, validateId, sanitize } from "../utils/helper.js";
+import { createError, validateId, validateStringId, sanitize } from "../utils/helper.js";
 
 /**
  * Allowed chat roles for memory
@@ -40,7 +40,7 @@ const validateRole = (role) => {
 export const createMemorySession = ({ userId, patientId = null, title = "New Conversation" }) => {
     try {
         const validUserId = validateId(userId, "User ID");
-        const validPatientId = patientId ? validateId(patientId, "Patient ID") : null;
+        const validPatientId = patientId ? validateStringId(patientId, "Patient ID") : null;
         const normalizedTitle =
             typeof title === "string" && title.trim() ? title.trim() : "New Conversation";
 
@@ -65,7 +65,7 @@ export const createMemorySession = ({ userId, patientId = null, title = "New Con
 export const getOrCreateLatestMemorySession = ({ userId, patientId = null }) => {
     try {
         const validUserId = validateId(userId, "User ID");
-        const validPatientId = patientId ? validateId(patientId, "Patient ID") : null;
+        const validPatientId = patientId ? validateStringId(patientId, "Patient ID") : null;
 
         const sessions = getSessionsByUserId(validUserId, 50) || [];
         const aiSession = sessions.find((session) => session.session_type === "ai_nurse");

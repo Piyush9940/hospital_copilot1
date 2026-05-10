@@ -261,7 +261,7 @@ class VideoCall {
 
     getAppointmentId() {
         const params = new URLSearchParams(window.location.search);
-        return params.get("id");
+        return params.get("id") || params.get("appointmentId") || params.get("appointment");
     }
 
     async loadAppointmentDetails() {

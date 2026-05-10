@@ -1,5 +1,5 @@
 import db from "../config/db.js";
-import { createError, validateId, safeJsonStringify } from "../utils/helper.js";
+import { createError, validateId, validateStringId, safeJsonStringify } from "../utils/helper.js";
 
 const CHAT_ROLES = ["user", "assistant", "doctor", "patient", "nurse", "system"];
 const CHAT_SESSION_TYPES = ["ai_nurse", "doctor_chat", "support"];
@@ -13,7 +13,7 @@ const validateRole = (role) => {
 export const createChatSession = (userId, patientId = null, title = "New Conversation", sessionType = "ai_nurse") => {
     try {
         const validUserId = validateId(userId, "User ID");
-        const validPatientId = patientId ? validateId(patientId, "Patient ID") : null;
+        const validPatientId = patientId ? validateStringId(patientId, "Patient ID") : null;
         const normalizedTitle = typeof title === "string" && title.trim() ? title.trim() : "New Conversation";
 
         if (!CHAT_SESSION_TYPES.includes(sessionType)) {

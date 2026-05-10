@@ -1,8 +1,9 @@
 // face-auth.js
 let faceModelsLoaded = false;
+let faceModelsFailed = false;
 
 async function loadFaceModels() {
-    if (faceModelsLoaded) return;
+    if (faceModelsLoaded || faceModelsFailed) return;
     try {
         LoadingOverlay.show();
         await faceapi.nets.tinyFaceDetector.loadFromUri('../models');
@@ -12,20 +13,35 @@ async function loadFaceModels() {
         console.log("Face models loaded successfully");
     } catch (e) {
         console.error("Error loading face models:", e);
+        faceModelsFailed = true;
         Toast.show("Failed to load face recognition models.", "error");
+        throw e;
     } finally {
         LoadingOverlay.hide();
     }
 }
 
 async function getFaceDescriptor(videoElement) {
-    if (!faceModelsLoaded) await loadFaceModels();
+    if (!faceModelsLoaded && !faceModelsFailed) {
+        try {
+            await loadFaceModels();
+        } catch (e) {
+            return null; // Return null gracefully on failure
+        }
+    }
+    
+    if (faceModelsFailed) return null;
 
-    const detection = await faceapi.detectSingleFace(videoElement, new faceapi.TinyFaceDetectorOptions())
-        .withFaceLandmarks()
-        .withFaceDescriptor();
+    try {
+        const detection = await faceapi.detectSingleFace(videoElement, new faceapi.TinyFaceDetectorOptions())
+            .withFaceLandmarks()
+            .withFaceDescriptor();
 
-    return detection ? Array.from(detection.descriptor) : null;
+        return detection ? Array.from(detection.descriptor) : null;
+    } catch (e) {
+        console.error("Face detection error:", e);
+        return null;
+    }
 }
 
 window.FaceAuth = {

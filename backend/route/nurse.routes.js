@@ -25,6 +25,7 @@ const router = express.Router();
 router.post(
     "/profile",
     authMiddleware,
+    roleMiddleware("nurse"),
     [
         body("userId").notEmpty().withMessage("userId is required"),
         body("department").trim().notEmpty().withMessage("department is required"),

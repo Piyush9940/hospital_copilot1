@@ -12,7 +12,7 @@ import {
 } from "../model/appointment.model.js";
 
 import { incrementPatientCount } from "../model/doctor.model.js";
-import { createError, validateId, sanitize } from "../utils/helper.js";
+import { createError, validateId, validateStringId, sanitize } from "../utils/helper.js";
 
 import {
   APPOINTMENT_STATUS,
@@ -34,7 +34,8 @@ import { sendAppointmentReminderSms } from "../config/twilio.js";
  */
 const validateConsultationType = (value) => {
   const allowed = Object.values(APPOINTMENT_TYPE);
-  const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
+  const normalized =
+    typeof value === "string" ? value.trim().toLowerCase().replace(/_/g, "-") : "";
 
   if (!allowed.includes(normalized)) {
     throw createError(`Invalid consultation type. Allowed values: ${allowed.join(", ")}`, 400);
@@ -62,7 +63,14 @@ const validatePaymentStatus = (value) => {
  */
 const validateVideoStatus = (value) => {
   const allowed = Object.values(VIDEO_CALL_STATUS);
-  const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
+  const statusAliases = {
+    not_started: VIDEO_CALL_STATUS.NOT_STARTED,
+    waiting: VIDEO_CALL_STATUS.WAITING,
+    active: VIDEO_CALL_STATUS.ACTIVE,
+    ended: VIDEO_CALL_STATUS.ENDED,
+  };
+  const raw = typeof value === "string" ? value.trim().toLowerCase() : "";
+  const normalized = statusAliases[raw] || raw;
 
   if (!allowed.includes(normalized)) {
     throw createError(`Invalid video call status. Allowed values: ${allowed.join(", ")}`, 400);
@@ -150,7 +158,7 @@ export const createAppointmentRequest = (data) => {
     }
 
     const payload = {
-      patientId: validateId(data.patientId, "Patient ID"),
+      patientId: validateStringId(data.patientId, "Patient ID"),
       doctorId: validateId(data.doctorId, "Doctor ID"),
       nurseId: data.nurseId ? validateId(data.nurseId, "Nurse ID") : null,
       symptoms: sanitize(data.symptoms || ""),
@@ -252,7 +260,7 @@ export const getAppointmentDetails = (appointmentId) => {
  */
 export const getPatientAppointments = (patientId) => {
   try {
-    const validPatientId = validateId(patientId, "Patient ID");
+    const validPatientId = validateStringId(patientId, "Patient ID");
     const appointments = getAppointmentsByPatientId(validPatientId) || [];
 
     return {
@@ -357,6 +365,17 @@ export const markAppointmentPayment = (appointmentId, paymentStatus, paymentId =
     }
 
     updatePaymentStatus(validAppointmentId, normalizedPaymentStatus, paymentId || null);
+
+    if (
+      normalizedPaymentStatus === PAYMENT_STATUS.PAID &&
+      ![
+        APPOINTMENT_STATUS.CONFIRMED,
+        APPOINTMENT_STATUS.CANCELLED,
+        APPOINTMENT_STATUS.COMPLETED,
+      ].includes(existing.appointment_status)
+    ) {
+      updateAppointmentStatus(validAppointmentId, APPOINTMENT_STATUS.CONFIRMED);
+    }
 
     const updated = getAppointmentById(validAppointmentId);
 

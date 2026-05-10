@@ -32,7 +32,12 @@ router.post(
             .withMessage("Password is required")
             .isLength({ min: 6 })
             .withMessage("Password must be at least 6 characters long"),
-        body("role").trim().notEmpty().withMessage("Role is required"),
+        body("role")
+            .trim()
+            .notEmpty()
+            .withMessage("Role is required")
+            .isIn(["patient", "doctor", "nurse"])
+            .withMessage("Role must be patient, doctor, or nurse"),
         body("phone").optional().isString(),
         body("profileImage").optional().isString(),
     ],
@@ -50,6 +55,12 @@ router.post(
             .isEmail()
             .withMessage("Invalid email"),
         body("password").trim().notEmpty().withMessage("Password is required"),
+        body("role")
+            .trim()
+            .notEmpty()
+            .withMessage("Role is required")
+            .isIn(["patient", "doctor", "nurse"])
+            .withMessage("Role must be patient, doctor, or nurse"),
     ],
     validateMiddleware,
     login
@@ -58,8 +69,13 @@ router.post(
 router.post(
     "/face-login",
     [
-        body("role").trim().notEmpty().withMessage("Role is required"),
-        body("faceImageBase64").isString().withMessage("Face image is required")
+        body("role")
+            .trim()
+            .notEmpty()
+            .withMessage("Role is required")
+            .isIn(["patient", "doctor", "nurse"])
+            .withMessage("Role must be patient, doctor, or nurse"),
+        body("faceDescriptor").isArray().withMessage("Face descriptor is required")
     ],
     validateMiddleware,
     faceLogin

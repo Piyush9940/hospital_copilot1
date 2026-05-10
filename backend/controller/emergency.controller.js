@@ -11,14 +11,14 @@ import {
     createEmergencyAlertWithNotification,
 } from "../services/emergency.service.js";
 
-import { createError, validateId, sanitize } from "../utils/helper.js";
+import { createError, validateId, validateStringId, sanitize } from "../utils/helper.js";
 
 /**
  * Create emergency alert using patient table ID
  */
 export const createEmergencyAlert = async (req, res, next) => {
     try {
-        const patientId = validateId(req.body?.patientId, "Patient ID");
+        const patientId = validateStringId(req.body?.patientId, "Patient ID");
         const message =
             typeof req.body?.message === "string" ? sanitize(req.body.message) : "";
         const status =
@@ -171,7 +171,7 @@ export const getAlertsByStatus = async (req, res, next) => {
  */
 export const getAlertsByPatientId = async (req, res, next) => {
     try {
-        const patientId = validateId(req.params?.patientId, "Patient ID");
+        const patientId = validateStringId(req.params?.patientId, "Patient ID");
 
         const result = await getPatientEmergencyAlerts({
             patientId,
