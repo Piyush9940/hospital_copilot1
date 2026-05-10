@@ -451,7 +451,7 @@
             <div class="user-menu">
                 <button class="user-menu-btn" id="userMenuBtn">
                     <div class="avatar" id="userAvatar">DM</div>
-                    <span id="userName">Dr. Mitchell</span>
+                    <span id="userName">Doctor</span>
                     <i class="fas fa-chevron-down"></i>
                 </button>
                 <div class="user-dropdown" id="userDropdown">
@@ -468,7 +468,7 @@
     <!-- welcome row -->
     <div class="welcome-section glass-container">
         <div>
-            <h1 class="welcome-title">Welcome, Dr. <span id="doctorLastName">Mitchell</span> <i class="fas fa-stethoscope"></i></h1>
+            <h1 class="welcome-title">Welcome, Dr. <span id="doctorLastName">Doctor</span> <i class="fas fa-stethoscope"></i></h1>
             <p class="welcome-subtitle">You have <strong id="todayAppointments">0</strong> appointments today</p>
         </div>
         <div class="doctor-status">
@@ -495,7 +495,7 @@
         <div class="stat-card glass-container"><div class="stat-icon" style="background: #2d6a4f;"><i class="fas fa-calendar-check fa-xl" style="color:white"></i></div><div class="stat-info"><h4>Next Appointment</h4><div class="stat-value" id="nextAppointmentTime">--:--</div><p id="nextPatientName" style="font-size:12px">No appointment</p></div></div>
         <div class="stat-card glass-container"><div class="stat-icon" style="background: #1f7b4d;"><i class="fas fa-user-plus fa-xl" style="color:white"></i></div><div class="stat-info"><h4>New Patients</h4><div class="stat-value" id="newPatients">0</div><p>this month</p></div></div>
         <div class="stat-card glass-container"><div class="stat-icon" style="background: #f4a261;"><i class="fas fa-comment-dots fa-xl" style="color:white"></i></div><div class="stat-info"><h4>Chat Requests</h4><div class="stat-value" id="chatRequests">0</div><p>pending approval</p></div></div>
-        <div class="stat-card glass-container" onclick="alert('📹 Video call interface ready (demo)')"><div class="stat-icon" style="background: #6c63ff;"><i class="fas fa-video fa-xl" style="color:white"></i></div><div class="stat-info"><h4>Video Calls</h4><div class="stat-value" id="videoCalls">0</div><p>scheduled today</p></div></div>
+        <div class="stat-card glass-container" onclick="window.location.href='doctor-appointments.html'"><div class="stat-icon" style="background: #6c63ff;"><i class="fas fa-video fa-xl" style="color:white"></i></div><div class="stat-info"><h4>Video Calls</h4><div class="stat-value" id="videoCalls">0</div><p>scheduled today</p></div></div>
     </div>
 
     <!-- 2 column grid inner (graph removed, now balanced) -->
@@ -535,38 +535,78 @@
             availabilityText.innerText = e.target.checked ? 'Available' : 'Unavailable';
         });
 
-        // Mock data (clean and realistic)
-        const appointmentsToday = [
-            { time: "09:30 AM", patient: "Emma Watson", type: "Follow-up" },
-            { time: "11:15 AM", patient: "James Carter", type: "Consultation" },
-            { time: "02:00 PM", patient: "Sophia Ramirez", type: "Lab Review" },
-            { time: "04:30 PM", patient: "Michael Lee", type: "Telehealth" }
-        ];
-        const completedCount = 2;
-        const totalPatientsCount = 284;
-        const pendingReviewsCount = 5;
-        const newPatientsThisMonth = 18;
-        const pendingChatRequests = 3;
-        const videoCallsToday = 1;
+        let appointmentsToday = [];
+        let allAppointments = [];
+        let recentPatientsList = [];
+        let emergencies = [];
+        let pendingReports = [];
 
-        todayAppSpan.innerText = appointmentsToday.length;
-        totalPatientsSpan.innerText = totalPatientsCount;
-        completedTodaySpan.innerText = completedCount;
-        pendingReviewsSpan.innerText = pendingReviewsCount;
-        newPatientsSpan.innerText = newPatientsThisMonth;
-        chatRequestsSpan.innerText = pendingChatRequests;
-        videoCallsSpan.innerText = videoCallsToday;
-        document.getElementById('doctorLastName').innerText = "Mitchell";
-        document.getElementById('userName').innerHTML = "Dr. Mitchell";
-        document.getElementById('userAvatar').innerHTML = "DM";
+        function normalizeApiArray(response) {
+            return response?.data?.appointments ||
+                response?.appointments ||
+                response?.data?.emergencies ||
+                response?.emergencies ||
+                response?.data ||
+                response ||
+                [];
+        }
 
-        // Next appointment
-        if (appointmentsToday.length) {
-            nextAppTimeSpan.innerText = appointmentsToday[0].time;
-            nextPatientSpan.innerText = appointmentsToday[0].patient;
-        } else {
-            nextAppTimeSpan.innerText = "--:--";
-            nextPatientSpan.innerText = "No upcoming";
+        function formatDate(value) {
+            if (!value) return 'Recent';
+            const date = new Date(value);
+            return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleDateString();
+        }
+
+        function getPatientName(appointment) {
+            return appointment.patientName || appointment.patient_name || appointment.patient?.name || 'Patient';
+        }
+
+        function getAppointmentStatus(appointment) {
+            return String(appointment.appointmentStatus || appointment.appointment_status || appointment.status || '').toLowerCase();
+        }
+
+        function getConsultationType(appointment) {
+            return appointment.consultationType || appointment.consultation_type || appointment.type || 'Consultation';
+        }
+
+        function updateDoctorIdentity(profile) {
+            const user = window.Auth?.getUser?.() || {};
+            const fullName = profile?.name || user.name || 'Doctor';
+            const cleanName = fullName.replace(/^Dr\.\s*/i, '').trim() || 'Doctor';
+            const parts = cleanName.split(/\s+/).filter(Boolean);
+            const firstName = parts[0] || 'Doctor';
+            const lastName = parts.slice(1).join(' ') || firstName;
+            const initials = parts.slice(0, 2).map(part => part[0]).join('').toUpperCase() || 'DR';
+
+            document.getElementById('doctorLastName').innerText = lastName;
+            document.getElementById('userName').innerHTML = `Dr. ${lastName}`;
+            document.getElementById('userAvatar').innerHTML = initials;
+        }
+
+        function updateStats(profile) {
+            const today = new Date().toISOString().split('T')[0];
+            const completedToday = allAppointments.filter(apt => {
+                const date = apt.appointmentDate || apt.appointment_date || apt.date;
+                return String(date || '').split('T')[0] === today && getAppointmentStatus(apt) === 'completed';
+            }).length;
+            const pendingReviews = allAppointments.filter(apt => ['requested', 'pending', 'confirmed'].includes(getAppointmentStatus(apt))).length;
+            const videoCallsToday = appointmentsToday.filter(apt => String(getConsultationType(apt)).toLowerCase() === 'video').length;
+
+            todayAppSpan.innerText = appointmentsToday.length;
+            totalPatientsSpan.innerText = profile?.totalPatients ?? profile?.total_patients ?? recentPatientsList.length;
+            completedTodaySpan.innerText = completedToday;
+            pendingReviewsSpan.innerText = pendingReviews;
+            newPatientsSpan.innerText = recentPatientsList.length;
+            chatRequestsSpan.innerText = '0';
+            videoCallsSpan.innerText = videoCallsToday;
+
+            if (appointmentsToday.length) {
+                nextAppTimeSpan.innerText = appointmentsToday[0].appointmentTime || appointmentsToday[0].appointment_time || appointmentsToday[0].time || '--:--';
+                nextPatientSpan.innerText = getPatientName(appointmentsToday[0]);
+            } else {
+                nextAppTimeSpan.innerText = "--:--";
+                nextPatientSpan.innerText = "No upcoming";
+            }
         }
 
         // Render timeline
@@ -576,7 +616,7 @@
                 const div = document.createElement('div');
                 div.className = 'timeline-item';
                 div.innerHTML = `
-                    <div><span class="time-badge">${app.time}</span> <strong>${app.patient}</strong><br><small style="color:#5f7d9c">${app.type}</small></div>
+                    <div><span class="time-badge">${app.appointmentTime || app.appointment_time || app.time || '--:--'}</span> <strong>${getPatientName(app)}</strong><br><small style="color:#5f7d9c">${getConsultationType(app)}</small></div>
                     <i class="fas fa-chevron-right" style="color:#98b1c9"></i>
                 `;
                 scheduleTimeline.appendChild(div);
@@ -584,13 +624,6 @@
             if (!appointmentsToday.length) scheduleTimeline.innerHTML = '<div class="empty-message">No appointments scheduled today</div>';
         }
 
-        // Recent patients
-        const recentPatientsList = [
-            { name: "Olivia Bennett", lastVisit: "2 days ago", condition: "Hypertension" },
-            { name: "Liam O'Connor", lastVisit: "Yesterday", condition: "Diabetes Type 2" },
-            { name: "Chloe Garcia", lastVisit: "3 days ago", condition: "Routine Check" },
-            { name: "Ethan Park", lastVisit: "1 week ago", condition: "Asthma" }
-        ];
         function renderRecentPatients() {
             recentPatientsDiv.innerHTML = '';
             recentPatientsList.forEach(p => {
@@ -599,13 +632,9 @@
                 el.innerHTML = `<div><span class="patient-name">${p.name}</span><div style="font-size:12px; color:#5f7d9c">${p.condition}</div></div><div style="font-size:12px">${p.lastVisit}</div>`;
                 recentPatientsDiv.appendChild(el);
             });
+            if (!recentPatientsList.length) recentPatientsDiv.innerHTML = '<div class="empty-message">No recent patients</div>';
         }
 
-        // Emergency alerts
-        let emergencies = [
-            { id: 1, patient: "Arthur Morgan", severity: "High", description: "Chest pain, BP critical" },
-            { id: 2, patient: "Mary Johnson", severity: "Moderate", description: "Severe allergic reaction" }
-        ];
         function renderEmergencies() {
             emergencyAlertsDiv.innerHTML = '';
             if (emergencies.length === 0) {
@@ -617,33 +646,28 @@
             emergencies.forEach(em => {
                 const alertDiv = document.createElement('div');
                 alertDiv.className = 'alert-item';
-                alertDiv.style.borderLeft = em.severity === 'High' ? '4px solid #ef4444' : '4px solid #f59e0b';
+                const severity = em.severity || em.priority || 'High';
+                alertDiv.style.borderLeft = String(severity).toLowerCase() === 'high' ? '4px solid #ef4444' : '4px solid #f59e0b';
                 alertDiv.style.paddingLeft = '10px';
                 alertDiv.innerHTML = `<div><strong>⚠️ ${em.patient}</strong><div style="font-size:12px">${em.description}</div></div><span style="background:#f1f3f5; padding:4px 8px; border-radius:20px; font-size:11px;">${em.severity}</span>`;
                 emergencyAlertsDiv.appendChild(alertDiv);
             });
         }
 
-        // Pending reports
-        const reportsMock = [
-            { patient: "Sophia Ramirez", type: "Blood work", date: "May 12" },
-            { patient: "James Carter", type: "MRI Review", date: "May 10" },
-            { patient: "Nina Dobrev", type: "ECG Analysis", date: "May 9" }
-        ];
         function renderReports() {
             pendingReportsDiv.innerHTML = '';
-            reportsMock.forEach(r => {
+            pendingReports.forEach(r => {
                 const repItem = document.createElement('div');
                 repItem.className = 'report-item';
-                repItem.innerHTML = `<div><strong>${r.patient}</strong> - ${r.type}</div><div style="font-size:12px">${r.date}</div>`;
+                repItem.innerHTML = `<div><strong>${r.patientName || r.patient_name || 'Patient'}</strong> - ${r.title || r.diagnosis || 'Report'}</div><div style="font-size:12px">${formatDate(r.createdAt || r.created_at || r.date)}</div>`;
                 pendingReportsDiv.appendChild(repItem);
             });
-            if (!reportsMock.length) pendingReportsDiv.innerHTML = '<div class="empty-message">All reports finalized</div>';
+            if (!pendingReports.length) pendingReportsDiv.innerHTML = '<div class="empty-message">All reports finalized</div>';
         }
 
         // Quick actions
-        document.getElementById('startCallBtn')?.addEventListener('click', () => alert("📞 Starting secure video call ... (demo)"));
-        document.querySelector('.emergency-btn')?.addEventListener('click', () => alert("🚨 Emergency mode activated: high priority protocols."));
+        document.getElementById('startCallBtn')?.addEventListener('click', () => window.location.href = 'doctor-appointments.html');
+        document.querySelector('.emergency-btn')?.addEventListener('click', () => window.location.href = 'doctor-emergency.html');
         document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
             e.preventDefault();
             if(window.Auth) window.Auth.logout();
@@ -667,11 +691,80 @@
             else navMenuDiv.style.display = 'flex';
         });
 
-        // final render
-        renderTimeline();
-        renderRecentPatients();
-        renderEmergencies();
-        renderReports();
+        function bindQuickActions() {
+            const startCallBtn = document.getElementById('startCallBtn');
+            if (startCallBtn) {
+                const cleanStartCallBtn = startCallBtn.cloneNode(true);
+                startCallBtn.parentNode.replaceChild(cleanStartCallBtn, startCallBtn);
+                cleanStartCallBtn.addEventListener('click', () => window.location.href = 'doctor-appointments.html');
+            }
+
+            const emergencyBtn = document.querySelector('.quick-actions-grid .emergency-btn');
+            if (emergencyBtn) {
+                const cleanEmergencyBtn = emergencyBtn.cloneNode(true);
+                emergencyBtn.parentNode.replaceChild(cleanEmergencyBtn, emergencyBtn);
+                cleanEmergencyBtn.addEventListener('click', () => window.location.href = 'doctor-emergency.html');
+            }
+        }
+
+        async function loadDashboard() {
+            if (!window.requireRole || !requireRole(['doctor'])) return;
+
+            try {
+                const doctorRes = await API.get('/doctor/me');
+                const doctorProfile = doctorRes?.data || doctorRes?.doctor || doctorRes || null;
+                const doctorId = doctorProfile?.id || doctorProfile?.doctorId;
+                updateDoctorIdentity(doctorProfile);
+
+                const [appointmentsRes, emergenciesRes, reportsRes] = await Promise.all([
+                    doctorId ? API.get(`/appointments/doctor/${doctorId}`).catch(() => []) : Promise.resolve([]),
+                    API.get('/v2/emergency/pending').catch(() => []),
+                    API.get('/reports').catch(() => []),
+                ]);
+
+                const appointments = normalizeApiArray(appointmentsRes);
+                allAppointments = Array.isArray(appointments) ? appointments : [];
+                const today = new Date().toISOString().split('T')[0];
+                appointmentsToday = allAppointments.filter(apt => String(apt.appointmentDate || apt.appointment_date || apt.date || '').split('T')[0] === today);
+
+                const rawEmergencies = normalizeApiArray(emergenciesRes);
+                emergencies = (Array.isArray(rawEmergencies) ? rawEmergencies : []).map(item => ({
+                    patient: item.patient_name || item.patientName || 'Patient',
+                    description: item.summary || item.message || 'Emergency triggered',
+                    severity: item.severity || item.priority || 'High',
+                }));
+
+                const reports = normalizeApiArray(reportsRes);
+                pendingReports = (Array.isArray(reports) ? reports : []).slice(0, 5);
+
+                const patientMap = new Map();
+                allAppointments.forEach(apt => {
+                    const key = apt.patientId || apt.patient_id || getPatientName(apt);
+                    if (!patientMap.has(key)) {
+                        patientMap.set(key, {
+                            name: getPatientName(apt),
+                            condition: apt.symptoms || 'Consultation',
+                            lastVisit: formatDate(apt.appointmentDate || apt.appointment_date || apt.date),
+                        });
+                    }
+                });
+                recentPatientsList = Array.from(patientMap.values()).slice(0, 5);
+
+                updateStats(doctorProfile);
+            } catch (error) {
+                console.error('Failed to load doctor dashboard:', error);
+                updateDoctorIdentity(null);
+                updateStats(null);
+            }
+
+            renderTimeline();
+            renderRecentPatients();
+            renderEmergencies();
+            renderReports();
+            bindQuickActions();
+        }
+
+        loadDashboard();
 
         // set active nav highlight
         document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));

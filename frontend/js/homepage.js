@@ -1,15 +1,151 @@
 // Homepage JavaScript - Spectacular Animations and Interactions
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     initializePreloader();
     initializeNavbar();
     initializeMobileMenu();
+    await loadHomepageData();
     initializeCounters();
-    initializeDoctorSlider();
     initializeScrollAnimations();
     initializeBackToTop();
     initializeSmoothScroll();
 });
+
+async function loadHomepageData() {
+    try {
+        const baseUrl = (window.CONFIG?.NODE_API || 'http://127.0.0.1:5000/api').replace(/\/+$/, '');
+        const response = await fetch(`${baseUrl}/doctor/public-list`);
+        const result = await response.json();
+        const doctors = Array.isArray(result?.data) ? result.data : [];
+
+        renderHomepageDoctors(doctors);
+        updateHomepageStats(doctors);
+        updateHeroDoctorCards(doctors);
+    } catch (error) {
+        console.error('Failed to load homepage data:', error);
+        renderHomepageDoctors([]);
+        updateHomepageStats([]);
+        updateHeroDoctorCards([]);
+    } finally {
+        initializeDoctorSlider();
+    }
+}
+
+function updateHeroDoctorCards(doctors = []) {
+    const primaryDoctor = doctors[0];
+    const doctorCard = document.querySelector('.float-card.card-1 .card-info');
+    if (doctorCard) {
+        doctorCard.innerHTML = primaryDoctor
+            ? `<h4>${escapeHtml(primaryDoctor.name || 'Doctor')}</h4><p>${escapeHtml(primaryDoctor.specialization || 'General')} • Available for booking</p>`
+            : '<h4>Doctor booking</h4><p>Check available specialists</p>';
+    }
+
+    const nextCard = document.querySelector('.float-card.card-3 .card-info');
+    if (nextCard) {
+        nextCard.innerHTML = primaryDoctor
+            ? `<h4>Next Available</h4><p>${escapeHtml(primaryDoctor.hospitalName || 'Book from doctor list')}</p>`
+            : '<h4>Next Available</h4><p>Open appointment list</p>';
+    }
+}
+
+function updateHomepageStats(doctors = []) {
+    const doctorCount = doctors.length;
+    const patientCount = doctors.reduce((sum, doctor) => sum + Number(doctor.totalPatients || doctor.total_patients || 0), 0);
+    const specialties = new Set(doctors.map((doctor) => doctor.specialization).filter(Boolean)).size;
+
+    const heroStats = document.querySelectorAll('.hero-stats .stat-number');
+    if (heroStats[0]) {
+        heroStats[0].dataset.target = String(patientCount);
+        heroStats[0].textContent = String(patientCount);
+    }
+    if (heroStats[1]) {
+        heroStats[1].dataset.target = String(doctorCount);
+        heroStats[1].textContent = String(doctorCount);
+    }
+    if (heroStats[2]) {
+        heroStats[2].dataset.target = String(specialties);
+        heroStats[2].textContent = String(specialties);
+    }
+
+    const counters = document.querySelectorAll('.stats-grid-large .counter');
+    if (counters[0]) counters[0].dataset.target = String(patientCount);
+    if (counters[1]) counters[1].dataset.target = String(doctorCount);
+    if (counters[2]) counters[2].dataset.target = String(specialties);
+    if (counters[3]) counters[3].dataset.target = '0';
+}
+
+function renderHomepageDoctors(doctors = []) {
+    const container = document.getElementById('doctorsContainer');
+    const dotsContainer = document.getElementById('sliderDots');
+    if (!container) return;
+
+    if (dotsContainer) dotsContainer.innerHTML = '';
+
+    if (!doctors.length) {
+        container.innerHTML = `
+            <div class="doctor-slide">
+                <div class="doctor-card-detailed">
+                    <div class="doctor-info-detailed">
+                        <h3>No doctors available</h3>
+                        <p class="specialty">Please check back later</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = doctors.map((doctor) => {
+        const name = doctor.name || 'Doctor';
+        const specialization = doctor.specialization || 'General';
+        const rating = Number(doctor.rating || 0).toFixed(1);
+        const experience = Number(doctor.experience || 0);
+        const totalPatients = Number(doctor.totalPatients || doctor.total_patients || 0);
+        const profileImage = doctor.profileImage && doctor.profileImage !== 'default-profile.jpg'
+            ? doctor.profileImage
+            : `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2563eb&color=fff&size=400`;
+
+        return `
+            <div class="doctor-slide">
+                <div class="doctor-card-detailed">
+                    <div class="doctor-image-wrapper">
+                        <img src="${profileImage}" alt="${escapeHtml(name)}">
+                        <div class="doctor-badge">${doctor.hospitalName || 'Available for booking'}</div>
+                    </div>
+                    <div class="doctor-info-detailed">
+                        <h3>${escapeHtml(name)}</h3>
+                        <p class="specialty">${escapeHtml(specialization)}</p>
+                        <div class="doctor-rating">
+                            <div class="stars">${ratingStars(Number(doctor.rating || 0))}</div>
+                            <span>${rating}</span>
+                        </div>
+                        <div class="doctor-stats">
+                            <span><i class="fas fa-briefcase"></i> ${experience}+ Years</span>
+                            <span><i class="fas fa-user-md"></i> ${totalPatients} Patients</span>
+                        </div>
+                        <button class="book-doctor-btn" onclick="window.location.href='pages/appointment-booking.html?doctor=${encodeURIComponent(doctor.id)}'">
+                            Book Appointment
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function ratingStars(rating) {
+    const rounded = Math.round(Number(rating || 0));
+    return Array.from({ length: 5 }, (_, index) => index < rounded ? '★' : '☆').join('');
+}
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
 
 // Preloader
 function initializePreloader() {
@@ -102,6 +238,9 @@ function initializeDoctorSlider() {
     const container = document.getElementById('doctorsContainer');
     const slides = document.querySelectorAll('.doctor-slide');
     const dotsContainer = document.getElementById('sliderDots');
+
+    if (!container || !dotsContainer || !slides.length) return;
+    dotsContainer.innerHTML = '';
     
     // Create dots
     slides.forEach((_, index) => {
@@ -117,7 +256,8 @@ function initializeDoctorSlider() {
 
 function slideDoctors(direction) {
     const slides = document.querySelectorAll('.doctor-slide');
-    currentSlide = Math.max(0, Math.min(currentSlide + direction, slides.length - 3));
+    if (!slides.length) return;
+    currentSlide = Math.max(0, Math.min(currentSlide + direction, Math.max(slides.length - 3, 0)));
     updateSlider();
 }
 
@@ -130,6 +270,8 @@ function updateSlider() {
     const container = document.getElementById('doctorsContainer');
     const slides = document.querySelectorAll('.doctor-slide');
     const dots = document.querySelectorAll('.dot');
+
+    if (!container || !slides.length) return;
     
     const slideWidth = slides[0].offsetWidth + 32; // Including padding
     container.scrollTo({

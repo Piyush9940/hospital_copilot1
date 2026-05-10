@@ -116,12 +116,12 @@ class DoctorDashboard {
 
     normalizeStats(stats) {
         return {
-            totalPatients: Number(stats.totalPatients || stats.total_patients || 156),
-            completedToday: Number(stats.completedToday || stats.completed_today || 5),
-            pendingReviews: Number(stats.pendingReviews || stats.pending_reviews || 3),
-            newPatients: Number(stats.newPatients || stats.new_patients || 12),
-            chatRequests: Number(stats.chatRequests || stats.chat_requests || 5),
-            videoCalls: Number(stats.videoCalls || stats.video_calls || 2)
+            totalPatients: Number(stats.totalPatients || stats.total_patients || 0),
+            completedToday: Number(stats.completedToday || stats.completed_today || 0),
+            pendingReviews: Number(stats.pendingReviews || stats.pending_reviews || 0),
+            newPatients: Number(stats.newPatients || stats.new_patients || 0),
+            chatRequests: Number(stats.chatRequests || stats.chat_requests || 0),
+            videoCalls: Number(stats.videoCalls || stats.video_calls || 0)
         };
     }
 
@@ -176,7 +176,7 @@ class DoctorDashboard {
         const fullName =
             user.name ||
             [user.firstName, user.lastName].filter(Boolean).join(' ').trim() ||
-            'Dr. Smith';
+            'Doctor';
 
         const firstName =
             user.firstName ||
@@ -192,7 +192,7 @@ class DoctorDashboard {
         const userNameEl = document.getElementById('userName');
         const userAvatarEl = document.getElementById('userAvatar');
 
-        if (doctorLastNameEl) doctorLastNameEl.textContent = lastName || 'Smith';
+        if (doctorLastNameEl) doctorLastNameEl.textContent = lastName || firstName || 'Doctor';
         if (userNameEl) userNameEl.textContent = `Dr. ${lastName || firstName || 'Doctor'}`;
         if (userAvatarEl) userAvatarEl.textContent = (firstName?.[0] || 'D').toUpperCase();
     }

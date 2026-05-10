@@ -36,6 +36,7 @@ router.post(
     createProfile
 );
 
+router.get("/public-list", getAllProfiles);
 router.get("/me", authMiddleware, roleMiddleware("doctor"), getMyProfile);
 router.get("/", authMiddleware, getAllProfiles);
 router.get("/list", authMiddleware, getAllProfiles);
