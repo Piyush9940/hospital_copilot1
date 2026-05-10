@@ -78,6 +78,49 @@ function redirectToDashboard(role) {
     window.location.href = redirectMap[role] || "dashboard-home.html";
 }
 
+function clearStoredSession() {
+    localStorage.removeItem(STORAGE_KEYS.TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.USER);
+    localStorage.removeItem(STORAGE_KEYS.ROLE);
+}
+
+function decodeJwtPayload(token) {
+    try {
+        const payload = String(token || "").split(".")[1];
+        if (!payload) return null;
+
+        const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+        const padded = normalized.padEnd(normalized.length + ((4 - normalized.length % 4) % 4), "=");
+        return JSON.parse(atob(padded));
+    } catch (error) {
+        return null;
+    }
+}
+
+function isTokenUsable(token) {
+    if (!token || typeof token !== "string") return false;
+
+    const payload = decodeJwtPayload(token);
+    if (!payload) return true;
+
+    if (payload.exp && Date.now() >= Number(payload.exp) * 1000) {
+        return false;
+    }
+
+    return true;
+}
+
+function redirectToLoginForSession() {
+    const currentPage = window.location.pathname.split("/").pop();
+    if (currentPage === "login.html" || currentPage === "register.html") return;
+
+    const loginPath = window.location.pathname.includes("/pages/")
+        ? "login.html"
+        : "pages/login.html";
+
+    window.location.href = loginPath;
+}
+
 // ===============================
 // API Helper
 // ===============================
@@ -120,6 +163,12 @@ const API = {
                 status: response.status,
                 result,
             });
+
+            if (response.status === 401) {
+                clearStoredSession();
+                Toast.show("Your session expired. Please log in again.", "warning");
+                setTimeout(redirectToLoginForSession, 500);
+            }
 
             throw new Error(
                 result?.message ||
@@ -166,7 +215,13 @@ const API = {
 // ===============================
 const Auth = {
     isAuthenticated() {
-        return !!localStorage.getItem(STORAGE_KEYS.TOKEN);
+        const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+        if (!isTokenUsable(token)) {
+            clearStoredSession();
+            return false;
+        }
+
+        return !!token;
     },
 
     getToken() {
@@ -194,9 +249,7 @@ const Auth = {
     },
 
     clearSession() {
-        localStorage.removeItem(STORAGE_KEYS.TOKEN);
-        localStorage.removeItem(STORAGE_KEYS.USER);
-        localStorage.removeItem(STORAGE_KEYS.ROLE);
+        clearStoredSession();
     },
 
     logout() {

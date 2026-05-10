@@ -62,6 +62,10 @@ app.use(express.urlencoded({ extended: true, limit: "20mb" }));
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+app.get("/favicon.ico", (req, res) => {
+    return res.status(204).end();
+});
+
 app.get("/", (req, res) => {
     return res.status(200).json({
         success: true,
