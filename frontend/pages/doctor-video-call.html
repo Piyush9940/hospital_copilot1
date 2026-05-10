@@ -452,7 +452,7 @@
         }
     </style>
 </head>
-<body>
+<body data-video-manual-start="true">
 
 <!-- PERMISSION MODAL (first step) -->
 <div class="permission-modal" id="permissionModal">
@@ -478,7 +478,8 @@
         <div class="call-info-box">
             <h3>👨‍⚕️ Live Consultation</h3>
             <span style="color: #10b981;">● Secure Call</span>
-            <div class="call-timer" id="callTimer">00:00</div>
+            <div class="call-timer" id="callDuration">00:00</div>
+            <span id="callStatus" style="color: #cbd5e1; font-size: 0.9rem;">Waiting to start</span>
         </div>
         <div>
             <button class="ctrl-btn" style="width: auto; padding: 0 1.2rem; border-radius: 40px; font-size: 0.85rem;" id="recordBtn" onclick="videoCallHandler.toggleRecording()">
@@ -489,14 +490,14 @@
 
     <div class="video-grid-area">
         <div class="patient-info-bar">
-            <div style="width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #a855f7); display: flex; align-items: center; justify-content: center; font-weight: bold;">JS</div>
+            <div id="patientAvatarInitials" style="width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #a855f7); display: flex; align-items: center; justify-content: center; font-weight: bold;">PT</div>
             <div>
-                <strong>John Smith</strong>
-                <p style="font-size: 0.8rem; opacity: 0.8;">Patient • Age 45 • Follow-up</p>
+                <strong id="patientNameLabel">Patient</strong>
+                <p id="patientMetaLabel" style="font-size: 0.8rem; opacity: 0.8;">Video consultation</p>
             </div>
         </div>
 
-        <!-- Remote video (simulated remote stream placeholder with dynamic display) -->
+        <!-- Remote video -->
         <video class="main-video" id="remoteVideo" autoplay playsinline poster="">
             <source src="" type="video/mp4">
         </video>
@@ -510,8 +511,7 @@
                 <button onclick="videoCallHandler.toggleChat()" style="background: none; border: none; color: white; font-size: 1.3rem; cursor: pointer;">✕</button>
             </div>
             <div class="chat-side-messages" id="chatMessages">
-                <div class="message-bubble" style="background:#334155;">👋 Hello! I'm Dr. Wilson. How are you feeling today?</div>
-                <div class="message-bubble own">Much better, doctor. Thank you.</div>
+                <div class="message-bubble" style="background:#334155;">Consultation chat is ready.</div>
             </div>
             <div class="chat-side-input">
                 <input type="text" placeholder="Type your message..." id="chatInput">
@@ -597,8 +597,7 @@
                 localVideoElem.srcObject = stream;
                 localVideoElem.muted = true; // avoid feedback
                 
-                // Simulate remote patient video placeholder (for demo, we will show a dynamic animated fallback)
-                // In real scenario you'd connect to WebRTC, but for demo use a subtle gradient + custom image simulation
+                // Legacy fallback only; the real call manager below handles WebRTC signaling.
                 this.simulateRemoteVideo();
                 
                 // Start call timer
@@ -652,7 +651,7 @@
                 ctx.fillText("👤", canvas.width/2 - 45, canvas.height/2);
                 ctx.font = '28px Inter';
                 ctx.fillStyle = '#94a3b8';
-                ctx.fillText("Patient • John Smith", canvas.width/2 - 130, canvas.height/2 + 90);
+                ctx.fillText("Patient", canvas.width/2 - 55, canvas.height/2 + 90);
                 ctx.font = '18px monospace';
                 ctx.fillStyle = '#60a5fa';
                 ctx.fillText("Secure connection • Ready", canvas.width/2 - 140, canvas.height - 60);
@@ -712,7 +711,7 @@
             if (this.isRecording) {
                 recordBtn.style.background = "#ef4444";
                 recordBtn.innerHTML = "⏺ Recording...";
-                this.showToast("Recording started (simulated)", "warning");
+                this.showToast("Recording started", "warning");
             } else {
                 recordBtn.style.background = "";
                 recordBtn.innerHTML = "⏹️ Record";
@@ -765,8 +764,8 @@
         }
 
         openPatientRecord() {
-            window.open('https://example.com/patient-record', '_blank');
-            this.showToast("Opening EMR record (demo)", "info");
+            window.location.href = 'doctor-patient-view.html';
+            this.showToast("Opening patient record", "info");
         }
 
         sendChatMsg() {
@@ -780,11 +779,11 @@
             messagesDiv.appendChild(ownMsgDiv);
             input.value = '';
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            // Simulate reply after 1 second dynamic
+            // Local chat echo for this page.
             setTimeout(() => {
                 const replyDiv = document.createElement('div');
                 replyDiv.className = 'message-bubble';
-                replyDiv.innerHTML = `<strong>Dr. Wilson:</strong> I'll review that. Thank you.`;
+                replyDiv.innerHTML = `<strong>System:</strong> Message noted.`;
                 messagesDiv.appendChild(replyDiv);
                 messagesDiv.scrollTop = messagesDiv.scrollHeight;
             }, 900);
@@ -799,7 +798,7 @@
                 if (this.timerInterval) clearInterval(this.timerInterval);
                 this.showToast("Call ended. Thank you for using HealthCare Plus.", "info");
                 setTimeout(() => {
-                    window.location.reload(); // Reset to permission state (or just go back)
+                    window.location.href = 'doctor-appointments.html';
                 }, 1800);
             }
         }
@@ -821,13 +820,111 @@
     document.getElementById('denyBtn')?.addEventListener('click', () => {
         videoCallHandler.showToast("Permission denied. Cannot start call.", "error");
         setTimeout(() => {
-            if(confirm("Without media permissions, call won't start. Refresh to try again?")) window.location.reload();
+            if(confirm("Without media permissions, call won't start. Go back to appointments?")) window.location.href = 'doctor-appointments.html';
         }, 100);
     });
     
     // Make sure the timer and UI are ready only after permission.
     // attach fallback for ending call from external functions
     window.videoCallHandler = videoCallHandler;
+</script>
+<script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.1/simplepeer.min.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/video-call.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        if (window.requireRole && !requireRole(["doctor"])) return;
+
+        const allowBtn = document.getElementById("allowBtn");
+        const denyBtn = document.getElementById("denyBtn");
+
+        if (allowBtn) {
+            const cleanAllowBtn = allowBtn.cloneNode(true);
+            allowBtn.parentNode.replaceChild(cleanAllowBtn, allowBtn);
+
+            cleanAllowBtn.addEventListener("click", async () => {
+                cleanAllowBtn.disabled = true;
+                cleanAllowBtn.textContent = "Connecting...";
+
+                try {
+                    await loadPatientInfo();
+                    document.getElementById("permissionModal").style.display = "none";
+                    const container = document.getElementById("videoCallContainer");
+                    container.classList.add("active");
+                    container.style.display = "flex";
+
+                    await window.videoCall.initialize();
+                } catch (error) {
+                    cleanAllowBtn.disabled = false;
+                    cleanAllowBtn.textContent = "Allow Access";
+                    document.getElementById("permissionModal").style.display = "flex";
+                }
+            });
+        }
+
+        if (denyBtn) {
+            const cleanDenyBtn = denyBtn.cloneNode(true);
+            denyBtn.parentNode.replaceChild(cleanDenyBtn, denyBtn);
+            cleanDenyBtn.addEventListener("click", () => {
+                window.location.href = "doctor-appointments.html";
+            });
+        }
+
+        window.videoCallHandler = {
+            toggleMic: () => window.videoCall.toggleMic(),
+            toggleVideo: () => window.videoCall.toggleVideo(),
+            shareScreen: () => window.videoCall.shareScreen(),
+            endCall: () => window.videoCall.endCall(),
+            toggleChat: () => document.getElementById("chatPanel")?.classList.toggle("open"),
+            sendChatMsg: () => {
+                const input = document.getElementById("chatInput");
+                const message = input?.value?.trim();
+                if (!message) return;
+
+                const messages = document.getElementById("chatMessages");
+                const item = document.createElement("div");
+                item.className = "message-bubble own";
+                item.textContent = message;
+                messages.appendChild(item);
+                input.value = "";
+                messages.scrollTop = messages.scrollHeight;
+            },
+            toggleRecording: () => window.videoCall.addChatMessage?.("System", "Recording is not enabled for this call.", "system"),
+            openPatientRecord: () => {
+                const appointmentId = new URLSearchParams(window.location.search).get("appointmentId");
+                window.location.href = appointmentId
+                    ? `doctor-patient-view.html?appointment=${appointmentId}`
+                    : "doctor-patient-view.html";
+            },
+        };
+
+        async function loadPatientInfo() {
+            const appointmentId = new URLSearchParams(window.location.search).get("appointmentId");
+            if (!appointmentId || !window.API) return;
+
+            try {
+                const response = await API.get(`/appointments/${appointmentId}`);
+                const result = response?.data || response;
+                const appointment = result?.data || result;
+                const patientName = appointment?.patientName || appointment?.patient?.name || "Patient";
+                const initials = patientName
+                    .split(/\s+/)
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .map((part) => part[0])
+                    .join("")
+                    .toUpperCase() || "PT";
+
+                document.getElementById("patientNameLabel").textContent = patientName;
+                document.getElementById("patientAvatarInitials").textContent = initials;
+                document.getElementById("patientMetaLabel").textContent =
+                    appointment?.symptoms || appointment?.reason || "Video consultation";
+            } catch (error) {
+                console.error("Could not load patient info for video call:", error);
+            }
+        }
+    });
 </script>
 </body>
 </html>

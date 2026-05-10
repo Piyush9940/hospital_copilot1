@@ -514,8 +514,8 @@
                         date: apt.appointmentDate ? apt.appointmentDate.split('T')[0] : (apt.date || 'Today'),
                         time: apt.appointmentTime || apt.time || '--',
                         symptoms: apt.symptoms || apt.reason || 'General Consultation',
-                        status: apt.status || 'pending',
-                        payment: apt.paymentStatus || 'unpaid',
+                        status: apt.appointmentStatus || apt.status || 'pending',
+                        payment: apt.paymentStatus || apt.payment || 'unpaid',
                         video: apt.consultationType === 'video' || apt.type === 'video' || false
                     }));
                     

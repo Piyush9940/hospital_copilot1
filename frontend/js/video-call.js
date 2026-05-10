@@ -13,6 +13,7 @@ class VideoCall {
         this.initialized = false;
         this.ending = false;
         this.lastSignalPayload = null;
+        this.callStatusPoller = null;
     }
 
     async initialize() {
@@ -29,7 +30,7 @@ class VideoCall {
                 Toast.show("Please select a specific appointment to start a video call.", "warning");
                 setTimeout(() => {
                     const role = Auth.getRole();
-                    if (role === 'doctor') window.location.href = 'doctor-dashboard2.html';
+                    if (role === 'doctor') window.location.href = 'doctor-appointments.html';
                     else if (role === 'nurse') window.location.href = 'nurse-dashboard.html';
                     else window.location.href = 'patient-dashboard.html';
                 }, 2000);
@@ -42,6 +43,7 @@ class VideoCall {
             this.startCallDuration();
             await this.loadAppointmentDetails();
             this.startSignalPolling();
+            this.startCallStatusPolling();
 
             const callStatus = document.getElementById("callStatus");
             if (callStatus) {
@@ -254,6 +256,51 @@ class VideoCall {
         }
     }
 
+    startCallStatusPolling() {
+        this.stopCallStatusPolling();
+
+        this.callStatusPoller = setInterval(async () => {
+            if (this.ending || this.isEmergency || !this.appointmentId) return;
+
+            try {
+                const response = await API.get(`/video-call/status/${this.appointmentId}`);
+                const result = response?.data || response;
+                const callState = result?.callState || result?.data?.callState || null;
+
+                if (callState?.call_status === "ended") {
+                    this.handleRemoteCallEnded(callState.ended_by);
+                }
+            } catch (error) {
+                console.error("Call status polling error:", error);
+            }
+        }, 2500);
+    }
+
+    stopCallStatusPolling() {
+        if (this.callStatusPoller) {
+            clearInterval(this.callStatusPoller);
+            this.callStatusPoller = null;
+        }
+    }
+
+    handleRemoteCallEnded(endedBy = "") {
+        if (this.ending) return;
+        this.ending = true;
+
+        this.cleanup();
+
+        const callStatus = document.getElementById("callStatus");
+        if (callStatus) {
+            callStatus.textContent = endedBy ? `Call ended by ${endedBy}` : "Call ended";
+        }
+
+        Toast.show("Call ended", "info");
+
+        setTimeout(() => {
+            this.redirectAfterCall();
+        }, 900);
+    }
+
     isInitiator() {
         const role = Auth.getRole();
         return role === "patient";
@@ -395,6 +442,7 @@ class VideoCall {
 
         try {
             this.stopSignalPolling();
+            this.stopCallStatusPolling();
 
             if (this.durationInterval) {
                 clearInterval(this.durationInterval);
@@ -418,15 +466,19 @@ class VideoCall {
         } finally {
             this.ending = false;
             setTimeout(() => {
-                const role = Auth.getRole();
-                if (role === 'doctor') {
-                    window.location.href = 'doctor-dashboard2.html';
-                } else if (role === 'nurse') {
-                    window.location.href = 'nurse-dashboard.html';
-                } else {
-                    window.location.href = 'patient-dashboard.html';
-                }
+                this.redirectAfterCall();
             }, 1000);
+        }
+    }
+
+    redirectAfterCall() {
+        const role = Auth.getRole();
+        if (role === 'doctor') {
+            window.location.href = 'doctor-appointments.html';
+        } else if (role === 'nurse') {
+            window.location.href = 'nurse-dashboard.html';
+        } else {
+            window.location.href = 'patient-dashboard.html';
         }
     }
 
@@ -465,6 +517,7 @@ class VideoCall {
 
     cleanup() {
         this.stopSignalPolling();
+        this.stopCallStatusPolling();
 
         if (this.durationInterval) {
             clearInterval(this.durationInterval);
@@ -482,6 +535,7 @@ class VideoCall {
 }
 
 const videoCall = new VideoCall();
+window.videoCall = videoCall;
 
 function toggleMic() {
     videoCall.toggleMic();
@@ -512,6 +566,10 @@ function handleChatKeyPress(event) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    if (document.body?.dataset?.videoManualStart === "true") {
+        return;
+    }
+
     if (requireRole(["patient", "doctor"])) {
         videoCall.initialize();
     }
