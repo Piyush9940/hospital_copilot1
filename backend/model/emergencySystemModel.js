@@ -12,10 +12,18 @@ export const createEmergency = (patientId, lat, lng, locationAddress, medicalCon
 
 export const getPendingEmergencies = () => {
     const stmt = db.prepare(`
-        SELECT e.*, u.name as patient_name, p.age, p.gender, p.history, p.allergies, p.medications
+        SELECT
+            e.*,
+            COALESCE(u.name, 'Unknown Patient') as patient_name,
+            p.age,
+            p.gender,
+            p.history,
+            p.allergies,
+            p.medications,
+            p.patient_id as patientId
         FROM emergencies e
-        JOIN patients p ON e.patient_id = p.patient_id
-        JOIN users u ON p.user_id = u.id
+        LEFT JOIN patients p ON e.patient_id = p.patient_id
+        LEFT JOIN users u ON p.user_id = u.id
         WHERE e.status = 'pending'
         ORDER BY e.created_at DESC
     `);
@@ -24,10 +32,18 @@ export const getPendingEmergencies = () => {
 
 export const getPastEmergencies = () => {
     const stmt = db.prepare(`
-        SELECT e.*, u.name as patient_name, p.age, p.gender, p.history, p.allergies, p.medications
+        SELECT
+            e.*,
+            COALESCE(u.name, 'Unknown Patient') as patient_name,
+            p.age,
+            p.gender,
+            p.history,
+            p.allergies,
+            p.medications,
+            p.patient_id as patientId
         FROM emergencies e
-        JOIN patients p ON e.patient_id = p.patient_id
-        JOIN users u ON p.user_id = u.id
+        LEFT JOIN patients p ON e.patient_id = p.patient_id
+        LEFT JOIN users u ON p.user_id = u.id
         WHERE e.status != 'pending'
         ORDER BY e.updated_at DESC
     `);

@@ -112,7 +112,12 @@ document.addEventListener("DOMContentLoaded", () => {
         
         pollInterval = setInterval(async () => {
             try {
-                const response = await fetch(`${API_URL}/status/${emergencyId}`);
+                const token = typeof window.Auth !== 'undefined' ? window.Auth.getToken() : localStorage.getItem("hospital_copilot_token") || "";
+                const response = await fetch(`${API_URL}/status/${emergencyId}`, {
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
                 const data = await response.json();
                 
                 if (data.success) {

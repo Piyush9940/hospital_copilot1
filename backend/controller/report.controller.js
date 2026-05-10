@@ -27,6 +27,14 @@ const toUploadUrl = (filePath) => {
     return `/uploads/${relativePath}`;
 };
 
+const ensureUploadsDir = () => {
+    const uploadsDir = path.join(__dirname, "..", "uploads");
+    if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    return uploadsDir;
+};
+
 const resolveReportDoctorId = (req) => {
     if (req.body?.doctorId) {
         return validateId(req.body.doctorId, "Doctor ID");
@@ -177,12 +185,69 @@ const writeObjectRows = (doc, value) => {
     writeKeyValueGrid(doc, rows);
 };
 
+const writeGeneratedReportPdf = ({
+    patientId,
+    patientName,
+    title = "Medical Report",
+    diagnosis = "Medical Report",
+    summary = "No summary provided.",
+    prescription = "",
+    notes = "",
+}) => {
+    const uploadsDir = ensureUploadsDir();
+    const fileName = `report_${Date.now()}.pdf`;
+    const filePath = path.join(uploadsDir, fileName);
+
+    const doc = new PDFDocument({
+        margin: 54,
+        size: "A4",
+        info: {
+            Title: title,
+            Author: "Hospital Copilot",
+            Subject: "Medical report",
+        },
+    });
+
+    doc.pipe(fs.createWriteStream(filePath));
+
+    doc
+        .fillColor("#0f766e")
+        .font("Helvetica-Bold")
+        .fontSize(22)
+        .text(title, { align: "left" });
+    doc.moveDown(0.8);
+
+    writeKeyValueGrid(doc, [
+        { label: "Patient ID", value: patientId },
+        { label: "Patient Name", value: patientName || "N/A" },
+        { label: "Generated At", value: formatDateTime(new Date()) },
+        { label: "Diagnosis", value: diagnosis },
+    ]);
+
+    writeSectionTitle(doc, "Clinical Summary");
+    writeParagraph(doc, summary);
+
+    if (prescription) {
+        writeSectionTitle(doc, "Prescription / Treatment");
+        writeParagraph(doc, prescription);
+    }
+
+    if (notes) {
+        writeSectionTitle(doc, "Clinical Notes");
+        writeParagraph(doc, notes);
+    }
+
+    doc.end();
+
+    return `/uploads/${fileName}`;
+};
+
 /**
  * Create new medical report
  */
 export const createReport = async (req, res, next) => {
     try {
-        let patientId = req.body?.patientId;
+        let patientId = req.body?.patientId || req.body?.patient_id;
         if (!patientId && req.user?.role === 'patient') {
             const p = getPatientByUserId(req.user.id);
             if (p) patientId = p.patient_id;
@@ -201,6 +266,17 @@ export const createReport = async (req, res, next) => {
         let pdfPath = typeof req.body?.pdfPath === "string" ? req.body.pdfPath.trim() : "";
         if (req.file) {
             pdfPath = toUploadUrl(req.file.path);
+        }
+        if (!pdfPath) {
+            pdfPath = writeGeneratedReportPdf({
+                patientId: validPatientId,
+                patientName: req.body?.patientName || req.body?.patient_name,
+                title,
+                diagnosis,
+                summary,
+                prescription: req.body?.prescription,
+                notes: req.body?.notes,
+            });
         }
 
         const result = await createMedicalReport({
@@ -386,7 +462,7 @@ export const deleteReport = async (req, res, next) => {
 export const verifyOwnershipByPatientId = async (req, res, next) => {
     try {
         const reportId = validateId(req.params?.reportId, "Report ID");
-        const patientId = validateId(req.params?.patientId, "Patient ID");
+        const patientId = validateStringId(req.params?.patientId, "Patient ID");
 
         const result = await verifyReportOwnershipByPatientId({
             reportId,
@@ -467,10 +543,7 @@ export const generateReportPDF = async (req, res, next) => {
         });
         
         const fileName = `report_${Date.now()}.pdf`;
-        const uploadsDir = path.join(__dirname, '..', 'uploads');
-        if (!fs.existsSync(uploadsDir)) {
-            fs.mkdirSync(uploadsDir, { recursive: true });
-        }
+        const uploadsDir = ensureUploadsDir();
         
         const filePath = path.join(uploadsDir, fileName);
         const stream = fs.createWriteStream(filePath);
@@ -608,7 +681,31 @@ export const generateReportPDF = async (req, res, next) => {
             return next(createError(`Failed to write report PDF: ${error.message}`, 500));
         });
 
-        stream.on('finish', () => {
+        stream.on('finish', async () => {
+            let savedReport = null;
+            const patientId =
+                patientInfo.patientId ||
+                patientInfo.patient_id ||
+                req.body?.patientId ||
+                req.body?.patient_id;
+
+            if (patientId) {
+                try {
+                    const doctorId = resolveReportDoctorId(req);
+                    const saveResult = await createMedicalReport({
+                        patientId,
+                        doctorId,
+                        title: diagnosis || "Generated Medical Report",
+                        diagnosis: diagnosis || "Generated Report",
+                        summary: summary || aiNurseSummary || notes || "Generated medical report",
+                        pdfPath: `/uploads/${fileName}`,
+                    });
+                    savedReport = saveResult?.data || null;
+                } catch (saveError) {
+                    console.error("Generated report PDF was created but could not be saved:", saveError.message);
+                }
+            }
+
             return res.status(200).json({
                 success: true,
                 message: "Report PDF generated successfully",
@@ -616,6 +713,7 @@ export const generateReportPDF = async (req, res, next) => {
                 data: {
                     fileName,
                     filePath: `/uploads/${fileName}`,
+                    report: savedReport,
                 },
             });
         });
