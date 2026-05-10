@@ -1,6 +1,6 @@
 // API Configuration
 const CONFIG = {
-    NODE_API: "http://127.0.0.1:5000/api",
+    NODE_API: "https://hospital-copilot1.onrender.com/api",
     AI_API: "https://piyush9940-hospital-copilot-ai-service.hf.space",
     RAZORPAY_KEY: "rzp_test_your_key_here"
 };
