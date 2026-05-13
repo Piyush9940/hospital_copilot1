@@ -54,7 +54,7 @@ export const validatePhone = (phone) => {
         throw createError("Phone number is required", 400);
     }
 
-    const normalized = phone.trim();
+    const normalized = phone.trim().replace(/[\s-]/g, "");
 
     if (!/^\+[1-9]\d{7,14}$/.test(normalized)) {
         throw createError("Invalid phone format. Use E.164 (+919876543210)", 400);

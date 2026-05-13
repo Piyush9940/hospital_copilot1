@@ -13,7 +13,7 @@ export const createPatientProfile = (userId, age, gender, history, allergies, me
         const normalizedHistory = typeof history === "string" ? history.trim() : "";
         const normalizedAllergies = typeof allergies === "string" ? allergies.trim() : "";
         const normalizedMedications = typeof medications === "string" ? medications.trim() : "";
-        const normalizedBloodGroup = typeof bloodGroup === "string" ? bloodGroup.trim() : "";
+        const normalizedBloodGroup = typeof bloodGroup === "string" ? bloodGroup.trim().replace(/\s+/g, "").toUpperCase() : "";
         const normalizedAddress = typeof address === "string" ? address.trim() : "";
         const normalizedDateOfBirth = typeof dateOfBirth === "string" ? dateOfBirth.trim() : "";
 

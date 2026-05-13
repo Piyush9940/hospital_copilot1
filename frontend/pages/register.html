@@ -327,7 +327,7 @@
 
             const role = document.querySelector('.role-btn.active').dataset.role;
 
-            let phone = document.getElementById('phone').value.trim();
+            let phone = document.getElementById('phone').value.trim().replace(/[\s-]/g, "");
             // Basic validation for phone number
             if (/^\d{10}$/.test(phone)) {
                 phone = `+91${phone}`;
