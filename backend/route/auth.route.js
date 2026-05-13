@@ -29,7 +29,7 @@ router.post(
         body("password")
             .trim()
             .notEmpty()
-            .withMessage("Password is required")
+            .withMessage("Password is required"),
             
         body("role")
             .trim()
@@ -107,7 +107,7 @@ router.put(
         body("newPassword")
             .trim()
             .notEmpty()
-            .withMessage("New password is required")
+            .withMessage("New password is required"),
             
         body("confirmPassword").trim().notEmpty().withMessage("Confirm password is required"),
     ],
