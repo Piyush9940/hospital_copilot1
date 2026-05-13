@@ -46,11 +46,7 @@ const resolveReportDoctorId = (req) => {
     }
 
     const [firstDoctor] = getAllDoctors() || [];
-    if (!firstDoctor?.id) {
-        throw createError("A doctor profile is required before uploading reports", 400);
-    }
-
-    return firstDoctor.id;
+    return firstDoctor?.id || null;
 };
 
 const safeText = (value, fallback = "N/A") => {
@@ -728,3 +724,4 @@ export const generateReportPDF = async (req, res, next) => {
         );
     }
 };
+

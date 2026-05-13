@@ -80,9 +80,7 @@ export const register = async (req, res, next) => {
 
         if (!name) throw createError("Name is required", 400);
         if (!password) throw createError("Password is required", 400);
-        if (password.length < 6) {
-            throw createError("Password must be at least 6 characters long", 400);
-        }
+        
         if (!ALLOWED_ROLES.includes(role)) {
             throw createError(
                 `Invalid role. Allowed values: ${ALLOWED_ROLES.join(", ")}`,
@@ -448,9 +446,7 @@ export const updateMyPassword = async (req, res, next) => {
             throw createError("New password is required", 400);
         }
 
-        if (newPassword.length < 6) {
-            throw createError("New password must be at least 6 characters long", 400);
-        }
+        
 
         if (newPassword !== confirmPassword) {
             throw createError("New password and confirm password do not match", 400);
@@ -543,3 +539,4 @@ export const deleteMyProfile = async (req, res, next) => {
         );
     }
 };
+
