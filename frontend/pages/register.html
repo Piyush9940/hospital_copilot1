@@ -125,17 +125,17 @@
                         <label class="form-label">Gender</label>
                         <div class="radio-group">
                             <label class="radio-label">
-                                <input type="radio" name="gender" value="male" checked>
+                                <input type="radio" name="gender" value="Male" checked>
                                 <span class="radio-custom"></span>
                                 Male
                             </label>
                             <label class="radio-label">
-                                <input type="radio" name="gender" value="female">
+                                <input type="radio" name="gender" value="Female">
                                 <span class="radio-custom"></span>
                                 Female
                             </label>
                             <label class="radio-label">
-                                <input type="radio" name="gender" value="other">
+                                <input type="radio" name="gender" value="Other">
                                 <span class="radio-custom"></span>
                                 Other
                             </label>
@@ -328,8 +328,12 @@
             const role = document.querySelector('.role-btn.active').dataset.role;
 
             let phone = document.getElementById('phone').value.trim();
+            // Basic validation for phone number
             if (/^\d{10}$/.test(phone)) {
                 phone = `+91${phone}`;
+            } else if (!/^\+[1-9]\d{7,14}$/.test(phone)) {
+                Toast.show('Please enter a valid 10-digit phone number or use E.164 format (e.g., +919876543210)', 'error');
+                return;
             }
 
             const userData = {

@@ -72,8 +72,16 @@ export const register = async (req, res, next) => {
             throw createError("User with this email already exists", 409);
         }
         
-        if (faceDescriptorInput && Array.isArray(faceDescriptorInput)) {
-            faceDescriptor = { path: null, embedding: faceDescriptorInput };
+        if (faceDescriptorInput) {
+            let descriptorArray = null;
+            if (Array.isArray(faceDescriptorInput)) {
+                descriptorArray = faceDescriptorInput;
+            } else if (typeof faceDescriptorInput === "object") {
+                descriptorArray = Object.values(faceDescriptorInput);
+            }
+            if (descriptorArray && descriptorArray.length > 0) {
+                faceDescriptor = { path: null, embedding: descriptorArray };
+            }
         }
 
         const saltRounds = Number(process.env.BCRYPT_SALT_ROUNDS || 10);
@@ -176,7 +184,11 @@ export const login = async (req, res, next) => {
             throw createError("Invalid email or password", 401);
         }
 
-        const faceDescriptorInput = req.body?.faceDescriptor;
+        let faceDescriptorInput = req.body?.faceDescriptor;
+        if (faceDescriptorInput && !Array.isArray(faceDescriptorInput) && typeof faceDescriptorInput === "object") {
+            faceDescriptorInput = Object.values(faceDescriptorInput);
+        }
+
         if (user.face_registered === 1 && Array.isArray(faceDescriptorInput)) {
             try {
                 const storedEmbedding = JSON.parse(user.face_embedding_json);
@@ -234,7 +246,11 @@ const calculateEuclideanDistance = (emb1, emb2) => {
 
 export const faceLogin = async (req, res, next) => {
     try {
-        const faceDescriptorInput = req.body?.faceDescriptor;
+        let faceDescriptorInput = req.body?.faceDescriptor;
+        if (faceDescriptorInput && !Array.isArray(faceDescriptorInput) && typeof faceDescriptorInput === "object") {
+            faceDescriptorInput = Object.values(faceDescriptorInput);
+        }
+
         const role = typeof req.body?.role === "string" ? req.body.role.trim().toLowerCase() : "";
 
         if (!faceDescriptorInput || !Array.isArray(faceDescriptorInput)) {
