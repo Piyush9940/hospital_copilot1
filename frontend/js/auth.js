@@ -520,8 +520,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const roleRequirements = {
         "patient-dashboard.html": ["patient"],
         "patient-profile.html": ["patient"],
+        "profile-settings.html": ["patient", "doctor", "nurse"],
         "patient-reports.html": ["patient"],
         "patient-vitals.html": ["patient"],
+        "patient-diagnosis.html": ["patient"],
         "patient-emergency.html": ["patient"],
         "patient-chat-history.html": ["patient"],
 

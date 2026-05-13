@@ -1,8 +1,10 @@
 // API Configuration
+const RUNTIME_CONFIG = window.RUNTIME_CONFIG || {};
+
 const CONFIG = {
-    NODE_API: "https://hospital-copilot1.onrender.com/api",
-    AI_API: "https://piyush9940-hospital-copilot-ai-service.hf.space",
-    RAZORPAY_KEY: "rzp_test_your_key_here"
+    NODE_API: RUNTIME_CONFIG.NODE_API || "https://hospital-copilot1.onrender.com/api",
+    AI_API: RUNTIME_CONFIG.AI_API || "https://piyush9940-hospital-copilot-ai-service.hf.space",
+    RAZORPAY_KEY: RUNTIME_CONFIG.RAZORPAY_KEY || ""
 };
 
 const API_BASE_URL = CONFIG.NODE_API;

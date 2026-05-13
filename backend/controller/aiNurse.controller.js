@@ -64,6 +64,61 @@ const GENERAL_MEDICAL_PATTERNS = [
     /\b(my|i\s+have|i\s+feel|i\s+am|i'm)\b.*\b(hurt|sick|unwell|weak|tired|dizzy|nauseous|feverish|anxious|depressed|pain|ache)\b/i,
 ];
 
+const EMERGENCY_KEYWORDS = [
+    "can't breathe", "cannot breathe", "chest pain", "stroke", "seizure",
+    "unconscious", "heavy bleeding", "severe bleeding", "heart attack",
+    "suicide", "poison", "overdose", "emergency", "ambulance", "sos"
+];
+
+const detectWebsiteAction = (message, role = "patient") => {
+    const text = String(message || "").toLowerCase();
+    if (!text) return null;
+    const normalizedRole = String(role || "patient").toLowerCase();
+    const pickUrl = (urls) => urls[normalizedRole] || urls.patient || urls.doctor || urls.nurse;
+
+    if (EMERGENCY_KEYWORDS.some((keyword) => text.includes(keyword))) {
+        return {
+            key: "emergency",
+            label: "Open emergency help",
+            url: pickUrl({ patient: "emergency.html", doctor: "doctor-emergency.html" }),
+        };
+    }
+
+    const actions = [
+        { key: "appointments", label: "Open appointments", urls: { patient: "appointment-list.html", doctor: "doctor-appointments.html" }, terms: ["book appointment", "appointment", "consult doctor", "schedule"] },
+        { key: "profile", label: "Open profile settings", urls: { patient: "profile-settings.html", doctor: "profile-settings.html", nurse: "profile-settings.html" }, terms: ["profile", "settings", "update my details"] },
+        { key: "reports", label: "Open reports", urls: { patient: "patient-reports.html", doctor: "doctor-reports.html" }, terms: ["report", "medical record", "pdf"] },
+        { key: "vitals", label: "Open vitals", urls: { patient: "patient-vitals.html", doctor: "doctor-vitals.html" }, terms: ["vitals", "blood pressure", "heart rate", "bp"] },
+        { key: "diagnosis", label: "Open AI diagnosis summary", urls: { patient: "patient-diagnosis.html" }, terms: ["diagnosis", "scan", "summary"] },
+        { key: "dashboard", label: "Open dashboard", urls: { patient: "patient-dashboard.html", doctor: "doctor-dashboard.html", nurse: "nurse-dashboard.html" }, terms: ["dashboard", "home page"] },
+    ];
+
+    const match = actions.find((action) => action.terms.some((term) => text.includes(term)));
+    if (!match) return null;
+    const url = pickUrl(match.urls);
+    return url ? { key: match.key, label: match.label, url } : null;
+};
+
+const isEmergencyMessage = (message) => {
+    const text = String(message || "").toLowerCase();
+    return EMERGENCY_KEYWORDS.some((keyword) => text.includes(keyword));
+};
+
+const appendSafetyDisclaimer = (reply, emergency = false) => {
+    let base = String(reply || "").trim();
+    if (emergency && !base.toLowerCase().includes("emergency services")) {
+        base = `If you are in immediate danger, call local emergency services now. Stay with someone if possible, keep the patient still, and share symptoms, medicines, allergies, and location with responders.\n\n${base}`;
+    }
+    const disclaimer = emergency
+        ? "This is only AI guidance, not a medical diagnosis. If this may be an emergency, call local emergency services now and consult a doctor immediately."
+        : "This is AI guidance only and is not a substitute for a doctor. Please consult a qualified clinician for medical decisions.";
+    const lower = base.toLowerCase();
+
+    return lower.includes("ai guidance") || lower.includes("consult a doctor")
+        ? base
+        : `${base}\n\n${disclaimer}`;
+};
+
 const NON_MEDICAL_REJECTION =
     "I’m here to help with medical and health-related questions only. Please ask me about symptoms, medicines, reports, vitals, appointments, or other care-related concerns.";
 
@@ -133,6 +188,8 @@ export const chat = async (req, res, next) => {
                 : "en";
         const appointmentId = req.body?.appointmentId || null;
         const attachments = normalizeAttachmentMetadata(req.body?.attachments);
+        const websiteAction = detectWebsiteAction(message, req.user?.role);
+        const emergencyDetected = isEmergencyMessage(message);
 
         if (!message) {
             throw createError("Message is required", 400);
@@ -168,6 +225,37 @@ export const chat = async (req, res, next) => {
             if (contextError?.message !== "Patient profile not found for this user") {
                 throw contextError;
             }
+        }
+
+        if (!isMedicalRelated(message, attachments) && websiteAction) {
+            const navigationReply = `I can help you move around the website. Use the button below to ${websiteAction.label.toLowerCase()}.`;
+
+            await saveConversationPair({
+                sessionId: session.id,
+                userId,
+                userMessage: message,
+                assistantReply: navigationReply,
+                medicalContext: {
+                    patientContext,
+                    attachments,
+                    websiteAction,
+                },
+            });
+
+            return res.status(200).json({
+                success: true,
+                message: "AI Nurse website action prepared",
+                data: {
+                    sessionId: session.id,
+                    response: navigationReply,
+                    reply: navigationReply,
+                    language,
+                    patientContext,
+                    context: patientContext,
+                    ragResponse: null,
+                    websiteAction,
+                },
+            });
         }
 
         if (!isMedicalRelated(message, attachments)) {
@@ -213,12 +301,13 @@ export const chat = async (req, res, next) => {
         });
 
         const aiData = extractServiceData(aiResult, {});
-        const reply =
+        const rawReply =
             aiData?.reply ||
             aiData?.message ||
             aiData?.response ||
             aiData?.answer ||
             "No response generated";
+        const reply = appendSafetyDisclaimer(rawReply, emergencyDetected);
         const ragResponse =
             aiData?.ragResponse ||
             aiData?.rag_response ||
@@ -247,6 +336,8 @@ export const chat = async (req, res, next) => {
                 patientContext: patientContext,
                 context: patientContext,
                 ragResponse,
+                websiteAction,
+                emergencyDetected,
                 raw: aiData,
             },
         });

@@ -6,54 +6,125 @@
     <title>Patient Emergency | Hospital Copilot</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/emergency.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
-    <div class="emergency-container">
-        <div class="emergency-header">
-            <h1>Emergency Assistance</h1>
-            <p>Press the button below if you need immediate medical help.</p>
-        </div>
+<body class="emergency-page">
+    <header class="emergency-navbar">
+        <a class="nav-brand" href="../index.html" aria-label="Hospital Copilot home">
+            <span class="brand-mark"><i class="fa-solid fa-heart-pulse"></i></span>
+            <span>
+                <strong>Hospital Copilot</strong>
+                <small>Emergency Response</small>
+            </span>
+        </a>
 
-        <div class="emergency-action">
-            <div style="margin-bottom: 1.5rem; text-align: left;">
-                <label style="display: block; font-weight: 600; color: #1e293b; margin-bottom: 0.5rem;"><i class="fa-solid fa-location-dot"></i> Location (Optional if GPS is on)</label>
-                <input type="text" id="manualLocation" placeholder="Enter your address manually..." style="width: 100%; padding: 0.8rem; border-radius: 12px; border: 2px solid #e2e8f0; font-size: 1rem; margin-bottom: 1rem;">
-                
-                <label style="display: block; font-weight: 600; color: #1e293b; margin-bottom: 0.5rem;"><i class="fa-solid fa-notes-medical"></i> Medical Context (Optional)</label>
-                <textarea id="medicalContext" rows="3" placeholder="Describe your current situation, symptoms, or reason for emergency..." style="width: 100%; padding: 0.8rem; border-radius: 12px; border: 2px solid #e2e8f0; font-size: 1rem; resize: vertical;"></textarea>
-            </div>
-            <button id="triggerEmergencyBtn" class="emergency-trigger-btn">
-                <i class="fa-solid fa-triangle-exclamation"></i>
-                <span>TRIGGER EMERGENCY</span>
-            </button>
-            <p class="voice-instruction" id="voiceInstruction"><i class="fa-solid fa-microphone"></i> Or just say "Help me"</p>
-        </div>
+        <nav class="nav-actions" aria-label="Emergency navigation">
+            <a href="patient-dashboard.html" id="dashboardNavBtn" class="nav-link-button">
+                <i class="fa-solid fa-gauge-high"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="profile-settings.html" id="profileNavBtn" class="nav-icon-button" aria-label="Open profile">
+                <i class="fa-solid fa-user"></i>
+            </a>
+        </nav>
+    </header>
 
-        <div class="emergency-status-panel hidden" id="statusPanel">
-            <div class="status-card">
-                <h3><i class="fa-solid fa-location-dot"></i> Location Status</h3>
-                <p id="locationStatus">Detecting location...</p>
-            </div>
-            
-            <div class="status-card highlight">
-                <h3><i class="fa-solid fa-truck-medical"></i> Request Status</h3>
-                <p id="requestStatus">Waiting for action...</p>
+    <main class="emergency-container patient-emergency-shell">
+        <section class="emergency-hero" aria-labelledby="emergencyTitle">
+            <div class="hero-copy">
+                <span class="eyebrow"><i class="fa-solid fa-shield-heart"></i> Live emergency dispatch</span>
+                <h1 id="emergencyTitle">Emergency Assistance</h1>
+                <p>Share your location and medical context with the care team so available doctors can respond fast.</p>
             </div>
 
-            <div class="status-card">
-                <h3><i class="fa-solid fa-hospital"></i> Nearest Hospitals</h3>
-                <ul id="hospitalsList" class="hospitals-list">
-                    <li>Searching...</li>
-                </ul>
+            <div class="hero-status" aria-live="polite">
+                <span class="status-dot"></span>
+                <div>
+                    <strong id="connectionLabel">Ready</strong>
+                    <span id="connectionDetail">Backend emergency service is configured through your API settings.</span>
+                </div>
             </div>
-        </div>
+        </section>
 
-        <button class="back-btn" onclick="window.history.back()">
-            <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+        <section class="emergency-workspace">
+            <form class="emergency-form" id="emergencyForm">
+                <div class="form-panel">
+                    <div class="section-heading">
+                        <span class="section-icon"><i class="fa-solid fa-location-crosshairs"></i></span>
+                        <div>
+                            <h2>Emergency Details</h2>
+                            <p>GPS is used first. Add an address if GPS is unavailable or needs clarity.</p>
+                        </div>
+                    </div>
+
+                    <label class="field-group" for="manualLocation">
+                        <span><i class="fa-solid fa-location-dot"></i> Location note</span>
+                        <input type="text" id="manualLocation" autocomplete="street-address" placeholder="Apartment, landmark, ward, or full address">
+                    </label>
+
+                    <label class="field-group" for="medicalContext">
+                        <span><i class="fa-solid fa-notes-medical"></i> Medical context</span>
+                        <textarea id="medicalContext" rows="4" placeholder="Symptoms, injury details, allergies, medication, or anything the doctor should know"></textarea>
+                    </label>
+
+                    <div class="quick-context" aria-label="Quick medical context">
+                        <button type="button" data-context="Chest pain and difficulty breathing.">Chest pain</button>
+                        <button type="button" data-context="Severe injury or bleeding.">Injury</button>
+                        <button type="button" data-context="High fever with weakness or confusion.">Fever</button>
+                    </div>
+                </div>
+
+                <div class="sos-panel">
+                    <div class="sos-orbit" aria-hidden="true">
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <button type="submit" id="triggerEmergencyBtn" class="emergency-trigger-btn">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>Trigger Emergency</span>
+                    </button>
+                    <p class="voice-instruction" id="voiceInstruction"><i class="fa-solid fa-microphone"></i> Voice trigger listening for "Help me"</p>
+                </div>
+            </form>
+
+            <aside class="emergency-status-panel hidden" id="statusPanel" aria-live="polite">
+                <div class="status-card progress-card">
+                    <h3><i class="fa-solid fa-list-check"></i> Response Progress</h3>
+                    <ol class="response-steps" id="responseSteps">
+                        <li class="active" data-step="location">Confirm location</li>
+                        <li data-step="dispatch">Send request</li>
+                        <li data-step="doctor">Doctor response</li>
+                    </ol>
+                </div>
+
+                <div class="status-card">
+                    <h3><i class="fa-solid fa-location-dot"></i> Location Status</h3>
+                    <p id="locationStatus">Waiting for location...</p>
+                </div>
+
+                <div class="status-card highlight">
+                    <h3><i class="fa-solid fa-truck-medical"></i> Request Status</h3>
+                    <p id="requestStatus">Waiting for action...</p>
+                </div>
+
+                <div class="status-card hospitals-card">
+                    <div class="card-title-row">
+                        <h3><i class="fa-solid fa-hospital"></i> Nearby Hospitals</h3>
+                        <span id="hospitalCount">0 found</span>
+                    </div>
+                    <ul id="hospitalsList" class="hospitals-list">
+                        <li class="empty-state">Hospitals will appear after dispatch.</li>
+                    </ul>
+                </div>
+            </aside>
+        </section>
+
+        <button type="button" class="back-btn" onclick="window.history.back()">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span>Back to Dashboard</span>
         </button>
-    </div>
+    </main>
 
     <script src="../js/config.js"></script>
     <script src="../js/auth.js"></script>

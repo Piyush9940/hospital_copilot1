@@ -11,6 +11,15 @@ class AINurse {
         this.synth = window.speechSynthesis || null;
         this.pendingAttachments = [];
         this.language = localStorage.getItem("ai_nurse_language") || "en";
+        this.navigationActions = {
+            dashboard: { label: "Open dashboard", patient: "patient-dashboard.html", doctor: "doctor-dashboard.html", nurse: "nurse-dashboard.html" },
+            profile: { label: "Open profile settings", patient: "profile-settings.html", doctor: "profile-settings.html", nurse: "profile-settings.html" },
+            reports: { label: "Open reports", patient: "patient-reports.html", doctor: "doctor-reports.html" },
+            vitals: { label: "Open vitals", patient: "patient-vitals.html", doctor: "doctor-vitals.html" },
+            appointments: { label: "Open appointments", patient: "appointment-list.html", doctor: "doctor-appointments.html" },
+            diagnosis: { label: "Open AI diagnosis summary", patient: "patient-diagnosis.html" },
+            emergency: { label: "Open emergency help", patient: "emergency.html", doctor: "doctor-emergency.html" }
+        };
     }
 
     async initialize() {
@@ -98,6 +107,7 @@ class AINurse {
 
         try {
             let ragInput = trimmedText;
+            const localAction = this.detectWebsiteAction(trimmedText);
 
             if (trimmedText && this.language !== "en") {
                 ragInput = await this.translateText(trimmedText, this.language, "en");
@@ -105,6 +115,8 @@ class AINurse {
 
             const ragResponse = await this.getAIResponse(ragInput,this.language);
             let aiText = this.extractAIText(ragResponse);
+            const serverAction = ragResponse?.data?.websiteAction || ragResponse?.websiteAction || null;
+            const action = serverAction || localAction;
 
             if (this.language !== "en" && aiText) {
                 aiText = await this.translateText(aiText, "en", this.language);
@@ -115,7 +127,7 @@ class AINurse {
                 "Tell me more",
                 "Book appointment",
                 "Emergency"
-            ]);
+            ], action);
 
             if (this.isTTSEnabled) {
                 await this.speakResponse(aiText);
@@ -272,13 +284,14 @@ class AINurse {
 
 
 
-    addMessage(type, text, attachments = [], suggestions = []) {
+    addMessage(type, text, attachments = [], suggestions = [], websiteAction = null) {
         const message = {
             id: Date.now() + Math.random(),
             type,
             text,
             attachments,
             suggestions,
+            websiteAction,
             timestamp: new Date().toISOString()
         };
 
@@ -316,12 +329,14 @@ class AINurse {
             message.type === "ai"
                 ? this.formatStructuredAIResponse(message.text)
                 : `<p>${this.escapeHtml(message.text).replace(/\n/g, "<br>")}</p>`;
+        const actionHtml = message.websiteAction ? this.renderWebsiteAction(message.websiteAction) : "";
 
         messageEl.innerHTML = `
             <div class="message-avatar">${message.type === "ai" ? "🤖" : "👤"}</div>
             <div class="message-content">
                 ${formattedContent}
                 ${attachmentsHtml}
+                ${actionHtml}
                 <span class="message-time">${this.formatTime(message.timestamp)}</span>
             </div>
         `;
@@ -439,6 +454,47 @@ class AINurse {
         container.innerHTML = suggestions.map(s => `
             <button class="suggestion-chip" onclick="sendQuickMessage('${this.escapeForOnclick(s)}')">${this.escapeHtml(s)}</button>
         `).join("");
+    }
+
+    detectWebsiteAction(text) {
+        const message = String(text || "").toLowerCase();
+        if (!message) return null;
+
+        const intents = [
+            { key: "emergency", patterns: ["emergency", "sos", "ambulance", "urgent help"] },
+            { key: "appointments", patterns: ["book appointment", "appointment", "consult doctor", "schedule"] },
+            { key: "profile", patterns: ["profile", "settings", "update my details", "change my phone"] },
+            { key: "reports", patterns: ["report", "medical record", "pdf"] },
+            { key: "vitals", patterns: ["vitals", "blood pressure", "heart rate", "bp"] },
+            { key: "diagnosis", patterns: ["diagnosis", "scan", "ai diagnosis", "summary"] },
+            { key: "dashboard", patterns: ["dashboard", "home page", "main page"] }
+        ];
+
+        const found = intents.find(intent => intent.patterns.some(pattern => message.includes(pattern)));
+        return found ? this.buildWebsiteAction(found.key) : null;
+    }
+
+    buildWebsiteAction(key) {
+        const role = window.Auth?.getRole?.() || "patient";
+        const config = this.navigationActions[key];
+        if (!config) return null;
+        const url = config[role] || config.patient || config.doctor || config.nurse;
+        return url ? { key, label: config.label, url } : null;
+    }
+
+    renderWebsiteAction(action) {
+        if (!action?.url || !action?.label) return "";
+        return `
+            <div class="website-action">
+                <button type="button" onclick="aiNurse.performWebsiteAction('${this.escapeForOnclick(action.url)}')">
+                    ${this.escapeHtml(action.label)}
+                </button>
+            </div>
+        `;
+    }
+
+    performWebsiteAction(url) {
+        if (url) window.location.href = url;
     }
 
     setupBrowserVoiceRecognition() {

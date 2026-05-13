@@ -30,14 +30,12 @@
 
             <div class="nav-menu">
                 <a href="patient-dashboard.html" class="nav-link active">Dashboard</a>
-                <a href="patient-profile.html" class="nav-link">Profile</a>
+                <a href="profile-settings.html" class="nav-link">Profile</a>
                 <a href="appointment-list.html" class="nav-link">Book Appointment</a>
                 <a href="patient-reports.html" class="nav-link">Reports</a>
                 <a href="patient-vitals.html" class="nav-link">Vitals</a>
-                <a href="patient-diagnosis.html" class="nav-link">Diagnosis</a>
+                <a href="patient-diagnosis.html" class="nav-link">AI Diagnosis Summary</a>
                 <a href="ai-nurse.html" class="nav-link">AI Nurse</a>
-                <a href="medical-scan-detection.html" class="nav-link">Medical Scans</a>
-                <a href="skin-detection.html" class="nav-link">Skin Detection</a>
                 <a href="emergency.html" class="nav-link emergency-link">Emergency</a>
                 
 
@@ -52,7 +50,7 @@
                         </svg>
                     </button>
                     <div class="user-dropdown" id="userDropdown">
-                        <a href="patient-profile.html">Profile Settings</a>
+                        <a href="profile-settings.html">Profile Settings</a>
                         <a href="patient-chat-history.html">Chat History</a>
                         <a href="#" onclick="Auth.logout()">Logout</a>
                     </div>
@@ -162,19 +160,15 @@
                         <div class="qa-icon">🤖</div>
                         <span>AI Nurse Chat</span>
                     </div>
-                    <div class="quick-access-item" onclick="window.location.href='medical-scan-detection.html'">
-                        <div class="qa-icon">🩻</div>
-                        <span>Medical Scans</span>
-                    </div>
-                    <div class="quick-access-item" onclick="window.location.href='skin-detection.html'">
-                        <div class="qa-icon">🔍</div>
-                        <span>Skin Diagnosis</span>
+                    <div class="quick-access-item" onclick="window.location.href='patient-diagnosis.html'">
+                        <div class="qa-icon">AI</div>
+                        <span>AI Diagnosis Summary</span>
                     </div>
                     <div class="quick-access-item" onclick="window.location.href='patient-chat-history.html'">
                         <div class="qa-icon">💬</div>
                         <span>Chat History</span>
                     </div>
-                    <div class="quick-access-item" onclick="window.location.href='patient-profile.html'">
+                    <div class="quick-access-item" onclick="window.location.href='profile-settings.html'">
                         <div class="qa-icon">⚙️</div>
                         <span>Settings</span>
                     </div>

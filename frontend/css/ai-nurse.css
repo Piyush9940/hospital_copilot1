@@ -129,6 +129,7 @@
     padding: 1rem;
     border-radius: 12px;
     position: relative;
+    overflow-wrap: anywhere;
 }
 
 .ai-message .message-content {
@@ -290,4 +291,49 @@
     justify-content: center;
     cursor: pointer;
     font-size: 12px;
+}
+
+.website-action {
+    margin-top: 0.75rem;
+}
+
+.website-action button {
+    border: none;
+    border-radius: 18px;
+    background: #0f766e;
+    color: white;
+    cursor: pointer;
+    font-weight: 700;
+    padding: 0.55rem 0.9rem;
+}
+
+.website-action button:hover {
+    background: #115e59;
+}
+
+@media (max-width: 768px) {
+    .ai-nurse-container {
+        height: calc(100vh - 64px);
+        padding: 0.5rem;
+    }
+
+    .chat-header {
+        align-items: flex-start;
+        padding: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .chat-header > div:last-child {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .message-content {
+        max-width: calc(100vw - 92px);
+    }
+
+    .quick-suggestions,
+    .chat-input-container {
+        padding: 0.75rem;
+    }
 }

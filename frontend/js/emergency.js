@@ -4,18 +4,40 @@ document.addEventListener("DOMContentLoaded", () => {
     const locationStatus = document.getElementById("locationStatus");
     const requestStatus = document.getElementById("requestStatus");
     const hospitalsList = document.getElementById("hospitalsList");
+    const hospitalCount = document.getElementById("hospitalCount");
+    const emergencyForm = document.getElementById("emergencyForm");
+    const responseSteps = document.getElementById("responseSteps");
+
+    if (!triggerBtn || !statusPanel || !locationStatus || !requestStatus || !hospitalsList) {
+        return;
+    }
 
     let pollInterval = null;
     let recognition = null;
-    
-    // Use the global API_BASE_URL from config.js so it points to the exact same server as auth
-    const API_URL = `${API_BASE_URL}/v2/emergency`;
 
-    triggerBtn.addEventListener("click", async () => {
+    const apiBaseUrl = typeof API_BASE_URL !== "undefined"
+        ? API_BASE_URL
+        : (window.CONFIG?.NODE_API || "http://127.0.0.1:5000/api");
+    const API_URL = `${apiBaseUrl}/v2/emergency`;
+
+    document.querySelectorAll(".quick-context button[data-context]").forEach((button) => {
+        button.addEventListener("click", () => {
+            const input = document.getElementById("medicalContext");
+            const context = button.dataset.context || "";
+            if (!input || !context) return;
+            input.value = input.value.trim() ? `${input.value.trim()}\n${context}` : context;
+            input.focus();
+        });
+    });
+
+    const handleEmergencySubmit = async (event) => {
+        event?.preventDefault?.();
+
         triggerBtn.disabled = true;
         triggerBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i><span> PROCESSING...</span>`;
         statusPanel.classList.remove("hidden");
         requestStatus.textContent = "Acquiring location...";
+        setStep("location");
 
         const medicalContext = document.getElementById("medicalContext")?.value || "";
         const manualLoc = document.getElementById("manualLocation")?.value?.trim();
@@ -34,149 +56,192 @@ document.addEventListener("DOMContentLoaded", () => {
                     locationStatus.textContent = `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
                     await sendEmergencyRequest(lat, lng, medicalContext);
                 },
-                async (error) => {
-                    console.error("Geolocation error:", error);
+                () => {
                     locationStatus.textContent = "Location access denied. Please enter manual location above.";
-                    triggerBtn.disabled = false;
-                    triggerBtn.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i><span> TRIGGER EMERGENCY</span>`;
+                    resetTriggerButton("TRIGGER EMERGENCY");
                 }
             );
         } else {
             locationStatus.textContent = "Geolocation not supported. Please enter manual location above.";
-            triggerBtn.disabled = false;
-            triggerBtn.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i><span> TRIGGER EMERGENCY</span>`;
+            resetTriggerButton("TRIGGER EMERGENCY");
         }
-    });
+    };
+
+    if (emergencyForm) {
+        emergencyForm.addEventListener("submit", handleEmergencySubmit);
+    } else {
+        triggerBtn.addEventListener("click", handleEmergencySubmit);
+    }
 
     async function sendEmergencyRequest(lat, lng, medicalContext, address = "Auto-detected Location") {
         requestStatus.innerHTML = `<span class="text-warning">Sending request to available doctors...</span>`;
-        
+        setStep("dispatch");
+
         try {
-            const token = typeof window.Auth !== 'undefined' ? window.Auth.getToken() : localStorage.getItem("token") || "";
+            const token = typeof window.Auth !== "undefined"
+                ? window.Auth.getToken()
+                : localStorage.getItem("token") || "";
             const response = await fetch(`${API_URL}/trigger`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
+                    "Authorization": `Bearer ${token}`,
                 },
                 body: JSON.stringify({
                     latitude: lat,
                     longitude: lng,
-                    address: address,
-                    medicalContext: medicalContext
-                })
+                    address,
+                    medicalContext,
+                }),
             });
 
             const data = await response.json();
             if (data.success) {
-                requestStatus.innerHTML = `<span class="text-warning">Request Pending. Waiting for Doctor to Accept...</span>`;
-                
-                // Display Hospitals
-                if (data.hospitals && data.hospitals.length > 0) {
-                    hospitalsList.innerHTML = data.hospitals.map(h => 
-                        `<li>
-                            <div class="h-name" style="font-weight: 600; font-size: 1.1rem; color: #1e293b;">${h.name}</div>
-                            <div class="h-addr" style="color: #64748b; font-size: 0.9rem; margin-top: 4px;"><i class="fa-solid fa-map-pin"></i> ${h.address}</div>
-                            <div class="h-phone" style="color: #64748b; font-size: 0.9rem; margin-top: 4px;"><i class="fa-solid fa-phone"></i> ${h.phone || "Not available"}</div>
-                            <div class="h-rating" style="margin-top: 4px;">Rating: ${h.rating} ⭐</div>
-                            <a href="https://www.google.com/maps/dir/?api=1&destination=${h.lat && h.lng ? `${h.lat},${h.lng}` : encodeURIComponent(h.name + ' ' + h.address)}" target="_blank" class="btn btn-primary" style="display: inline-block; margin-top: 10px; padding: 6px 12px; font-size: 0.9rem; text-decoration: none; border-radius: 6px;">
-                                <i class="fa-solid fa-directions"></i> Get Directions
-                            </a>
-                        </li>`
-                    ).join("");
-                } else {
-                    hospitalsList.innerHTML = "<li>No hospitals found nearby.</li>";
-                }
-
-                // Start polling
+                requestStatus.innerHTML = `<span class="text-warning">Request pending. Waiting for a doctor to accept...</span>`;
+                setStep("doctor");
+                renderHospitals(data.hospitals || []);
                 pollEmergencyStatus(data.emergencyId);
-
-            } else {
-                requestStatus.innerHTML = `<span class="text-danger">Failed: ${data.message || 'Unknown error'}</span>`;
-                if (data.details) {
-                    console.error("Backend Error Details:", data.details);
-                }
-                triggerBtn.disabled = false;
-                triggerBtn.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i><span> TRIGGER EMERGENCY</span>`;
+                return;
             }
+
+            requestStatus.innerHTML = `<span class="text-danger">Failed: ${escapeHtml(data.message || "Unknown error")}</span>`;
+            resetTriggerButton("TRIGGER EMERGENCY");
         } catch (error) {
-            console.error("Frontend Exception:", error);
-            requestStatus.innerHTML = `<span class="text-danger">Network error: ${error.message}. Please call 911.</span>`;
-            triggerBtn.disabled = false;
-            triggerBtn.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i><span> TRIGGER EMERGENCY</span>`;
+            requestStatus.innerHTML = `<span class="text-danger">Network error: ${escapeHtml(error.message)}. Please call local emergency services.</span>`;
+            resetTriggerButton("TRIGGER EMERGENCY");
         }
+    }
+
+    function renderHospitals(hospitals) {
+        if (hospitalCount) hospitalCount.textContent = `${hospitals.length} found`;
+
+        if (!hospitals.length) {
+            hospitalsList.innerHTML = '<li class="empty-state">No hospitals found nearby.</li>';
+            return;
+        }
+
+        hospitalsList.innerHTML = hospitals.map((hospital) => {
+            const name = escapeHtml(hospital.name || "Hospital");
+            const address = escapeHtml(hospital.address || "Address not available");
+            const phone = escapeHtml(hospital.phone || "Not available");
+            const rating = escapeHtml(hospital.rating || "Not rated");
+            const destination = hospital.lat && hospital.lng
+                ? `${encodeURIComponent(hospital.lat)},${encodeURIComponent(hospital.lng)}`
+                : encodeURIComponent(`${hospital.name || ""} ${hospital.address || ""}`.trim());
+            const phoneHref = hospital.phone ? `tel:${String(hospital.phone).replace(/[^\d+]/g, "")}` : "";
+
+            return `
+                <li>
+                    <div class="hospital-row">
+                        <div class="h-name">${name}</div>
+                        <div class="h-addr"><i class="fa-solid fa-map-pin"></i> ${address}</div>
+                        <div class="h-phone"><i class="fa-solid fa-phone"></i> ${phone}</div>
+                        <div class="h-rating">Rating: ${rating}</div>
+                        <div class="hospital-actions">
+                            <a href="https://www.google.com/maps/dir/?api=1&destination=${destination}" target="_blank" rel="noopener">
+                                <i class="fa-solid fa-directions"></i> Directions
+                            </a>
+                            ${phoneHref ? `<a href="${phoneHref}" class="phone-link"><i class="fa-solid fa-phone"></i> Call</a>` : ""}
+                        </div>
+                    </div>
+                </li>
+            `;
+        }).join("");
     }
 
     function pollEmergencyStatus(emergencyId) {
         if (pollInterval) clearInterval(pollInterval);
-        
+
         pollInterval = setInterval(async () => {
             try {
-                const token = typeof window.Auth !== 'undefined' ? window.Auth.getToken() : localStorage.getItem("hospital_copilot_token") || "";
+                const token = typeof window.Auth !== "undefined"
+                    ? window.Auth.getToken()
+                    : localStorage.getItem("hospital_copilot_token") || "";
                 const response = await fetch(`${API_URL}/status/${emergencyId}`, {
                     headers: {
-                        "Authorization": `Bearer ${token}`
-                    }
+                        "Authorization": `Bearer ${token}`,
+                    },
                 });
                 const data = await response.json();
-                
-                if (data.success) {
-                    if (data.status === 'accepted') {
-                        requestStatus.innerHTML = `<span class="text-success"><i class="fa-solid fa-check-circle"></i> Emergency Accepted by Doctor ID: ${data.doctorId}! Help is on the way.</span>`;
-                        clearInterval(pollInterval);
-                        triggerBtn.innerHTML = `<i class="fa-solid fa-check"></i><span> ACCEPTED</span>`;
-                        triggerBtn.classList.add("btn-success");
-                    } else if (data.status === 'rejected') {
-                        requestStatus.innerHTML = `<span class="text-danger"><i class="fa-solid fa-times-circle"></i> Request Rejected. Routing to another doctor...</span>`;
-                        // Realistically would retry, but we stop here for demo
-                        clearInterval(pollInterval);
-                        triggerBtn.disabled = false;
-                        triggerBtn.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i><span> TRIGGER AGAIN</span>`;
-                    }
+
+                if (!data.success) return;
+
+                if (data.status === "accepted") {
+                    requestStatus.innerHTML = `<span class="text-success"><i class="fa-solid fa-check-circle"></i> Emergency accepted by Doctor ID: ${escapeHtml(data.doctorId)}. Help is on the way.</span>`;
+                    clearInterval(pollInterval);
+                    setStep("doctor");
+                    triggerBtn.innerHTML = `<i class="fa-solid fa-check"></i><span> ACCEPTED</span>`;
+                    triggerBtn.classList.add("btn-success");
+                } else if (data.status === "rejected") {
+                    requestStatus.innerHTML = `<span class="text-danger"><i class="fa-solid fa-times-circle"></i> Request rejected. Please trigger again or call local emergency services.</span>`;
+                    clearInterval(pollInterval);
+                    resetTriggerButton("TRIGGER AGAIN");
                 }
             } catch (err) {
                 console.error("Polling error", err);
             }
-        }, 3000); // Poll every 3 seconds
+        }, 3000);
     }
 
-    // Voice Trigger Implementation (Extra Feature)
+    function setStep(activeStep) {
+        if (!responseSteps) return;
+        const order = ["location", "dispatch", "doctor"];
+        const activeIndex = order.indexOf(activeStep);
+
+        responseSteps.querySelectorAll("li[data-step]").forEach((item) => {
+            const index = order.indexOf(item.dataset.step);
+            item.classList.toggle("done", activeIndex > index);
+            item.classList.toggle("active", activeIndex === index);
+        });
+    }
+
+    function resetTriggerButton(label) {
+        triggerBtn.disabled = false;
+        triggerBtn.classList.remove("btn-success");
+        triggerBtn.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i><span> ${label}</span>`;
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
+
     function initVoiceTrigger() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (SpeechRecognition) {
-            recognition = new SpeechRecognition();
-            recognition.continuous = true;
-            recognition.interimResults = false;
-            recognition.lang = 'en-US';
-
-            recognition.onresult = (event) => {
-                const last = event.results.length - 1;
-                const transcript = event.results[last][0].transcript.trim().toLowerCase();
-                
-                if (transcript.includes("help me") || transcript.includes("emergency")) {
-                    console.log("Voice trigger detected!");
-                    if(!triggerBtn.disabled) {
-                        triggerBtn.click();
-                    }
-                }
-            };
-
-            recognition.onend = () => {
-                // Restart listening to keep it active
-                if(recognition) recognition.start();
-            };
-
-            try {
-                recognition.start();
-            } catch(e) {
-                console.log("Speech recognition already started");
-            }
-        } else {
+        if (!SpeechRecognition) {
             const voiceInst = document.getElementById("voiceInstruction");
-            if(voiceInst) voiceInst.style.display = "none";
+            if (voiceInst) voiceInst.style.display = "none";
+            return;
+        }
+
+        recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = false;
+        recognition.lang = "en-US";
+
+        recognition.onresult = (event) => {
+            const last = event.results.length - 1;
+            const transcript = event.results[last][0].transcript.trim().toLowerCase();
+
+            if ((transcript.includes("help me") || transcript.includes("emergency")) && !triggerBtn.disabled) {
+                triggerBtn.click();
+            }
+        };
+
+        recognition.onend = () => {
+            if (recognition) recognition.start();
+        };
+
+        try {
+            recognition.start();
+        } catch (error) {
+            console.warn("Speech recognition could not start:", error);
         }
     }
 
-    // Start listening for voice commands
     initVoiceTrigger();
 });

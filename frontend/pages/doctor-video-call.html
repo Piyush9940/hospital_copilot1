@@ -157,10 +157,12 @@
         /* Video Container (hidden until permission granted) */
         .video-container {
             height: 100vh;
+            max-height: 100vh;
             background: #1a1a2e;
             display: none;
             flex-direction: column;
             position: relative;
+            overflow: hidden;
         }
 
         .video-container.active {
@@ -168,13 +170,17 @@
         }
 
         .video-toolbar {
-            padding: 1rem 2rem;
+            min-height: 76px;
+            padding: 0.75rem 1.25rem;
             background: rgba(0,0,0,0.4);
             backdrop-filter: blur(10px);
             color: white;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            flex-shrink: 0;
             z-index: 100;
         }
 
@@ -197,6 +203,7 @@
 
         .video-grid-area {
             flex: 1;
+            min-height: 0;
             display: grid;
             grid-template-columns: 1fr;
             position: relative;
@@ -214,10 +221,11 @@
 
         .pip-video {
             position: absolute;
-            bottom: 120px;
-            right: 2rem;
-            width: 280px;
-            height: 210px;
+            bottom: 1rem;
+            right: 1rem;
+            width: min(280px, 28vw);
+            aspect-ratio: 4 / 3;
+            height: auto;
             border-radius: 20px;
             border: 3px solid rgba(255,255,255,0.4);
             object-fit: cover;
@@ -245,18 +253,21 @@
         }
 
         .control-bar {
-            padding: 1.2rem 2rem;
+            min-height: 88px;
+            padding: 0.85rem 1rem;
             background: rgba(0,0,0,0.55);
             backdrop-filter: blur(24px);
             display: flex;
             justify-content: center;
             gap: 1.2rem;
+            flex-wrap: wrap;
+            flex-shrink: 0;
             border-top: 1px solid rgba(255,255,255,0.1);
         }
 
         .ctrl-btn {
-            width: 60px;
-            height: 60px;
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
             border: none;
             background: rgba(255,255,255,0.12);
@@ -322,6 +333,7 @@
             align-items: center;
             gap: 0.9rem;
             z-index: 20;
+            max-width: calc(100vw - 2rem);
         }
 
         .recording-indicator {
@@ -348,6 +360,71 @@
             box-shadow: 0 20px 35px -8px black;
             border: 1px solid rgba(255,255,255,0.15);
             z-index: 50;
+        }
+
+        @media (max-width: 820px) {
+            .permission-card {
+                border-radius: 24px;
+                padding: 1.4rem;
+            }
+
+            .permission-buttons {
+                flex-direction: column;
+            }
+
+            .video-toolbar {
+                align-items: flex-start;
+            }
+
+            .call-info-box h3 {
+                font-size: 1rem;
+                width: 100%;
+            }
+
+            .patient-info-bar {
+                top: 88px;
+                left: 0.75rem;
+                right: 0.75rem;
+                border-radius: 18px;
+                padding: 0.6rem 0.75rem;
+            }
+
+            .video-grid-area {
+                padding: 0.5rem;
+            }
+
+            .main-video,
+            .video-placeholder-box {
+                border-radius: 18px;
+            }
+
+            .pip-video {
+                width: min(140px, 38vw);
+                bottom: 0.75rem;
+                right: 0.75rem;
+                border-radius: 14px;
+            }
+
+            .control-bar {
+                gap: 0.6rem;
+            }
+
+            .ctrl-btn,
+            .ctrl-btn.end-call {
+                width: 46px;
+                height: 46px;
+                font-size: 1.1rem;
+            }
+
+            .chat-side-panel {
+                top: auto;
+                left: 0.75rem;
+                right: 0.75rem;
+                bottom: 88px;
+                width: auto;
+                max-height: 45vh;
+                border-radius: 18px;
+            }
         }
 
         .chat-side-panel.open {

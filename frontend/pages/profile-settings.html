@@ -352,7 +352,7 @@
             <div class="nav-brand">
                 <i class="fas fa-heartbeat"></i> HealthCare Plus
             </div>
-            <div class="nav-menu"><a href="#"><i class="fas fa-home"></i> Dashboard</a></div>
+            <div class="nav-menu"><a id="dashboardLink" href="dashboard-home.html"><i class="fas fa-home"></i> Dashboard</a></div>
         </div>
     </nav>
 
@@ -469,7 +469,7 @@
         // BLUE-WHITE THEME PROFILE MANAGER - COMPLETELY DYNAMIC, NO PRE-FILLED DATA
         class ProfileManager {
             constructor() {
-                this.storageKey = 'healthcare_profile_data';
+                this.storageKey = 'healthcare_profile_preferences';
                 this.role = (window.Auth?.getRole?.() || window.Auth?.getUser?.()?.role || '').toLowerCase();
                 this.loadUserData();
                 this.bindEvents();
@@ -510,6 +510,7 @@
                         hospitalAddress: profile.hospitalAddress || '',
                     };
 
+                    this.setupDashboardLink();
                     this.configureRoleFields();
                     this.populateFormFields(data);
                     this.updateSidebar(data);
@@ -542,6 +543,17 @@
                     if (medicalSubtitle) medicalSubtitle.textContent = 'Update your specialization, qualification, and hospital details';
                     if (saveMedicalBtn) saveMedicalBtn.innerHTML = '<i class="fas fa-save"></i> Save Professional Info';
                 }
+            }
+
+            setupDashboardLink() {
+                const dashboardLink = document.getElementById('dashboardLink');
+                if (!dashboardLink) return;
+                const destinations = {
+                    patient: 'patient-dashboard.html',
+                    doctor: 'doctor-dashboard.html',
+                    nurse: 'nurse-dashboard.html'
+                };
+                dashboardLink.href = destinations[this.role] || 'dashboard-home.html';
             }
 
             resetAllFields() {
@@ -651,7 +663,7 @@
 
                 try {
                     // Update user name/phone/email
-                    await API.put('/auth/me', {
+                    const userUpdate = await API.put('/auth/me', {
                         name: `${firstName} ${lastName}`.trim(),
                         email: email,
                         phone: phone
@@ -671,8 +683,10 @@
                     data.firstName = firstName;
                     data.lastName = lastName;
                     const storedUser = Auth.getUser?.() || {};
+                    const updatedUser = userUpdate?.data || userUpdate?.user || userUpdate || {};
                     Auth.setSession?.(null, {
                         ...storedUser,
+                        ...updatedUser,
                         name: `${firstName} ${lastName}`.trim(),
                         email,
                         phone
@@ -705,6 +719,8 @@
                     await API.post('/patient/profile', {
                         age: age,
                         gender: gender,
+                        dateOfBirth: dob,
+                        address: document.getElementById('address').value,
                         bloodGroup: bloodGroup,
                         history: conditions,
                         allergies: allergies,
