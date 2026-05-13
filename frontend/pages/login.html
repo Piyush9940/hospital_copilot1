@@ -118,10 +118,10 @@
     </div>
 
     <script src="../js/face-api.min.js"></script>
-    <script src="../js/face-auth.js?v=3"></script>
+    <script src="../js/face-auth.js?v=4"></script>
     <script src="../js/localization.js?v=3"></script>
     <script src="../js/config.js?v=4"></script>
-    <script src="../js/auth.js?v=4"></script>
+    <script src="../js/auth.js?v=5"></script>
 <script>
     if (!window.AuthManager) {
         console.error("AuthManager is not loaded. Check ../js/auth.js path.");
@@ -156,11 +156,10 @@
             }
             
             if (typeof window.LoadingOverlay !== 'undefined') window.LoadingOverlay.show();
-            // Use custom login call to handle the new backend two-step process
             const response = await fetch(`${API_BASE_URL}/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ email, password, role })
             });
             const data = await response.json();
             
@@ -251,7 +250,8 @@
                         clearInterval(globalDetectInterval);
                         statusText.textContent = 'Face successfully captured! Authenticating...';
                         
-                        stream.getTracks().forEach(track => track.stop());
+                        window.FaceAuth.stopStream(stream);
+                        videoElement.srcObject = null;
                         videoContainer.style.display = 'none';
 
                         try {
@@ -264,6 +264,7 @@
                                 payload = {
                                     email: window.currentEmail,
                                     password: window.currentPassword,
+                                    role: window.currentRole || role,
                                     faceDescriptor: descriptor
                                 };
                             } else {
@@ -295,7 +296,8 @@
                     } else if (attempts > 30) {
                         clearInterval(globalDetectInterval);
                         statusText.textContent = 'Failed to detect face. Please try again.';
-                        stream.getTracks().forEach(track => track.stop());
+                        window.FaceAuth.stopStream(stream);
+                        videoElement.srcObject = null;
                         setTimeout(() => { videoContainer.style.display = 'none'; }, 3000);
                     }
                 }, 500);

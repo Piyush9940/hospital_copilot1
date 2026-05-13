@@ -65,10 +65,15 @@ router.post(
         body("password").trim().notEmpty().withMessage("Password is required"),
         body("role")
             .trim()
+            .toLowerCase()
             .notEmpty()
             .withMessage("Role is required")
             .isIn(["patient", "doctor", "nurse"])
             .withMessage("Role must be patient, doctor, or nurse"),
+        body("faceDescriptor")
+            .optional({ nullable: true, checkFalsy: true })
+            .isArray({ min: 128, max: 128 })
+            .withMessage("faceDescriptor must contain 128 numeric values"),
     ],
     validateMiddleware,
     login
@@ -79,11 +84,14 @@ router.post(
     [
         body("role")
             .trim()
+            .toLowerCase()
             .notEmpty()
             .withMessage("Role is required")
             .isIn(["patient", "doctor", "nurse"])
             .withMessage("Role must be patient, doctor, or nurse"),
-        body("faceDescriptor").isArray().withMessage("Face descriptor is required")
+        body("faceDescriptor")
+            .isArray({ min: 128, max: 128 })
+            .withMessage("Face descriptor must contain 128 numeric values")
     ],
     validateMiddleware,
     faceLogin

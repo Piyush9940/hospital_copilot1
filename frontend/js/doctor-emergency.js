@@ -93,8 +93,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (data.summary) {
             let riskBadge = '';
             if (data.riskLevel) {
-                const color = String(data.riskLevel).toLowerCase() === 'high' ? '#ef4444' : (String(data.riskLevel).toLowerCase() === 'medium' ? '#f59e0b' : '#10b981');
-                riskBadge = `<span style="display:inline-block; margin-bottom: 15px; background-color:${color};color:white;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:bold;">Risk Level: ${data.riskLevel}</span><br>`;
+                riskBadge = `<span class="risk-badge ${getRiskClass(data.riskLevel)}">Risk Level: ${escapeHtml(data.riskLevel)}</span><br>`;
             }
             aiSummaryContent.innerHTML = riskBadge + markedToHtml(data.summary);
         }
@@ -146,13 +145,13 @@ document.addEventListener("DOMContentLoaded", () => {
         requestsGrid.innerHTML = emergencies.map(em => `
             <div class="request-card">
                 <div class="req-header">
-                    <h4>Emergency #${em.id}</h4>
+                    <h4>Emergency #${escapeHtml(em.id)}</h4>
                     <span class="badge pending">PENDING</span>
                 </div>
                 <div class="req-body">
-                    <p><strong>Patient:</strong> ${em.patient_name} (Age: ${em.age || 'N/A'})</p>
-                    <p><strong>Location:</strong> ${em.location_address}</p>
-                    <p class="req-time">Time: ${new Date(em.created_at).toLocaleTimeString()}</p>
+                    <p><strong>Patient:</strong> ${escapeHtml(em.patient_name || "Unknown")} (Age: ${escapeHtml(em.age || "N/A")})</p>
+                    <p><strong>Location:</strong> ${escapeHtml(em.location_address || "Location not available")}</p>
+                    <p class="req-time"><i class="fa-regular fa-clock"></i> ${formatDateTime(em.created_at)}</p>
                 </div>
                 <div class="req-actions">
                     <button class="btn-accept" onclick="acceptEmergency(${em.id})"><i class="fa-solid fa-check"></i> Accept</button>
@@ -166,13 +165,13 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("pastRequestsGrid").innerHTML = emergencies.map(em => `
             <div class="request-card past-request">
                 <div class="req-header">
-                    <h4>Emergency #${em.id}</h4>
-                    <span class="badge ${em.status}">${em.status.toUpperCase()}</span>
+                    <h4>Emergency #${escapeHtml(em.id)}</h4>
+                    <span class="badge ${escapeHtml(em.status || "unknown")}">${escapeHtml(String(em.status || "unknown").toUpperCase())}</span>
                 </div>
                 <div class="req-body">
-                    <p><strong>Patient:</strong> ${em.patient_name} (Age: ${em.age || 'N/A'})</p>
-                    <p><strong>Status:</strong> ${em.status}</p>
-                    <p class="req-time">Updated: ${new Date(em.updated_at).toLocaleTimeString()}</p>
+                    <p><strong>Patient:</strong> ${escapeHtml(em.patient_name || "Unknown")} (Age: ${escapeHtml(em.age || "N/A")})</p>
+                    <p><strong>Status:</strong> ${escapeHtml(em.status || "unknown")}</p>
+                    <p class="req-time"><i class="fa-regular fa-clock"></i> Updated ${formatDateTime(em.updated_at)}</p>
                 </div>
             </div>
         `).join("");
@@ -306,7 +305,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const result = data.data || data;
                 const answer = extractRagAnswer(result, data);
                 const highlightsHtml = Array.isArray(result.reportHighlights) && result.reportHighlights.length
-                    ? `<div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(15, 43, 61, 0.15);">
+                    ? `<div class="report-highlights">
                         <strong>Report highlights considered:</strong><br>
                         ${result.reportHighlights.map(item => `&bull; ${escapeHtml(item)}`).join("<br>")}
                     </div>`
@@ -405,10 +404,29 @@ document.addEventListener("DOMContentLoaded", () => {
     function markedToHtml(text) {
         // Very basic markdown to html for bullet points and bold
         let html = String(text || "").replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        html = html.replace(/\n\*/g, '<br>•');
-        html = html.replace(/\n-/g, '<br>•');
+        html = html.replace(/\n\*/g, '<br>&bull;');
+        html = html.replace(/\n-/g, '<br>&bull;');
         html = html.replace(/\n/g, '<br>');
         return html;
+    }
+
+    function getRiskClass(riskLevel) {
+        const value = String(riskLevel || "").toLowerCase();
+        if (value === "high") return "risk-high";
+        if (value === "medium") return "risk-medium";
+        if (value === "low") return "risk-low";
+        return "risk-unknown";
+    }
+
+    function formatDateTime(value) {
+        const date = value ? new Date(value) : null;
+        if (!date || Number.isNaN(date.getTime())) return "Time not available";
+        return date.toLocaleString([], {
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        });
     }
 
     // Fetch Patient Reports dynamically
@@ -425,29 +443,47 @@ document.addEventListener("DOMContentLoaded", () => {
             if (data.success && data.data && data.data.length > 0) {
                 reportsContainer.innerHTML = data.data.map(r => {
                     const pdfPath = r.pdf_url || r.pdfUrl || r.pdf_path || r.pdfPath;
+                    const reportUrl = pdfPath
+                        ? (pdfPath.startsWith('http') ? pdfPath : (typeof CONFIG !== 'undefined' && CONFIG.NODE_API ? CONFIG.NODE_API.replace('/api', '') : 'http://127.0.0.1:5000') + pdfPath)
+                        : "";
                     return `
-                    <div style="background: #f8fafc; border-left: 4px solid #2c7cb6; padding: 12px; margin-bottom: 12px; border-radius: 6px;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                            <strong style="color: #0f2b3d; font-size: 1.05rem;">${r.diagnosis || 'Medical Report'}</strong>
-                            <span style="font-size: 0.8rem; color: #64748b;"><i class="fa-regular fa-calendar"></i> ${new Date(r.createdAt || r.date || Date.now()).toLocaleDateString()}</span>
+                    <div class="report-card">
+                        <div class="report-card-header">
+                            <strong class="report-card-title">${escapeHtml(r.diagnosis || 'Medical Report')}</strong>
+                            <span class="report-date"><i class="fa-regular fa-calendar"></i> ${escapeHtml(formatDateOnly(r.createdAt || r.date || Date.now()))}</span>
                         </div>
-                        <div style="margin-bottom: 8px;">
-                            <span style="background: #e2e8f0; color: #334155; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; text-transform: uppercase;">${r.type || 'General'}</span>
-                        </div>
-                        <p style="font-size: 0.9rem; color: #334155; margin-bottom: 10px;"><strong>Summary:</strong> ${r.summary || 'No summary details provided.'}</p>
+                        <span class="report-type">${escapeHtml(r.type || 'General')}</span>
+                        <p class="report-summary"><strong>Summary:</strong> ${escapeHtml(r.summary || 'No summary details provided.')}</p>
                         ${pdfPath ? `
-                            <button onclick="window.open('${pdfPath.startsWith('http') ? pdfPath : (typeof CONFIG !== 'undefined' && CONFIG.NODE_API ? CONFIG.NODE_API.replace('/api', '') : 'http://127.0.0.1:5000') + pdfPath}', '_blank')" style="background: #dcfce7; color: #166534; border: none; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; font-weight: bold;">
+                            <button class="report-action" data-report-url="${escapeHtml(reportUrl)}">
                                 <i class="fa-solid fa-download"></i> Download / View
                             </button>
-                        ` : '<span style="font-size: 0.8rem; color: #94a3b8;"><i class="fa-solid fa-file-excel"></i> No file attached</span>'}
+                        ` : '<span class="report-missing"><i class="fa-solid fa-file-excel"></i> No file attached</span>'}
                     </div>
                 `}).join("");
             } else {
-                reportsContainer.innerHTML = `<div style="text-align: center; color: #64748b; padding: 1rem;"><i class="fa-solid fa-folder-open" style="font-size: 2rem; margin-bottom: 10px; display: block; opacity: 0.5;"></i>No past medical reports available for this patient.</div>`;
+                reportsContainer.innerHTML = `<div class="report-empty"><i class="fa-solid fa-folder-open"></i>No past medical reports available for this patient.</div>`;
             }
         } catch (err) {
-            reportsContainer.innerHTML = `<div style="color: #dc2626; padding: 1rem;"><i class="fa-solid fa-triangle-exclamation"></i> Failed to load medical reports.</div>`;
+            reportsContainer.innerHTML = `<div class="report-error"><i class="fa-solid fa-triangle-exclamation"></i> Failed to load medical reports.</div>`;
             console.error("Error fetching reports:", err);
         }
+    }
+
+    document.getElementById("patientReportsContent")?.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-report-url]");
+        if (!button) return;
+        const url = button.getAttribute("data-report-url");
+        if (url) window.open(url, "_blank");
+    });
+
+    function formatDateOnly(value) {
+        const date = value ? new Date(value) : null;
+        if (!date || Number.isNaN(date.getTime())) return "Date not available";
+        return date.toLocaleDateString([], {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+        });
     }
 });

@@ -27,6 +27,11 @@ const extractServiceData = (result, fallback = null) => {
     return result.data !== undefined ? result.data : fallback;
 };
 
+const safeServiceCall = (callback) =>
+    Promise.resolve()
+        .then(callback)
+        .catch(() => null);
+
 /**
  * Get full doctor dashboard
  */
@@ -56,12 +61,12 @@ export const getDoctorDashboard = async (req, res, next) => {
             alertStatsResult,
             urgentNotesResult,
         ] = await Promise.all([
-            getDoctorDashboardSummary({ doctorId: doctorProfile.id }).catch(() => null),
-            getDoctorTodayAppointments({ doctorId: doctorProfile.id }).catch(() => null),
-            getDoctorAppointmentHistory({ doctorId: doctorProfile.id }).catch(() => null),
-            getPendingEmergencyAlerts().catch(() => null),
-            getEmergencyAlertStatistics().catch(() => null),
-            getUrgentNurseNotes().catch(() => null),
+            safeServiceCall(() => getDoctorDashboardSummary({ doctorId: doctorProfile.id })),
+            safeServiceCall(() => getDoctorTodayAppointments({ doctorId: doctorProfile.id })),
+            safeServiceCall(() => getDoctorAppointmentHistory({ doctorId: doctorProfile.id })),
+            safeServiceCall(() => getPendingEmergencyAlerts()),
+            safeServiceCall(() => getEmergencyAlertStatistics()),
+            safeServiceCall(() => getUrgentNurseNotes()),
         ]);
 
         const dashboardSummary = extractServiceData(dashboardSummaryResult, null);
@@ -137,11 +142,11 @@ export const getDoctorDashboardStats = async (req, res, next) => {
             alertStatsResult,
             urgentNotesResult,
         ] = await Promise.all([
-            getDoctorTodayAppointments({ doctorId: doctorProfile.id }).catch(() => null),
-            getDoctorAppointmentHistory({ doctorId: doctorProfile.id }).catch(() => null),
-            getPendingEmergencyAlerts().catch(() => null),
-            getEmergencyAlertStatistics().catch(() => null),
-            getUrgentNurseNotes().catch(() => null),
+            safeServiceCall(() => getDoctorTodayAppointments({ doctorId: doctorProfile.id })),
+            safeServiceCall(() => getDoctorAppointmentHistory({ doctorId: doctorProfile.id })),
+            safeServiceCall(() => getPendingEmergencyAlerts()),
+            safeServiceCall(() => getEmergencyAlertStatistics()),
+            safeServiceCall(() => getUrgentNurseNotes()),
         ]);
 
         const todayAppointments = extractServiceData(todayAppointmentsResult, []) || [];
@@ -208,10 +213,10 @@ export const getDoctorDashboardCards = async (req, res, next) => {
             urgentNotesResult,
             dashboardSummaryResult,
         ] = await Promise.all([
-            getDoctorTodayAppointments({ doctorId: doctorProfile.id }).catch(() => null),
-            getPendingEmergencyAlerts().catch(() => null),
-            getUrgentNurseNotes().catch(() => null),
-            getDoctorDashboardSummary({ doctorId: doctorProfile.id }).catch(() => null),
+            safeServiceCall(() => getDoctorTodayAppointments({ doctorId: doctorProfile.id })),
+            safeServiceCall(() => getPendingEmergencyAlerts()),
+            safeServiceCall(() => getUrgentNurseNotes()),
+            safeServiceCall(() => getDoctorDashboardSummary({ doctorId: doctorProfile.id })),
         ]);
 
         const todayAppointments = extractServiceData(todayAppointmentsResult, []) || [];

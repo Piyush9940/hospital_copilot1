@@ -8,14 +8,14 @@ import {
     checkCriticalVitalsByUserId,
 } from "../services/vital.service.js";
 
-import { createError, validateId } from "../utils/helper.js";
+import { createError, validateStringId } from "../utils/helper.js";
 
 /**
  * Create new vital record
  */
 export const addVital = async (req, res, next) => {
     try {
-        const patientId = validateId(req.body?.patientId, "Patient ID");
+        const patientId = validateStringId(req.body?.patientId, "Patient ID");
 
         const result = await createVitalRecord({
             patientId,
@@ -43,7 +43,7 @@ export const addVital = async (req, res, next) => {
  */
 export const getVitalsByPatientId = async (req, res, next) => {
     try {
-        const patientId = validateId(req.params?.patientId, "Patient ID");
+        const patientId = validateStringId(req.params?.patientId, "Patient ID");
 
         const result = await getPatientVitalHistory({
             patientId,
@@ -66,7 +66,7 @@ export const getVitalsByPatientId = async (req, res, next) => {
  */
 export const getLatestVitalByPatientId = async (req, res, next) => {
     try {
-        const patientId = validateId(req.params?.patientId, "Patient ID");
+        const patientId = validateStringId(req.params?.patientId, "Patient ID");
 
         const result = await getLatestPatientVital({
             patientId,

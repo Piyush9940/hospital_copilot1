@@ -37,7 +37,7 @@ export const addVital = (patientId, heartRate, spo2, bp, temperature, status) =>
                 patient_id,
                 heart_rate,
                 spo2,
-                bp,
+                blood_pressure,
                 temperature,
                 status,
                 created_at

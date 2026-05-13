@@ -6,73 +6,106 @@
     <title>Doctor Emergency Dashboard | Hospital Copilot</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/emergency.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="doctor-mode">
     <div class="dashboard-wrapper">
         <header class="doc-header">
-            <div class="logo">
-                <i class="fa-solid fa-truck-medical"></i> Doctor Emergency Dispatch
-            </div>
+            <a class="doc-brand" href="doctor-dashboard2.html" aria-label="Doctor dashboard">
+                <span class="doc-brand-mark"><i class="fa-solid fa-truck-medical"></i></span>
+                <span>
+                    <strong>Emergency Dispatch</strong>
+                    <small>Live doctor response center</small>
+                </span>
+            </a>
+
+            <nav class="doc-nav" aria-label="Doctor emergency navigation">
+                <a href="doctor-dashboard2.html" class="doc-nav-link"><i class="fa-solid fa-gauge-high"></i><span>Dashboard</span></a>
+                <a href="doctor-patients.html" class="doc-nav-link"><i class="fa-solid fa-user-injured"></i><span>Patients</span></a>
+                <a href="doctor-profile.html" class="doc-icon-link" aria-label="Doctor profile"><i class="fa-solid fa-user-doctor"></i></a>
+            </nav>
+
             <div class="doc-profile">
                 <span id="docName">Doctor</span>
-                <img src="https://ui-avatars.com/api/?name=Doctor&background=0D8ABC&color=fff" alt="Doc">
+                <img src="https://ui-avatars.com/api/?name=Doctor&background=0D8ABC&color=fff" alt="Doctor avatar">
             </div>
         </header>
 
         <main class="doc-main">
-            <!-- Pending Requests Section -->
+            <section class="doctor-hero">
+                <div>
+                    <span class="doctor-eyebrow"><i class="fa-solid fa-satellite-dish"></i> Real-time triage</span>
+                    <h1>Emergency Command Center</h1>
+                    <p>Accept, review, and support patient emergencies with live requests, AI summaries, RAG assistance, and medical report context.</p>
+                </div>
+                <div class="doctor-live-card">
+                    <span class="live-dot"></span>
+                    <div>
+                        <strong>Monitoring Active</strong>
+                        <span>Requests refresh automatically from the backend.</span>
+                    </div>
+                </div>
+            </section>
+
             <section class="requests-section" id="requestsSection">
-                <h2><i class="fa-solid fa-bell fa-shake text-warning"></i> Incoming Emergencies</h2>
+                <div class="section-title-row">
+                    <div>
+                        <span class="section-kicker">Live queue</span>
+                        <h2><i class="fa-solid fa-bell text-warning"></i> Incoming Emergencies</h2>
+                    </div>
+                    <span class="refresh-pill"><i class="fa-solid fa-arrows-rotate"></i> Auto refresh</span>
+                </div>
                 <div class="requests-grid" id="requestsGrid">
-                    <!-- Dynamic Requests -->
                     <div class="empty-state">No active emergencies at the moment.</div>
                 </div>
             </section>
 
-            <!-- Past Emergencies Section -->
-            <section class="past-emergencies-section" id="pastEmergenciesSection" style="margin-top: 2rem;">
-                <h2><i class="fa-solid fa-clock-rotate-left"></i> Past Emergencies</h2>
+            <section class="past-emergencies-section" id="pastEmergenciesSection">
+                <div class="section-title-row">
+                    <div>
+                        <span class="section-kicker">History</span>
+                        <h2><i class="fa-solid fa-clock-rotate-left"></i> Past Emergencies</h2>
+                    </div>
+                </div>
                 <div class="requests-grid" id="pastRequestsGrid">
                     <div class="empty-state">No past emergencies found.</div>
                 </div>
             </section>
 
-            <!-- Active Emergency View (Hidden initially) -->
             <section class="active-emergency-section hidden" id="activeEmergencySection">
                 <div class="active-header">
-                    <h2><i class="fa-solid fa-heart-pulse"></i> Active Emergency Handling</h2>
-                    <button id="endEmergencyBtn" class="btn-danger-outline">End Emergency</button>
+                    <div>
+                        <span class="section-kicker">Active case</span>
+                        <h2><i class="fa-solid fa-heart-pulse"></i> Emergency Handling</h2>
+                    </div>
+                    <button id="endEmergencyBtn" class="btn-danger-outline"><i class="fa-solid fa-xmark"></i> End Emergency</button>
                 </div>
 
                 <div class="active-grid">
-                    <!-- Patient Info & Summary -->
                     <div class="panel patient-summary-panel">
-                        <h3>AI Patient Summary</h3>
+                        <h3><i class="fa-solid fa-file-waveform"></i> AI Patient Summary</h3>
                         <div id="aiSummaryContent" class="summary-content">
                             <i class="fa-solid fa-circle-notch fa-spin"></i> Generating critical summary...
                         </div>
                     </div>
 
-                    <!-- RAG Query System -->
                     <div class="panel rag-panel">
-                        <h3><i class="fa-solid fa-robot"></i> AI Medical Assistant (RAG)</h3>
+                        <h3><i class="fa-solid fa-robot"></i> AI Medical Assistant</h3>
                         <div class="chat-container" id="ragChatBox">
                             <div class="chat-msg system">Ask any question regarding the patient's medical history, allergies, or current condition.</div>
                         </div>
                         <div class="chat-input-area">
-                            <input type="text" id="ragQueryInput" placeholder="e.g. What allergies does the patient have?">
-                            <button id="ragQueryBtn"><i class="fa-solid fa-paper-plane"></i></button>
+                            <input type="text" id="ragQueryInput" placeholder="Ask about allergies, reports, vitals, or current condition">
+                            <button id="ragQueryBtn" aria-label="Send question"><i class="fa-solid fa-paper-plane"></i></button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Patient Medical Reports -->
-                <div class="active-grid" style="margin-top: 1.5rem; grid-template-columns: 1fr;">
+                <div class="reports-grid">
                     <div class="panel patient-reports-panel">
                         <h3><i class="fa-solid fa-file-medical"></i> Patient Medical Reports</h3>
-                        <div id="patientReportsContent" class="reports-content" style="max-height: 300px; overflow-y: auto; padding-top: 1rem;">
+                        <div id="patientReportsContent" class="reports-content">
                             <i class="fa-solid fa-circle-notch fa-spin"></i> Loading previous medical reports...
                         </div>
                     </div>
@@ -83,6 +116,6 @@
 
     <script src="../js/config.js?v=10"></script>
     <script src="../js/auth.js?v=5"></script>
-    <script src="../js/doctor-emergency.js?v=11"></script>
+    <script src="../js/doctor-emergency.js?v=12"></script>
 </body>
 </html>

@@ -428,7 +428,7 @@ export const getPatientNurseNotesByUserId = ({ userId }) => {
             throw createError("Patient profile not found", 404);
         }
 
-        const notes = getNotesByPatientId(patient.id) || [];
+        const notes = getNotesByPatientId(patient.patient_id) || [];
 
         return {
             success: true,

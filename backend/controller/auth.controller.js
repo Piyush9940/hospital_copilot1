@@ -39,6 +39,29 @@ const normalizeUser = (user) => {
     };
 };
 
+const normalizeFaceDescriptor = (value) => {
+    if (!value) return null;
+
+    const descriptor = Array.isArray(value)
+        ? value
+        : typeof value === "object"
+        ? Object.values(value)
+        : null;
+
+    if (!Array.isArray(descriptor) || descriptor.length !== 128) {
+        return null;
+    }
+
+    const normalized = descriptor.map((item) => Number(item));
+    return normalized.every(Number.isFinite) ? normalized : null;
+};
+
+const getFaceDistance = (currentDescriptor, storedDescriptorJson) => {
+    const storedDescriptor = normalizeFaceDescriptor(JSON.parse(storedDescriptorJson || "null"));
+    if (!storedDescriptor) return Infinity;
+    return calculateEuclideanDistance(currentDescriptor, storedDescriptor);
+};
+
 export const register = async (req, res, next) => {
     try {
         const name = sanitize(req.body?.name);
@@ -52,7 +75,7 @@ export const register = async (req, res, next) => {
             typeof req.body?.profileImage === "string" && req.body.profileImage.trim()
                 ? req.body.profileImage.trim()
                 : null;
-        const faceDescriptorInput = req.body?.faceDescriptor || null;
+        const faceDescriptorInput = normalizeFaceDescriptor(req.body?.faceDescriptor);
         let faceDescriptor = null;
 
         if (!name) throw createError("Name is required", 400);
@@ -73,15 +96,7 @@ export const register = async (req, res, next) => {
         }
         
         if (faceDescriptorInput) {
-            let descriptorArray = null;
-            if (Array.isArray(faceDescriptorInput)) {
-                descriptorArray = faceDescriptorInput;
-            } else if (typeof faceDescriptorInput === "object") {
-                descriptorArray = Object.values(faceDescriptorInput);
-            }
-            if (descriptorArray && descriptorArray.length > 0) {
-                faceDescriptor = { path: null, embedding: descriptorArray };
-            }
+            faceDescriptor = { path: null, embedding: faceDescriptorInput };
         }
 
         const saltRounds = Number(process.env.BCRYPT_SALT_ROUNDS || 10);
@@ -184,15 +199,11 @@ export const login = async (req, res, next) => {
             throw createError("Invalid email or password", 401);
         }
 
-        let faceDescriptorInput = req.body?.faceDescriptor;
-        if (faceDescriptorInput && !Array.isArray(faceDescriptorInput) && typeof faceDescriptorInput === "object") {
-            faceDescriptorInput = Object.values(faceDescriptorInput);
-        }
+        const faceDescriptorInput = normalizeFaceDescriptor(req.body?.faceDescriptor);
 
-        if (user.face_registered === 1 && Array.isArray(faceDescriptorInput)) {
+        if (Number(user.face_registered) === 1 && faceDescriptorInput) {
             try {
-                const storedEmbedding = JSON.parse(user.face_embedding_json);
-                const distance = calculateEuclideanDistance(faceDescriptorInput, storedEmbedding);
+                const distance = getFaceDistance(faceDescriptorInput, user.face_embedding_json);
                 
                 // Using 0.6 threshold for face-api.js
                 if (distance > 0.6) {
@@ -246,18 +257,15 @@ const calculateEuclideanDistance = (emb1, emb2) => {
 
 export const faceLogin = async (req, res, next) => {
     try {
-        let faceDescriptorInput = req.body?.faceDescriptor;
-        if (faceDescriptorInput && !Array.isArray(faceDescriptorInput) && typeof faceDescriptorInput === "object") {
-            faceDescriptorInput = Object.values(faceDescriptorInput);
-        }
+        const faceDescriptorInput = normalizeFaceDescriptor(req.body?.faceDescriptor);
 
         const role = typeof req.body?.role === "string" ? req.body.role.trim().toLowerCase() : "";
 
-        if (!faceDescriptorInput || !Array.isArray(faceDescriptorInput)) {
+        if (!faceDescriptorInput) {
             throw createError("Face descriptor is required", 400);
         }
-        if (!ALLOWED_ROLES.includes(role)) {
-            throw createError(`Invalid role. Allowed values: ${ALLOWED_ROLES.join(", ")}`, 400);
+        if (!["patient", "doctor", "nurse"].includes(role)) {
+            throw createError("Please select a valid role before using face login", 400);
         }
 
         const currentEmbedding = faceDescriptorInput;
@@ -277,8 +285,7 @@ export const faceLogin = async (req, res, next) => {
 
         for (const u of users) {
             try {
-                const storedEmbedding = JSON.parse(u.face_embedding_json);
-                const distance = calculateEuclideanDistance(currentEmbedding, storedEmbedding);
+                const distance = getFaceDistance(currentEmbedding, u.face_embedding_json);
                 if (distance < minDistance) {
                     minDistance = distance;
                     bestMatch = u;

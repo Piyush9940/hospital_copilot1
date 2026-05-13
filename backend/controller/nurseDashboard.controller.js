@@ -23,6 +23,11 @@ const extractServiceData = (result, fallback = null) => {
     return result.data !== undefined ? result.data : fallback;
 };
 
+const safeServiceCall = (callback) =>
+    Promise.resolve()
+        .then(callback)
+        .catch(() => null);
+
 /**
  * Get full nurse dashboard
  */
@@ -51,13 +56,13 @@ export const getNurseDashboard = async (req, res, next) => {
             alertStatsResult,
             departmentNursesResult,
         ] = await Promise.all([
-            getUrgentNurseNotes().catch(() => null),
-            getNurseCreatedNotes({ nurseId: nurseProfile.id }).catch(() => null),
-            getPendingEmergencyAlerts().catch(() => null),
-            getEmergencyAlertStatistics().catch(() => null),
-            getNurseProfilesByDepartment({
+            safeServiceCall(() => getUrgentNurseNotes()),
+            safeServiceCall(() => getNurseCreatedNotes({ nurseId: nurseProfile.id })),
+            safeServiceCall(() => getPendingEmergencyAlerts()),
+            safeServiceCall(() => getEmergencyAlertStatistics()),
+            safeServiceCall(() => getNurseProfilesByDepartment({
                 department: nurseProfile.department,
-            }).catch(() => null),
+            })),
         ]);
 
         const urgentNotes = extractServiceData(urgentNotesResult, []) || [];
@@ -131,10 +136,10 @@ export const getNurseDashboardStats = async (req, res, next) => {
             pendingAlertsResult,
             alertStatsResult,
         ] = await Promise.all([
-            getUrgentNurseNotes().catch(() => null),
-            getNurseCreatedNotes({ nurseId: nurseProfile.id }).catch(() => null),
-            getPendingEmergencyAlerts().catch(() => null),
-            getEmergencyAlertStatistics().catch(() => null),
+            safeServiceCall(() => getUrgentNurseNotes()),
+            safeServiceCall(() => getNurseCreatedNotes({ nurseId: nurseProfile.id })),
+            safeServiceCall(() => getPendingEmergencyAlerts()),
+            safeServiceCall(() => getEmergencyAlertStatistics()),
         ]);
 
         const urgentNotes = extractServiceData(urgentNotesResult, []) || [];
@@ -198,9 +203,9 @@ export const getNurseDashboardCards = async (req, res, next) => {
             createdNotesResult,
             pendingAlertsResult,
         ] = await Promise.all([
-            getUrgentNurseNotes().catch(() => null),
-            getNurseCreatedNotes({ nurseId: nurseProfile.id }).catch(() => null),
-            getPendingEmergencyAlerts().catch(() => null),
+            safeServiceCall(() => getUrgentNurseNotes()),
+            safeServiceCall(() => getNurseCreatedNotes({ nurseId: nurseProfile.id })),
+            safeServiceCall(() => getPendingEmergencyAlerts()),
         ]);
 
         const urgentNotes = extractServiceData(urgentNotesResult, []) || [];

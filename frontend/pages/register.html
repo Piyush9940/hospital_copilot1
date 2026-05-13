@@ -238,9 +238,9 @@
     </div>
 
 <script src="../js/face-api.min.js"></script>
-<script src="../js/face-auth.js?v=3"></script>
+<script src="../js/face-auth.js?v=4"></script>
 <script src="../js/config.js?v=4"></script>
-<script src="../js/auth.js?v=4"></script>
+<script src="../js/auth.js?v=5"></script>
 <script>
     let registeredFaceDescriptor = null;
 
@@ -427,7 +427,8 @@
                         
                         registeredFaceDescriptor = descriptor;
                         
-                        stream.getTracks().forEach(track => track.stop());
+                        window.FaceAuth.stopStream(stream);
+                        videoElement.srcObject = null;
                         setTimeout(() => {
                             videoContainer.style.display = 'none';
                             btn.innerHTML = '<i class="fas fa-check" style="color:#10b981;"></i> Face Registered';
@@ -436,7 +437,8 @@
                     } else if (attempts > 30) {
                         clearInterval(globalDetectInterval);
                         statusText.textContent = 'Failed to detect face. Please try again.';
-                        stream.getTracks().forEach(track => track.stop());
+                        window.FaceAuth.stopStream(stream);
+                        videoElement.srcObject = null;
                         setTimeout(() => { videoContainer.style.display = 'none'; }, 3000);
                     }
                 }, 500);

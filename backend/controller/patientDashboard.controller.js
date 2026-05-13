@@ -35,7 +35,8 @@ const normalizePatientProfile = (patient) => {
     if (!patient) return null;
 
     return {
-        id: patient.id || null,
+        id: patient.patient_id || null,
+        patientId: patient.patient_id || null,
         userId: patient.user_id || null,
         age: patient.age ?? null,
         gender: patient.gender || null,
@@ -57,6 +58,11 @@ const extractServiceData = (result, fallback = null) => {
 
     return result.data !== undefined ? result.data : fallback;
 };
+
+const safeServiceCall = (callback) =>
+    Promise.resolve()
+        .then(callback)
+        .catch(() => null);
 
 /**
  * Get patient dashboard overview
@@ -83,17 +89,19 @@ export const getPatientDashboard = async (req, res, next) => {
             emergencyAlertsResult,
             nurseNotesResult,
         ] = await Promise.all([
-            getLatestVitalByUserId({ userId }).catch(() => null),
-            getVitalSummaryByUserId({ userId }).catch(() => null),
-            checkCriticalVitalsByUserId({ userId }).catch(() => null),
-            getMedicalReportsByUserId({ userId }).catch(() => null),
-            getEmergencyAlertsByUserId({ userId }).catch(() => null),
-            getPatientNurseNotesByUserId({ userId }).catch(() => null),
+            safeServiceCall(() => getLatestVitalByUserId({ userId })),
+            safeServiceCall(() => getVitalSummaryByUserId({ userId })),
+            safeServiceCall(() => checkCriticalVitalsByUserId({ userId })),
+            safeServiceCall(() => getMedicalReportsByUserId({ userId })),
+            safeServiceCall(() => getEmergencyAlertsByUserId({ userId })),
+            safeServiceCall(() => getPatientNurseNotesByUserId({ userId })),
         ]);
 
-        const appointmentsResult = await getPatientAppointments({
-            patientId: patient.id,
-        }).catch(() => null);
+        const appointmentsResult = await safeServiceCall(() =>
+            getPatientAppointments({
+                patientId: patient.patient_id,
+            })
+        );
 
         const compactContext = buildCompactPatientContext({
             userId,
@@ -168,11 +176,11 @@ export const getPatientDashboardStats = async (req, res, next) => {
             nurseNotesResult,
             appointmentsResult,
         ] = await Promise.all([
-            checkCriticalVitalsByUserId({ userId }).catch(() => null),
-            getMedicalReportsByUserId({ userId }).catch(() => null),
-            getEmergencyAlertsByUserId({ userId }).catch(() => null),
-            getPatientNurseNotesByUserId({ userId }).catch(() => null),
-            getPatientAppointments({ patientId: patient.id }).catch(() => null),
+            safeServiceCall(() => checkCriticalVitalsByUserId({ userId })),
+            safeServiceCall(() => getMedicalReportsByUserId({ userId })),
+            safeServiceCall(() => getEmergencyAlertsByUserId({ userId })),
+            safeServiceCall(() => getPatientNurseNotesByUserId({ userId })),
+            safeServiceCall(() => getPatientAppointments({ patientId: patient.patient_id })),
         ]);
 
         const reports = extractServiceData(reportsResult, []) || [];
@@ -228,10 +236,10 @@ export const getPatientDashboardCards = async (req, res, next) => {
             emergencyAlertsResult,
             appointmentsResult,
         ] = await Promise.all([
-            getLatestVitalByUserId({ userId }).catch(() => null),
-            getMedicalReportsByUserId({ userId }).catch(() => null),
-            getEmergencyAlertsByUserId({ userId }).catch(() => null),
-            getPatientAppointments({ patientId: patient.id }).catch(() => null),
+            safeServiceCall(() => getLatestVitalByUserId({ userId })),
+            safeServiceCall(() => getMedicalReportsByUserId({ userId })),
+            safeServiceCall(() => getEmergencyAlertsByUserId({ userId })),
+            safeServiceCall(() => getPatientAppointments({ patientId: patient.patient_id })),
         ]);
 
         const latestVital = extractServiceData(latestVitalResult, null);

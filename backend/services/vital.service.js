@@ -5,7 +5,7 @@ import {
 } from "../model/vital.model.js";
 
 import { getPatientByUserId } from "../model/patient.model.js";
-import { createError, validateId } from "../utils/helper.js";
+import { createError, validateId, validateStringId } from "../utils/helper.js";
 
 /**
  * Allowed vital status values
@@ -23,7 +23,7 @@ const normalizeVital = (vital) => {
         patientId: vital.patient_id || null,
         heartRate: vital.heart_rate ?? null,
         spo2: vital.spo2 ?? null,
-        bp: vital.bp || null,
+        bp: vital.blood_pressure || vital.bp || null,
         temperature: vital.temperature ?? null,
         status: vital.status || null,
         createdAt: vital.created_at || null,
@@ -110,7 +110,7 @@ export const createVitalRecord = ({
     status = null,
 }) => {
     try {
-        const validPatientId = validateId(patientId, "Patient ID");
+        const validPatientId = validateStringId(patientId, "Patient ID");
 
         const validHeartRate = Number(heartRate);
         const validSpo2 = Number(spo2);
@@ -174,7 +174,7 @@ export const createVitalRecord = ({
  */
 export const getPatientVitalHistory = ({ patientId }) => {
     try {
-        const validPatientId = validateId(patientId, "Patient ID");
+        const validPatientId = validateStringId(patientId, "Patient ID");
         const vitals = getVitalsByPatientId(validPatientId) || [];
 
         return {
@@ -199,7 +199,7 @@ export const getPatientVitalHistory = ({ patientId }) => {
  */
 export const getLatestPatientVital = ({ patientId }) => {
     try {
-        const validPatientId = validateId(patientId, "Patient ID");
+        const validPatientId = validateStringId(patientId, "Patient ID");
         const vital = getLatestVitals(validPatientId);
 
         if (!vital) {
@@ -236,7 +236,7 @@ export const getVitalHistoryByUserId = ({ userId }) => {
             throw createError("Patient profile not found", 404);
         }
 
-        const vitals = getVitalsByPatientId(patient.id) || [];
+        const vitals = getVitalsByPatientId(patient.patient_id) || [];
 
         return {
             success: true,
@@ -268,7 +268,7 @@ export const getLatestVitalByUserId = ({ userId }) => {
             throw createError("Patient profile not found", 404);
         }
 
-        const vital = getLatestVitals(patient.id);
+        const vital = getLatestVitals(patient.patient_id);
 
         if (!vital) {
             throw createError("No vitals found for this patient", 404);
