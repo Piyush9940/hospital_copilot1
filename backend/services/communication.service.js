@@ -16,7 +16,7 @@ import {
 } from "../model/chat.model.js";
 
 import { getAppointmentById } from "../model/appointment.model.js";
-import { createError, validateId, sanitize } from "../utils/helper.js";
+import { createError, validateId, validateStringId, sanitize } from "../utils/helper.js";
 import { APPOINTMENT_STATUS } from "../utils/constants.js";
 
 const CHAT_ROLES = ["patient", "doctor", "nurse", "assistant", "system", "user"];
@@ -114,13 +114,13 @@ const validateAppointmentForCommunication = (appointment) => {
 export const createCommunicationRequest = (appointmentId, patientId, doctorId) => {
     try {
         const validAppointmentId = validateId(appointmentId, "Appointment ID");
-        const validPatientId = validateId(patientId, "Patient ID");
+        const validPatientId = validateStringId(patientId, "Patient ID");
         const validDoctorId = validateId(doctorId, "Doctor ID");
 
         const appointment = getAppointmentById(validAppointmentId);
         validateAppointmentForCommunication(appointment);
 
-        if (Number(appointment.patient_id) !== validPatientId) {
+        if (String(appointment.patient_id) !== validPatientId) {
             throw createError("Patient does not belong to this appointment", 403);
         }
 
@@ -229,7 +229,7 @@ export const rejectCommunicationRequest = (permissionId) => {
 export const checkCommunicationAccess = (appointmentId, patientId, doctorId) => {
     try {
         const validAppointmentId = validateId(appointmentId, "Appointment ID");
-        const validPatientId = validateId(patientId, "Patient ID");
+        const validPatientId = validateStringId(patientId, "Patient ID");
         const validDoctorId = validateId(doctorId, "Doctor ID");
 
         const appointment = getAppointmentById(validAppointmentId);
@@ -276,7 +276,7 @@ export const createAuthorizedChatSession = ({
     try {
         const validAppointmentId = validateId(appointmentId, "Appointment ID");
         const validUserId = validateId(userId, "User ID");
-        const validPatientId = validateId(patientId, "Patient ID");
+        const validPatientId = validateStringId(patientId, "Patient ID");
         const validDoctorId = validateId(doctorId, "Doctor ID");
 
         const appointment = getAppointmentById(validAppointmentId);
@@ -340,7 +340,7 @@ export const sendCommunicationMessage = ({
 }) => {
     try {
         const validAppointmentId = validateId(appointmentId, "Appointment ID");
-        const validPatientId = validateId(patientId, "Patient ID");
+        const validPatientId = validateStringId(patientId, "Patient ID");
         const validDoctorId = validateId(doctorId, "Doctor ID");
         const validSessionId = validateId(sessionId, "Session ID");
         const validUserId = validateId(userId, "User ID");

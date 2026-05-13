@@ -12,7 +12,7 @@ import {
     getUrgentNurseNotes,
 } from "../services/nurse.service.js";
 
-import { createError, validateId } from "../utils/helper.js";
+import { createError, validateId, validateStringId } from "../utils/helper.js";
 
 /**
  * Create nurse profile
@@ -218,7 +218,7 @@ export const createNoteByPatientUserId = async (req, res, next) => {
  */
 export const getNotesByPatientId = async (req, res, next) => {
     try {
-        const patientId = validateId(req.params?.patientId, "Patient ID");
+        const patientId = validateStringId(req.params?.patientId, "Patient ID");
 
         const result = await getPatientNurseNotes({
             patientId,

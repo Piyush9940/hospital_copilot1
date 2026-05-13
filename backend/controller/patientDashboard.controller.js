@@ -98,9 +98,7 @@ export const getPatientDashboard = async (req, res, next) => {
         ]);
 
         const appointmentsResult = await safeServiceCall(() =>
-            getPatientAppointments({
-                patientId: patient.patient_id,
-            })
+            getPatientAppointments(patient.patient_id)
         );
 
         const compactContext = buildCompactPatientContext({
@@ -180,7 +178,7 @@ export const getPatientDashboardStats = async (req, res, next) => {
             safeServiceCall(() => getMedicalReportsByUserId({ userId })),
             safeServiceCall(() => getEmergencyAlertsByUserId({ userId })),
             safeServiceCall(() => getPatientNurseNotesByUserId({ userId })),
-            safeServiceCall(() => getPatientAppointments({ patientId: patient.patient_id })),
+            safeServiceCall(() => getPatientAppointments(patient.patient_id)),
         ]);
 
         const reports = extractServiceData(reportsResult, []) || [];
@@ -239,7 +237,7 @@ export const getPatientDashboardCards = async (req, res, next) => {
             safeServiceCall(() => getLatestVitalByUserId({ userId })),
             safeServiceCall(() => getMedicalReportsByUserId({ userId })),
             safeServiceCall(() => getEmergencyAlertsByUserId({ userId })),
-            safeServiceCall(() => getPatientAppointments({ patientId: patient.patient_id })),
+            safeServiceCall(() => getPatientAppointments(patient.patient_id)),
         ]);
 
         const latestVital = extractServiceData(latestVitalResult, null);

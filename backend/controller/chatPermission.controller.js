@@ -6,7 +6,7 @@ import {
     getAppointmentCommunicationPermissions,
 } from "../services/communication.service.js";
 
-import { createError, validateId } from "../utils/helper.js";
+import { createError, validateId, validateStringId } from "../utils/helper.js";
 
 /**
  * Create chat/communication permission request
@@ -15,7 +15,7 @@ import { createError, validateId } from "../utils/helper.js";
 export const requestChatPermission = async (req, res, next) => {
     try {
         const appointmentId = validateId(req.body?.appointmentId, "Appointment ID");
-        const patientId = validateId(req.body?.patientId, "Patient ID");
+        const patientId = validateStringId(req.body?.patientId, "Patient ID");
         const doctorId = validateId(req.body?.doctorId, "Doctor ID");
 
         const result = await createCommunicationRequest(
@@ -86,7 +86,7 @@ export const rejectPermission = async (req, res, next) => {
 export const checkPermissionAccess = async (req, res, next) => {
     try {
         const appointmentId = validateId(req.query?.appointmentId, "Appointment ID");
-        const patientId = validateId(req.query?.patientId, "Patient ID");
+        const patientId = validateStringId(req.query?.patientId, "Patient ID");
         const doctorId = validateId(req.query?.doctorId, "Doctor ID");
 
         const result = await checkCommunicationAccess(

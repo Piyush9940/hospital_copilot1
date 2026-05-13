@@ -1,12 +1,12 @@
 import db from "../config/db.js";
-import { createError, validateId } from "../utils/helper.js";
+import { createError, validateId, validateStringId } from "../utils/helper.js";
 
 const CHAT_PERMISSION_STATUSES = ["pending", "approved", "rejected"];
 
 export const requestChatPermission = (appointmentId, patientId, doctorId) => {
     try {
         const validAppointmentId = validateId(appointmentId, "Appointment ID");
-        const validPatientId = validateId(patientId, "Patient ID");
+        const validPatientId = validateStringId(patientId, "Patient ID");
         const validDoctorId = validateId(doctorId, "Doctor ID");
 
         const existingStmt = db.prepare(`
@@ -80,7 +80,7 @@ export const rejectChatPermission = (id) => {
 export const isChatAllowed = (appointmentId, patientId, doctorId) => {
     try {
         const validAppointmentId = validateId(appointmentId, "Appointment ID");
-        const validPatientId = validateId(patientId, "Patient ID");
+        const validPatientId = validateStringId(patientId, "Patient ID");
         const validDoctorId = validateId(doctorId, "Doctor ID");
 
         const stmt = db.prepare(`
