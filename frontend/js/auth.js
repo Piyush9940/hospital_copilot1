@@ -99,6 +99,17 @@ function normalizePhone(phone) {
     return cleaned;
 }
 
+function addOptionalField(target, key, value) {
+    const normalized = typeof value === "string" ? value.trim() : value;
+
+    if (normalized === undefined || normalized === null || normalized === "") {
+        return target;
+    }
+
+    target[key] = normalized;
+    return target;
+}
+
 function redirectToDashboard(role) {
     const redirectMap = {
         patient: "patient-dashboard.html",
@@ -362,9 +373,9 @@ class AuthManager {
         try {
             LoadingOverlay.show();
 
-            const role = safeTrim(userData?.role);
+            const role = safeTrim(userData?.role).toLowerCase();
             const fullName = `${safeTrim(userData?.firstName)} ${safeTrim(userData?.lastName)}`.trim();
-            const email = safeTrim(userData?.email);
+            const email = safeTrim(userData?.email).toLowerCase();
             const password = String(userData?.password || "");
             const phone = normalizePhone(userData?.phone || "");
 
@@ -378,9 +389,11 @@ class AuthManager {
                 email,
                 password,
                 role,
-                phone,
-                faceDescriptor: userData?.faceDescriptor || null,
             };
+            addOptionalField(registerPayload, "phone", phone);
+            if (Array.isArray(userData?.faceDescriptor) && userData.faceDescriptor.length > 0) {
+                registerPayload.faceDescriptor = userData.faceDescriptor;
+            }
 
             console.log("Register payload:", registerPayload);
 
@@ -445,6 +458,8 @@ class AuthManager {
                 history: safeTrim(userData?.medicalHistory || ""),
                 allergies: "",
                 medications: "",
+                bloodGroup: safeTrim(userData?.bloodGroup || ""),
+                dob: safeTrim(userData?.dob || ""),
             });
         }
 
@@ -465,6 +480,7 @@ class AuthManager {
                 department: safeTrim(userData?.department || "general"),
                 shift: "Morning",
                 qualification: safeTrim(userData?.licenseNumber || "Registered Nurse"),
+                experience: Number(userData?.nurseExperience || 0),
             });
         }
 

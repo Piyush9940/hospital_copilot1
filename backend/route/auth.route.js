@@ -34,12 +34,20 @@ router.post(
             .withMessage("Password must be at least 6 characters long"),
         body("role")
             .trim()
+            .toLowerCase()
             .notEmpty()
             .withMessage("Role is required")
             .isIn(["patient", "doctor", "nurse"])
             .withMessage("Role must be patient, doctor, or nurse"),
-        body("phone").optional().isString(),
-        body("profileImage").optional().isString(),
+        body("phone").optional({ nullable: true, checkFalsy: true }).isString(),
+        body("profileImage").optional({ nullable: true, checkFalsy: true }).isString(),
+        body("faceDescriptor")
+            .optional({ nullable: true, checkFalsy: true })
+            .custom((value) => {
+                if (Array.isArray(value)) return true;
+                if (value && typeof value === "object") return true;
+                throw new Error("faceDescriptor must be an array or object");
+            }),
     ],
     validateMiddleware,
     register
