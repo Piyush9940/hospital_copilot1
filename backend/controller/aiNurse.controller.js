@@ -52,7 +52,16 @@ const MEDICAL_RELEVANCE_KEYWORDS = [
     "pain", "patient", "prescription", "pulse", "rash", "report", "scan",
     "skin", "surgery", "symptom", "tablet", "test", "therapy", "treatment",
     "vaccine", "vital", "vomit", "wound", "xray", "x-ray", "mri", "ct",
-    "ultrasound", "pdf", "discharge", "summary", "pathology", "radiology"
+    "ultrasound", "pdf", "discharge", "summary", "pathology", "radiology",
+    "covid", "diet", "exercise", "flu", "hypertension", "infection",
+    "insomnia", "mental", "migraine", "nutrition", "period", "pregnan",
+    "pressure", "sleep", "vitamin", "wellness"
+];
+
+const GENERAL_MEDICAL_PATTERNS = [
+    /\bwhat\s+(is|are|causes?)\b.*\b(disease|condition|syndrome|infection|medicine|medication|symptom|treatment|therapy|vaccine|vitamin)\b/i,
+    /\b(how|why|when)\b.*\b(doctor|medicine|medication|symptom|pain|sleep|diet|exercise|health|wellness|pregnan|period|infection|fever|cough)\b/i,
+    /\b(my|i\s+have|i\s+feel|i\s+am|i'm)\b.*\b(hurt|sick|unwell|weak|tired|dizzy|nauseous|feverish|anxious|depressed|pain|ache)\b/i,
 ];
 
 const NON_MEDICAL_REJECTION =
@@ -89,7 +98,10 @@ const isMedicalRelated = (message, attachments = []) => {
 
     if (!haystack.trim()) return false;
 
-    return MEDICAL_RELEVANCE_KEYWORDS.some((keyword) => haystack.includes(keyword));
+    return (
+        MEDICAL_RELEVANCE_KEYWORDS.some((keyword) => haystack.includes(keyword)) ||
+        GENERAL_MEDICAL_PATTERNS.some((pattern) => pattern.test(haystack))
+    );
 };
 
 export const healthCheck = async (req, res, next) => {

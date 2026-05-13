@@ -56,7 +56,8 @@ def build_nurse_prompt(
 You are an AI Nurse assistant for a hospital copilot system.
 
 Rules:
-- Only answer medical, healthcare, patient-care, appointment, report, medication, symptom, vital, emergency, or wellness-related questions.
+- Only answer medical, healthcare, patient-care, appointment, report, medication, symptom, vital, emergency, wellness, prevention, nutrition, sleep, mental-health, pregnancy, vaccine, first-aid, or general health-education questions.
+- General medical questions are allowed even when they are not about the current patient, such as "What is hypertension?", "How can I sleep better?", or "What causes fever?"
 - If the user asks about unrelated topics such as entertainment, coding, finance, politics, general trivia, travel, shopping, or personal tasks, politely refuse and invite a medical question.
 - If uploaded documents or attachment metadata are present, use them only for medically relevant questions. If the query is unrelated to the document or not healthcare-related, politely refuse instead of summarizing or analyzing it.
 - Give calm, clear, practical, medically cautious answers.
@@ -96,6 +97,7 @@ def generate_groq_response(prompt: str) -> str:
                 "role": "system",
                 "content": (
                     "You are a helpful AI Nurse. "
+                    "Only answer medical or health-related questions, including general health education. "
                     "Provide medically cautious guidance, not a final diagnosis."
                 ),
             },
@@ -155,3 +157,53 @@ def generate_nurse_response(
     print("LLM reply preview =", reply[:300])
 
     return reply
+
+
+def check_if_medical_query(message: str, context: Optional[Dict[str, Any]] = None) -> bool:
+    """
+    Uses the LLM to evaluate if a user's query is generally related to
+    medicine, health, symptoms, reports, appointments, etc.
+    """
+    message = _safe_text(message)
+    if not message:
+        return False
+        
+    attachments_str = ""
+    if context:
+        attachments = context.get("uploadedAttachments") or context.get("attachments") or []
+        if isinstance(attachments, list):
+            attachments_str = " ".join(
+                f"{item.get('name', '')} {item.get('type', '')}" if isinstance(item, dict) else str(item)
+                for item in attachments
+            )
+
+    combined_text = f"User query: {message}\nAttachments: {attachments_str}".strip()
+
+    prompt = f"""
+Evaluate if the following text or its context is related to medicine, healthcare, diseases, symptoms, wellness, prevention, nutrition, sleep, mental health, pregnancy, vaccines, first aid, medical appointments, hospital queries, patient care, medical imaging, or any related health topic.
+Even general expressions of physical or mental discomfort (e.g. "I hurt", "my head is spinning", "I can't sleep") should be considered medical.
+General health-education questions (e.g. "What is hypertension?", "What causes fever?", "How can I improve sleep?") should be considered medical.
+
+Text to evaluate:
+{combined_text}
+
+Answer strictly with "YES" if it is medically related, or "NO" if it is completely unrelated to medicine or healthcare (e.g. general chit-chat, coding, finance, games, entertainment, politics, shopping, travel planning).
+""".strip()
+
+    try:
+        client = Groq(api_key=GROQ_API_KEY)
+        response = client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[
+                {"role": "system", "content": "You are a binary classification model. Only output 'YES' or 'NO'."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.0,
+            max_tokens=10,
+        )
+        content = _safe_text(response.choices[0].message.content).upper()
+        return "YES" in content
+    except Exception as e:
+        print(f"Error classifying medical query: {e}")
+        # Default to True on failure so we don't accidentally block valid medical queries
+        return True

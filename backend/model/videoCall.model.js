@@ -102,7 +102,7 @@ export const markCallStarted = (appointmentId) => {
     }
 };
 
-export const markCallEnded = (appointmentId, endedBy = "system") => {
+export const markCallEnded = (appointmentId, endedBy = "system", senderUserId = null) => {
     try {
         const validAppointmentId = validateId(appointmentId, "Appointment ID");
 
@@ -119,7 +119,29 @@ export const markCallEnded = (appointmentId, endedBy = "system") => {
             WHERE appointment_id = ?
         `);
 
-        return stmt.run(normalizedEndedBy, validAppointmentId);
+        const result = stmt.run(normalizedEndedBy, validAppointmentId);
+        if (result.changes > 0) return result;
+
+        const senderRole = ["patient", "doctor"].includes(normalizedEndedBy)
+            ? normalizedEndedBy
+            : "doctor";
+        const validSenderUserId = senderUserId ? validateId(senderUserId, "Sender User ID") : 1;
+
+        const insertStmt = db.prepare(`
+            INSERT INTO video_calls (
+                appointment_id,
+                sender_role,
+                sender_user_id,
+                signal_json,
+                call_status,
+                ended_by,
+                created_at,
+                updated_at
+            )
+            VALUES (?, ?, ?, '{}', 'ended', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        `);
+
+        return insertStmt.run(validAppointmentId, senderRole, validSenderUserId, normalizedEndedBy);
     } catch (error) {
         throw createError(error.message || "Failed to mark call ended", error.statusCode || 500);
     }

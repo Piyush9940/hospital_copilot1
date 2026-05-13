@@ -127,22 +127,32 @@ export const updateUser = (id, data) => {
 
         const name =
             typeof data.name === "string" && data.name.trim() ? data.name.trim() : null;
+        const email =
+            typeof data.email === "string" && data.email.trim() ? validateEmail(data.email) : null;
         const phone = data.phone ? validatePhone(data.phone) : null;
         const profileImage =
             typeof data.profileImage === "string" && data.profileImage.trim()
                 ? data.profileImage.trim()
                 : null;
 
+        if (email) {
+            const existingStmt = db.prepare(`SELECT id FROM users WHERE email = ? AND id != ? LIMIT 1`);
+            if (existingStmt.get(email, userId)) {
+                throw createError("User with this email already exists", 409);
+            }
+        }
+
         const stmt = db.prepare(`
             UPDATE users
             SET name = COALESCE(?, name),
+                email = COALESCE(?, email),
                 phone = COALESCE(?, phone),
                 profile_image = COALESCE(?, profile_image),
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
         `);
 
-        return stmt.run(name, phone, profileImage, userId);
+        return stmt.run(name, email, phone, profileImage, userId);
     } catch (error) {
         throw createError(error.message || "Failed to update user", error.statusCode || 500);
     }

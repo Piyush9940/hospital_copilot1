@@ -195,18 +195,18 @@ export const getPastRequests = async (req, res, next) => {
 export const acceptEmergency = async (req, res, next) => {
     try {
         const { emergencyId } = req.body;
-        // In real app, doctorId comes from req.user (we need to get doctors.id using users.id)
-        // For demo, we prioritize req.body.doctorId
         let doctorId = req.body.doctorId;
         if (req.user && req.user.role === 'doctor') {
-            const doctor = emergencyModel.getDoctorProfileByUserId(req.user.id);
-            if (doctor) {
-                doctorId = doctor.id;
-            }
+            const doctor = emergencyModel.ensureDoctorProfileByUserId(req.user.id);
+            doctorId = doctor.id;
         }
 
-        if (!emergencyId || !doctorId) {
-            return next(createError("emergencyId and doctorId required", 400));
+        if (!emergencyId) {
+            return next(createError("Emergency request is missing. Please refresh and try again.", 400));
+        }
+
+        if (!doctorId) {
+            return next(createError("Only a logged-in doctor can accept an emergency.", 403));
         }
 
         const result = emergencyModel.acceptEmergency(emergencyId, doctorId);
@@ -289,10 +289,16 @@ export const rejectEmergency = async (req, res, next) => {
         let doctorId = req.body.doctorId;
         
         if (req.user && req.user.role === 'doctor') {
-            const doctor = emergencyModel.getDoctorProfileByUserId(req.user.id);
-            if (doctor) {
-                doctorId = doctor.id;
-            }
+            const doctor = emergencyModel.ensureDoctorProfileByUserId(req.user.id);
+            doctorId = doctor.id;
+        }
+
+        if (!emergencyId) {
+            return next(createError("Emergency request is missing. Please refresh and try again.", 400));
+        }
+
+        if (!doctorId) {
+            return next(createError("Only a logged-in doctor can reject an emergency.", 403));
         }
         
         emergencyModel.rejectEmergency(emergencyId, doctorId);

@@ -18,7 +18,7 @@ import { createError, validateId } from "../utils/helper.js";
 export const createProfile = async (req, res, next) => {
     try {
         const result = await createDoctorProfile({
-            userId: req.body?.userId,
+            userId: req.user?.id || req.body?.userId,
             specialization: req.body?.specialization,
             experience: req.body?.experience,
             qualification: req.body?.qualification,

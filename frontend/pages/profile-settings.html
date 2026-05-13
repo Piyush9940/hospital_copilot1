@@ -412,6 +412,12 @@
                     <div class="form-group" style="grid-column: span 2;"><label><i class="fas fa-notes-medical"></i> Chronic Conditions</label><textarea class="form-input" id="conditions" rows="2" placeholder="e.g., Diabetes, Hypertension - leave empty if none"></textarea></div>
                     <div class="form-group" style="grid-column: span 2;"><label><i class="fas fa-allergies"></i> Allergies</label><textarea class="form-input" id="allergies" rows="2" placeholder="e.g., Penicillin, Peanuts - leave empty if none"></textarea></div>
                     <div class="form-group" style="grid-column: span 2;"><label><i class="fas fa-capsules"></i> Current Medications</label><textarea class="form-input" id="medications" rows="2" placeholder="List medicines with dosage"></textarea></div>
+                    <div class="form-group doctor-only"><label><i class="fas fa-user-md"></i> Specialization <span class="required-star">*</span></label><input type="text" class="form-input" id="specialization" placeholder="e.g., Cardiology"></div>
+                    <div class="form-group doctor-only"><label><i class="fas fa-graduation-cap"></i> Qualification <span class="required-star">*</span></label><input type="text" class="form-input" id="qualification" placeholder="e.g., MBBS, MD"></div>
+                    <div class="form-group doctor-only"><label><i class="fas fa-briefcase-medical"></i> Experience (years) <span class="required-star">*</span></label><input type="number" class="form-input" id="experience" min="0" placeholder="Years of experience"></div>
+                    <div class="form-group doctor-only"><label><i class="fas fa-indian-rupee-sign"></i> Appointment Fee <span class="required-star">*</span></label><input type="number" class="form-input" id="appointmentFee" min="0" placeholder="Consultation fee"></div>
+                    <div class="form-group doctor-only"><label><i class="fas fa-hospital"></i> Hospital Name <span class="required-star">*</span></label><input type="text" class="form-input" id="hospitalName" placeholder="Hospital or clinic name"></div>
+                    <div class="form-group doctor-only"><label><i class="fas fa-location-dot"></i> Hospital Address</label><input type="text" class="form-input" id="hospitalAddress" placeholder="Hospital or clinic address"></div>
                 </div>
                 <button class="save-btn" id="saveMedicalBtn"><i class="fas fa-heartbeat"></i> Save Medical Info</button>
             </div>
@@ -464,6 +470,7 @@
         class ProfileManager {
             constructor() {
                 this.storageKey = 'healthcare_profile_data';
+                this.role = (window.Auth?.getRole?.() || window.Auth?.getUser?.()?.role || '').toLowerCase();
                 this.loadUserData();
                 this.bindEvents();
                 this.setupBMICalculator();
@@ -474,9 +481,13 @@
             async loadUserData() {
                 try {
                     const userRes = await API.get('/auth/me');
-                    const user = userRes.data;
-                    const profileRes = await API.get('/patient/me');
-                    const profile = profileRes.data || {};
+                    const user = userRes?.data || userRes?.user || userRes || {};
+                    const role = this.role || String(user.role || '').toLowerCase();
+                    this.role = role;
+                    const profileRes = role === 'doctor'
+                        ? await API.get('/doctor/me').catch(() => ({}))
+                        : await API.get('/patient/me').catch(() => ({}));
+                    const profile = profileRes?.data || profileRes?.doctor || profileRes?.patient || {};
 
                     const data = {
                         firstName: user.name ? user.name.split(' ')[0] : '',
@@ -491,14 +502,45 @@
                         history: profile.history || '',
                         allergies: profile.allergies || '',
                         medications: profile.medications || '',
+                        specialization: profile.specialization || '',
+                        qualification: profile.qualification || '',
+                        experience: profile.experience ?? '',
+                        appointmentFee: profile.appointmentFee ?? '',
+                        hospitalName: profile.hospitalName || '',
+                        hospitalAddress: profile.hospitalAddress || '',
                     };
 
+                    this.configureRoleFields();
                     this.populateFormFields(data);
                     this.updateSidebar(data);
                 } catch (e) {
                     console.error('Failed to load profile', e);
                     this.resetAllFields();
                     this.updateSidebar({ firstName: '', lastName: '' });
+                }
+            }
+
+            configureRoleFields() {
+                const isDoctor = this.role === 'doctor';
+                const patientFieldIds = ['bloodGroup', 'height', 'weight', 'bmi', 'conditions', 'allergies', 'medications'];
+                const doctorFieldIds = ['specialization', 'qualification', 'experience', 'appointmentFee', 'hospitalName', 'hospitalAddress'];
+
+                patientFieldIds.forEach(id => {
+                    const group = document.getElementById(id)?.closest('.form-group');
+                    if (group) group.style.display = isDoctor ? 'none' : '';
+                });
+                doctorFieldIds.forEach(id => {
+                    const group = document.getElementById(id)?.closest('.form-group');
+                    if (group) group.style.display = isDoctor ? '' : 'none';
+                });
+
+                const medicalTitle = document.querySelector('#medical-section .section-header h2');
+                const medicalSubtitle = document.querySelector('#medical-section .section-header p');
+                const saveMedicalBtn = document.getElementById('saveMedicalBtn');
+                if (isDoctor) {
+                    if (medicalTitle) medicalTitle.innerHTML = '<i class="fas fa-user-md"></i> Professional Information';
+                    if (medicalSubtitle) medicalSubtitle.textContent = 'Update your specialization, qualification, and hospital details';
+                    if (saveMedicalBtn) saveMedicalBtn.innerHTML = '<i class="fas fa-save"></i> Save Professional Info';
                 }
             }
 
@@ -516,6 +558,12 @@
                 document.getElementById('conditions').value = '';
                 document.getElementById('allergies').value = '';
                 document.getElementById('medications').value = '';
+                document.getElementById('specialization').value = '';
+                document.getElementById('qualification').value = '';
+                document.getElementById('experience').value = '';
+                document.getElementById('appointmentFee').value = '';
+                document.getElementById('hospitalName').value = '';
+                document.getElementById('hospitalAddress').value = '';
                 document.getElementById('bmi').value = '';
                 document.getElementById('notifAppt').checked = false;
                 document.getElementById('notifReports').checked = false;
@@ -540,6 +588,12 @@
                 document.getElementById('conditions').value = data.conditions || '';
                 document.getElementById('allergies').value = data.allergies || '';
                 document.getElementById('medications').value = data.medications || '';
+                document.getElementById('specialization').value = data.specialization || '';
+                document.getElementById('qualification').value = data.qualification || '';
+                document.getElementById('experience').value = data.experience ?? '';
+                document.getElementById('appointmentFee').value = data.appointmentFee ?? '';
+                document.getElementById('hospitalName').value = data.hospitalName || '';
+                document.getElementById('hospitalAddress').value = data.hospitalAddress || '';
                 document.getElementById('notifAppt').checked = data.notifAppt || false;
                 document.getElementById('notifReports').checked = data.notifReports || false;
                 document.getElementById('notifAI').checked = data.notifAI || false;
@@ -603,21 +657,26 @@
                         phone: phone
                     });
 
-                    // Update patient profile info
-                    const user = Auth.getUser();
-                    const age = dob ? new Date().getFullYear() - new Date(dob).getFullYear() : 30;
-                    
-                    await API.post('/patient/profile', {
-                        userId: user.id,
-                        age: age,
-                        gender: gender,
-                        dateOfBirth: dob,
-                        address: address
-                    });
+                    if (this.role === 'patient') {
+                        const age = dob ? this.calculateAge(dob) : '';
+                        await API.post('/patient/profile', {
+                            age: age,
+                            gender: gender,
+                            dateOfBirth: dob,
+                            address: address
+                        });
+                    }
 
                     const data = this.getCurrentData();
                     data.firstName = firstName;
                     data.lastName = lastName;
+                    const storedUser = Auth.getUser?.() || {};
+                    Auth.setSession?.(null, {
+                        ...storedUser,
+                        name: `${firstName} ${lastName}`.trim(),
+                        email,
+                        phone
+                    }, this.role);
                     this.updateSidebar(data);
                     this.showToast('Personal information saved successfully!', '#0284c7');
                 } catch (e) {
@@ -626,6 +685,11 @@
             }
 
             async saveMedicalInfo() {
+                if (this.role === 'doctor') {
+                    await this.saveDoctorProfessionalInfo();
+                    return;
+                }
+
                 const bloodGroup = document.getElementById('bloodGroup').value;
                 const height = document.getElementById('height').value;
                 const weight = document.getElementById('weight').value;
@@ -634,13 +698,11 @@
                 const medications = document.getElementById('medications').value;
 
                 try {
-                    const user = Auth.getUser();
                     const dob = document.getElementById('dob').value;
-                    const gender = document.getElementById('gender').value || 'Other';
-                    const age = dob ? new Date().getFullYear() - new Date(dob).getFullYear() : 30;
+                    const gender = document.getElementById('gender').value;
+                    const age = dob ? this.calculateAge(dob) : '';
 
                     await API.post('/patient/profile', {
-                        userId: user.id,
                         age: age,
                         gender: gender,
                         bloodGroup: bloodGroup,
@@ -656,6 +718,47 @@
                 }
             }
 
+            async saveDoctorProfessionalInfo() {
+                const specialization = document.getElementById('specialization').value.trim();
+                const qualification = document.getElementById('qualification').value.trim();
+                const experience = document.getElementById('experience').value;
+                const appointmentFee = document.getElementById('appointmentFee').value;
+                const hospitalName = document.getElementById('hospitalName').value.trim();
+                const hospitalAddress = document.getElementById('hospitalAddress').value.trim();
+
+                if (!specialization || !qualification || !hospitalName) {
+                    this.showToast('Please fill specialization, qualification, and hospital name', '#ef4444');
+                    return;
+                }
+
+                try {
+                    await API.post('/doctor/profile', {
+                        specialization,
+                        qualification,
+                        experience,
+                        appointmentFee,
+                        hospitalName,
+                        hospitalAddress
+                    });
+                    this.showToast('Professional information saved successfully!', '#0284c7');
+                } catch (e) {
+                    this.showToast(e.message || 'Failed to save professional info', '#ef4444');
+                }
+            }
+
+            calculateAge(dob) {
+                if (!dob) return '';
+                const birthDate = new Date(dob);
+                if (Number.isNaN(birthDate.getTime())) return '';
+                const today = new Date();
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                    age -= 1;
+                }
+                return age > 0 ? age : '';
+            }
+
             getCurrentData() {
                 const saved = localStorage.getItem(this.storageKey);
                 if (saved) {
@@ -664,7 +767,7 @@
                 return {};
             }
 
-            changePassword() {
+            async changePassword() {
                 const currentPwd = document.getElementById('currentPassword').value;
                 const newPwd = document.getElementById('newPassword').value;
                 const confirmPwd = document.getElementById('confirmPassword').value;
@@ -680,10 +783,19 @@
                     this.showToast('Password must be at least 6 characters', '#f59e0b');
                     return;
                 }
-                this.showToast('Password changed successfully!', '#0284c7');
-                document.getElementById('currentPassword').value = '';
-                document.getElementById('newPassword').value = '';
-                document.getElementById('confirmPassword').value = '';
+                try {
+                    await API.put('/auth/update-password', {
+                        currentPassword: currentPwd,
+                        newPassword: newPwd,
+                        confirmPassword: confirmPwd
+                    });
+                    this.showToast('Password changed successfully!', '#0284c7');
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                } catch (e) {
+                    this.showToast(e.message || 'Failed to update password', '#ef4444');
+                }
             }
 
             setup2FA() {

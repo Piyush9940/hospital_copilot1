@@ -1,11 +1,23 @@
 import db from "../config/db.js";
 import { createError, validateId } from "../utils/helper.js";
 
+const normalizeShift = (shift) => {
+    const value = typeof shift === "string" ? shift.trim().toLowerCase() : "";
+    const aliases = {
+        day: "Morning",
+        morning: "Morning",
+        evening: "Evening",
+        night: "Night",
+    };
+
+    return aliases[value] || "";
+};
+
 export const createNurse = (userId, department, shift, qualification, experience = 0) => {
     try {
         const validUserId = validateId(userId, "User ID");
         const normalizedDepartment = typeof department === "string" ? department.trim() : "";
-        const normalizedShift = typeof shift === "string" ? shift.trim() : "";
+        const normalizedShift = normalizeShift(shift);
         const normalizedQualification = typeof qualification === "string" ? qualification.trim() : "";
         const validExperience = Number(experience);
 

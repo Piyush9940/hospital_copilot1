@@ -4,7 +4,8 @@ import { createError, validateId, generateHashedPatientId, validateStringId } fr
 export const createPatientProfile = (userId, age, gender, history, allergies, medications, bloodGroup, address, dateOfBirth) => {
     try {
         const validUserId = validateId(userId, "User ID");
-        const validAge = Number(age);
+        const validAge =
+            age === undefined || age === null || age === "" ? null : Number(age);
         let normalizedGender = typeof gender === "string" ? gender.trim() : "";
         if (normalizedGender) {
             normalizedGender = normalizedGender.charAt(0).toUpperCase() + normalizedGender.slice(1).toLowerCase();
@@ -16,12 +17,8 @@ export const createPatientProfile = (userId, age, gender, history, allergies, me
         const normalizedAddress = typeof address === "string" ? address.trim() : "";
         const normalizedDateOfBirth = typeof dateOfBirth === "string" ? dateOfBirth.trim() : "";
 
-        if (!Number.isInteger(validAge) || validAge <= 0) {
+        if (validAge !== null && (!Number.isInteger(validAge) || validAge <= 0)) {
             throw createError("Valid age is required", 400);
-        }
-
-        if (!normalizedGender) {
-            throw createError("Gender is required", 400);
         }
 
         const patientIdHash = generateHashedPatientId();
@@ -57,7 +54,7 @@ export const createPatientProfile = (userId, age, gender, history, allergies, me
             patientIdHash,
             validUserId,
             validAge,
-            normalizedGender,
+            normalizedGender || null,
             normalizedHistory || null,
             normalizedAllergies || null,
             normalizedMedications || null,

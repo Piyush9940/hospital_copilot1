@@ -134,3 +134,57 @@ export const incrementPatientCount = (doctorId) => {
         throw createError(error.message || "Failed to increment patient count", error.statusCode || 500);
     }
 };
+
+export const upsertDoctor = (userId, specialization, experience, qualification, appointmentFee, hospitalName, hospitalAddress = null) => {
+    try {
+        const validUserId = validateId(userId, "User ID");
+        const normalizedSpecialization = typeof specialization === "string" ? specialization.trim() : "";
+        const normalizedQualification = typeof qualification === "string" ? qualification.trim() : "";
+        const normalizedHospitalName = typeof hospitalName === "string" ? hospitalName.trim() : "";
+        const normalizedHospitalAddress = typeof hospitalAddress === "string" && hospitalAddress.trim() ? hospitalAddress.trim() : null;
+        const validExperience = experience === undefined || experience === null || experience === "" ? 0 : Number(experience);
+        const validAppointmentFee = appointmentFee === undefined || appointmentFee === null || appointmentFee === "" ? 500 : Number(appointmentFee);
+
+        if (!normalizedSpecialization) throw createError("Specialization is required", 400);
+        if (!normalizedQualification) throw createError("Qualification is required", 400);
+        if (!normalizedHospitalName) throw createError("Hospital name is required", 400);
+        if (!Number.isFinite(validExperience) || validExperience < 0) throw createError("Valid experience is required", 400);
+        if (!Number.isFinite(validAppointmentFee) || validAppointmentFee < 0) throw createError("Valid appointment fee is required", 400);
+
+        const stmt = db.prepare(`
+            INSERT INTO doctors (
+                user_id,
+                specialization,
+                experience,
+                qualification,
+                appointment_fee,
+                hospital_name,
+                hospital_address,
+                rating,
+                total_patients,
+                created_at,
+                updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            ON CONFLICT(user_id) DO UPDATE SET
+                specialization = excluded.specialization,
+                experience = excluded.experience,
+                qualification = excluded.qualification,
+                appointment_fee = excluded.appointment_fee,
+                hospital_name = excluded.hospital_name,
+                hospital_address = excluded.hospital_address,
+                updated_at = CURRENT_TIMESTAMP
+        `);
+
+        return stmt.run(
+            validUserId,
+            normalizedSpecialization,
+            validExperience,
+            normalizedQualification,
+            validAppointmentFee,
+            normalizedHospitalName,
+            normalizedHospitalAddress
+        );
+    } catch (error) {
+        throw createError(error.message || "Failed to save doctor profile", error.statusCode || 500);
+    }
+};

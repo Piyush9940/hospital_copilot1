@@ -412,7 +412,19 @@ function handleAlert(id) {
 }
 
 function startVideoCall() {
-    window.location.href = 'doctor-video-call.html';
+    const dashboard = window.doctorDashboardInstance;
+    const appointment = dashboard?.data?.appointments?.find((apt) => {
+        const status = String(apt.appointmentStatus || apt.status || "").toLowerCase();
+        const type = String(apt.consultationType || apt.type || "").toLowerCase().replace("_", "-");
+        return status === "confirmed" && type === "video";
+    });
+
+    if (appointment?.id || appointment?.appointmentId) {
+        window.location.href = `doctor-video-call.html?appointmentId=${encodeURIComponent(appointment.id || appointment.appointmentId)}`;
+        return;
+    }
+
+    window.location.href = 'doctor-appointments.html';
 }
 
 function handleEmergency() {
@@ -437,5 +449,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!requireRole(['doctor'])) return;
 
     const dashboard = new DoctorDashboard();
+    window.doctorDashboardInstance = dashboard;
     dashboard.initialize();
 });

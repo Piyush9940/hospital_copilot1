@@ -9,13 +9,44 @@ const STORAGE_KEYS = {
     ROLE: "hospital_copilot_role",
 };
 
+let authRedirectInProgress = false;
+let lastToast = { message: "", time: 0 };
+
 // ===============================
 // Safe UI Helpers Fallback
 // ===============================
 const Toast = window.Toast || {
     show(message, type = "info") {
         console.log(`[${type.toUpperCase()}] ${message}`);
-        alert(message);
+
+        const now = Date.now();
+        if (lastToast.message === message && now - lastToast.time < 2500) {
+            return;
+        }
+        lastToast = { message, time: now };
+
+        const existing = document.querySelector(".auth-toast-fallback");
+        if (existing) existing.remove();
+
+        const toast = document.createElement("div");
+        toast.className = `auth-toast-fallback ${type}`;
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            max-width: min(420px, calc(100vw - 40px));
+            z-index: 9999;
+            padding: 12px 16px;
+            border-radius: 10px;
+            color: #fff;
+            font: 500 14px/1.4 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.22);
+            background: ${type === "error" ? "#dc2626" : type === "warning" ? "#d97706" : type === "success" ? "#059669" : "#2563eb"};
+        `;
+
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3200);
     },
 };
 
@@ -111,8 +142,11 @@ function isTokenUsable(token) {
 }
 
 function redirectToLoginForSession() {
+    if (authRedirectInProgress) return;
+
     const currentPage = window.location.pathname.split("/").pop();
     if (currentPage === "login.html" || currentPage === "register.html") return;
+    authRedirectInProgress = true;
 
     const loginPath = window.location.pathname.includes("/pages/")
         ? "login.html"
@@ -166,8 +200,10 @@ const API = {
 
             if (response.status === 401) {
                 clearStoredSession();
-                Toast.show("Your session expired. Please log in again.", "warning");
-                setTimeout(redirectToLoginForSession, 500);
+                if (!authRedirectInProgress) {
+                    Toast.show("Your session expired. Please log in again.", "warning");
+                    setTimeout(redirectToLoginForSession, 500);
+                }
             }
 
             throw new Error(
@@ -405,7 +441,7 @@ class AuthManager {
             return API.post("/patient/profile", {
                 userId,
                 age,
-                gender: safeTrim(userData?.gender || "male"),
+                gender: safeTrim(userData?.gender || "Male"),
                 history: safeTrim(userData?.medicalHistory || ""),
                 allergies: "",
                 medications: "",
@@ -427,7 +463,7 @@ class AuthManager {
             return API.post("/nurse/profile", {
                 userId,
                 department: safeTrim(userData?.department || "general"),
-                shift: "day",
+                shift: "Morning",
                 qualification: safeTrim(userData?.licenseNumber || "Registered Nurse"),
             });
         }
@@ -449,8 +485,13 @@ class AuthManager {
 // ===============================
 function requireAuth() {
     if (!Auth.isAuthenticated()) {
-        Toast.show("Please login to continue", "warning");
-        window.location.href = "login.html";
+        if (!authRedirectInProgress) {
+            authRedirectInProgress = true;
+            Toast.show("Please login to continue", "warning");
+            setTimeout(() => {
+                window.location.href = "login.html";
+            }, 300);
+        }
         return false;
     }
     return true;

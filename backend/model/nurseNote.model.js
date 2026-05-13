@@ -1,15 +1,28 @@
 import db from "../config/db.js";
-import { createError, validateId, safeJsonStringify } from "../utils/helper.js";
+import { createError, validateId, validateStringId, safeJsonStringify } from "../utils/helper.js";
 
-const NOTE_TYPES = ["observation", "instruction", "escalation", "follow_up"];
+const NOTE_TYPES = ["observation", "medication", "care", "handover", "incident"];
+const NOTE_TYPE_ALIASES = {
+    instruction: "care",
+    escalation: "incident",
+    follow_up: "handover",
+};
+
+const normalizeNoteType = (noteType) => {
+    const normalized = typeof noteType === "string" && noteType.trim()
+        ? noteType.trim().toLowerCase()
+        : "observation";
+
+    return NOTE_TYPE_ALIASES[normalized] || normalized;
+};
 
 export const createNurseNote = (patientId, nurseId, appointmentId, note, noteType = "observation", isUrgent = 0, attachments = null) => {
     try {
-        const validPatientId = validateId(patientId, "Patient ID");
+        const validPatientId = validateStringId(patientId, "Patient ID");
         const validNurseId = validateId(nurseId, "Nurse ID");
         const validAppointmentId = appointmentId ? validateId(appointmentId, "Appointment ID") : null;
         const normalizedNote = typeof note === "string" ? note.trim() : "";
-        const normalizedNoteType = typeof noteType === "string" ? noteType.trim() : "observation";
+        const normalizedNoteType = normalizeNoteType(noteType);
         const urgentFlag = Number(isUrgent) ? 1 : 0;
         const attachmentsJson = attachments ? safeJsonStringify(attachments) : null;
 
@@ -51,7 +64,7 @@ export const createNurseNote = (patientId, nurseId, appointmentId, note, noteTyp
 
 export const getNotesByPatientId = (patientId) => {
     try {
-        const validPatientId = validateId(patientId, "Patient ID");
+        const validPatientId = validateStringId(patientId, "Patient ID");
 
         const stmt = db.prepare(`
             SELECT nn.*, u.name AS nurse_name, u.profile_image AS nurse_image
@@ -75,7 +88,7 @@ export const getNotesByNurseId = (nurseId) => {
         const stmt = db.prepare(`
             SELECT nn.*, pat.name AS patient_name
             FROM nurse_notes nn
-            JOIN patients p ON nn.patient_id = p.id
+            JOIN patients p ON nn.patient_id = p.patient_id
             JOIN users pat ON p.user_id = pat.id
             WHERE nn.nurse_id = ?
             ORDER BY nn.created_at DESC
@@ -94,7 +107,7 @@ export const getUrgentNotes = () => {
             FROM nurse_notes nn
             JOIN nurses n ON nn.nurse_id = n.id
             JOIN users u ON n.user_id = u.id
-            JOIN patients p ON nn.patient_id = p.id
+            JOIN patients p ON nn.patient_id = p.patient_id
             JOIN users pat ON p.user_id = pat.id
             WHERE nn.is_urgent = 1
             ORDER BY nn.created_at DESC

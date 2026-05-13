@@ -188,6 +188,7 @@ CREATE TABLE IF NOT EXISTS nurse_notes (
     is_urgent INTEGER DEFAULT 0,
     attachments TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patients(patient_id) ON DELETE CASCADE,
     FOREIGN KEY (nurse_id) REFERENCES nurses(id) ON DELETE CASCADE,
     FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE SET NULL

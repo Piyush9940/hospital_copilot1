@@ -1,5 +1,4 @@
 import express from "express";
-import { body } from "express-validator";
 
 import {
     createProfile,
@@ -28,11 +27,7 @@ router.post(
     "/profile",
     authMiddleware,
     roleMiddleware("patient"),
-    [
-        body("userId").notEmpty().withMessage("userId is required"),
-        body("age").notEmpty().withMessage("age is required"),
-        body("gender").trim().notEmpty().withMessage("gender is required"),
-    ],
+    [],
     validateMiddleware,
     createProfile
 );

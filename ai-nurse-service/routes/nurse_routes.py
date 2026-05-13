@@ -3,41 +3,15 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 
 from services.rag_service import get_rag_context
-from services.llm_service import generate_nurse_response
+from services.llm_service import generate_nurse_response, check_if_medical_query
 
 router = APIRouter()
-
-MEDICAL_KEYWORDS = {
-    "ache", "allerg", "ambulance", "appointment", "asthma", "blood", "bp",
-    "breath", "burn", "cancer", "cardiac", "chest", "clinic", "cold", "cough",
-    "diagnos", "diabetes", "dizzy", "doctor", "dose", "drug", "emergency",
-    "fever", "fracture", "headache", "health", "heart", "hospital", "injury",
-    "lab", "medical", "medicine", "medication", "nausea", "nurse", "oxygen",
-    "pain", "patient", "prescription", "pulse", "rash", "report", "scan",
-    "skin", "surgery", "symptom", "tablet", "test", "therapy", "treatment",
-    "vaccine", "vital", "vomit", "wound", "xray", "x-ray", "mri", "ct",
-    "ultrasound", "pdf", "discharge", "summary", "pathology", "radiology",
-}
 
 NON_MEDICAL_REFUSAL = (
     "I’m here to help with medical and health-related questions only. "
     "Please ask me about symptoms, medicines, reports, vitals, appointments, "
     "or other care-related concerns."
 )
-
-
-def is_medical_related(text: str, context: Dict[str, Any]) -> bool:
-    attachments = context.get("uploadedAttachments") or context.get("attachments") or []
-    attachment_text = ""
-    if isinstance(attachments, list):
-        attachment_text = " ".join(
-            f"{item.get('name', '')} {item.get('type', '')}" if isinstance(item, dict) else str(item)
-            for item in attachments
-        )
-
-    haystack = f"{text} {attachment_text}".lower()
-    return any(keyword in haystack for keyword in MEDICAL_KEYWORDS)
-
 
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1)
@@ -54,7 +28,7 @@ async def nurse_chat(request: ChatRequest):
         if not user_message:
             raise HTTPException(status_code=400, detail="Message is required")
 
-        if not is_medical_related(user_message, request.context):
+        if not check_if_medical_query(user_message, request.context):
             return {
                 "reply": NON_MEDICAL_REFUSAL,
                 "patient_id": request.patient_id,

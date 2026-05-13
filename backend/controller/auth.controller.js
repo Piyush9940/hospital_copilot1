@@ -357,6 +357,10 @@ export const updateMe = async (req, res, next) => {
                 req.body?.phone && String(req.body.phone).trim()
                     ? validatePhone(req.body.phone)
                     : null,
+            email:
+                req.body?.email && String(req.body.email).trim()
+                    ? validateEmail(req.body.email)
+                    : null,
             profileImage:
                 typeof req.body?.profileImage === "string" &&
                 req.body.profileImage.trim()
@@ -364,7 +368,7 @@ export const updateMe = async (req, res, next) => {
                     : null,
         };
 
-        if (!payload.name && !payload.phone && !payload.profileImage) {
+        if (!payload.name && !payload.email && !payload.phone && !payload.profileImage) {
             throw createError("At least one field is required to update profile", 400);
         }
 
@@ -429,7 +433,9 @@ export const updateMyPassword = async (req, res, next) => {
             throw createError("New password and confirm password do not match", 400);
         }
 
-        const userWithPassword = findUserByEmail(req.user.email);
+        const userWithPassword = db
+            .prepare("SELECT * FROM users WHERE id = ?")
+            .get(userId);
         if (!userWithPassword) {
             throw createError("User not found", 404);
         }
@@ -481,7 +487,9 @@ export const deleteMyProfile = async (req, res, next) => {
             throw createError("Password is required", 400);
         }
 
-        const userWithPassword = findUserByEmail(req.user.email);
+        const userWithPassword = db
+            .prepare("SELECT * FROM users WHERE id = ?")
+            .get(userId);
         if (!userWithPassword) {
             throw createError("User not found", 404);
         }

@@ -117,6 +117,26 @@ export const getDoctorProfileByUserId = (userId) => {
     return stmt.get(userId);
 };
 
+export const ensureDoctorProfileByUserId = (userId) => {
+    const existingDoctor = getDoctorProfileByUserId(userId);
+    if (existingDoctor) return existingDoctor;
+
+    const stmt = db.prepare(`
+        INSERT INTO doctors (
+            user_id,
+            specialization,
+            experience,
+            qualification,
+            appointment_fee,
+            hospital_name,
+            created_at,
+            updated_at
+        ) VALUES (?, 'General Medicine', 0, 'MBBS', 500, 'Hospital Copilot', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    `);
+    const result = stmt.run(userId);
+    return getDoctorProfileByUserId(userId) || { id: result.lastInsertRowid, user_id: userId };
+};
+
 export const getPatientProfile = (patientId) => {
     const stmt = db.prepare(`
         SELECT p.*, u.name, u.email

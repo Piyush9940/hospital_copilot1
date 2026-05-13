@@ -303,7 +303,7 @@ class VideoCall {
 
     isInitiator() {
         const role = Auth.getRole();
-        return role === "patient";
+        return role === "doctor";
     }
 
     getAppointmentId() {
@@ -441,6 +441,10 @@ class VideoCall {
         this.ending = true;
 
         try {
+            if (!this.isEmergency && this.appointmentId) {
+                await API.post(`/video-call/end/${this.appointmentId}`, {});
+            }
+
             this.stopSignalPolling();
             this.stopCallStatusPolling();
 
@@ -456,8 +460,6 @@ class VideoCall {
             if (this.peer && !this.peer.destroyed) {
                 this.peer.destroy();
             }
-
-            await API.post(`/video-call/end/${this.appointmentId}`, {});
 
             Toast.show("Call ended", "info");
         } catch (error) {

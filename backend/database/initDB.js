@@ -65,6 +65,12 @@ try {
         `ALTER TABLE patients ADD COLUMN date_of_birth DATE;`
     );
 
+    ensureColumn(
+        "nurse_notes",
+        "updated_at",
+        `ALTER TABLE nurse_notes ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP;`
+    );
+
     console.log("✅ Database initialized successfully!");
     console.log("📋 Tables ensured:");
     console.log("   1. users");

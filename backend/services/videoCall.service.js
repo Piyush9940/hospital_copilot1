@@ -146,7 +146,7 @@ export const endVideoCall = async ({
         const appointment = getAppointmentById(validAppointmentId);
         verifyCallAccess(appointment, validUserId, normalizedRole);
 
-        markCallEnded(validAppointmentId, normalizedRole);
+        markCallEnded(validAppointmentId, normalizedRole, validUserId);
 
         return {
             success: true,

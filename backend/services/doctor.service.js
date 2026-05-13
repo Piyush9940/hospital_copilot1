@@ -1,5 +1,5 @@
 import {
-    createDoctor,
+    upsertDoctor,
     getDoctorByUserId,
     getDoctorById,
     getAllDoctors,
@@ -111,7 +111,7 @@ export const createDoctorProfile = ({
             throw createError("Valid appointment fee is required", 400);
         }
 
-        const result = createDoctor(
+        const result = upsertDoctor(
             validUserId,
             normalizedSpecialization,
             validExperience,
@@ -121,15 +121,15 @@ export const createDoctorProfile = ({
             normalizedHospitalAddress
         );
 
-        if (!result || !result.lastInsertRowid) {
-            throw createError("Failed to create doctor profile", 500);
+        if (!result || result.changes === 0) {
+            throw createError("Failed to save doctor profile", 500);
         }
 
-        const doctor = getDoctorById(result.lastInsertRowid);
+        const doctor = getDoctorByUserId(validUserId);
 
         return {
             success: true,
-            message: "Doctor profile created successfully",
+            message: "Doctor profile saved successfully",
             data: normalizeDoctor(doctor),
         };
     } catch (error) {

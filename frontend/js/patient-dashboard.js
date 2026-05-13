@@ -22,6 +22,8 @@
 
             this.chart = null;
             this.bound = false;
+            this.callAlertShownFor = new Set();
+            this.incomingCallPoller = null;
         }
 
         async initialize() {
@@ -39,6 +41,7 @@
                 this.populateUserInfo();
                 this.updateUI();
                 this.bindEventsOnce();
+                this.startIncomingCallPolling();
                 if (window.LoadingOverlay?.hide) LoadingOverlay.hide();
             }
         }
@@ -178,7 +181,7 @@
 
         updateStats() {
             const upcomingCount = this.data.appointments.filter(a =>
-                ['confirmed', 'pending', 'scheduled'].includes(String(a.status || '').toLowerCase())
+                ['confirmed', 'pending', 'requested', 'scheduled'].includes(this.getAppointmentStatus(a))
             ).length;
 
             const upcomingEl = document.getElementById('upcomingAppointments');
@@ -278,7 +281,7 @@
             const date = appointment.date || appointment.appointmentDate || 'N/A';
             const time = appointment.time || appointment.appointmentTime || 'N/A';
             const status = String(appointment.status || appointment.appointmentStatus || 'pending').toLowerCase();
-            const type = String(appointment.type || appointment.consultationType || 'video').toLowerCase().replace('_', '-');
+            const type = this.getAppointmentType(appointment);
             const isVideo = type === 'video';
 
             return `
@@ -354,6 +357,82 @@
                     this.createRipple(e);
                 });
             });
+        }
+
+        startIncomingCallPolling() {
+            if (this.incomingCallPoller) clearInterval(this.incomingCallPoller);
+            this.checkIncomingVideoCalls();
+            this.incomingCallPoller = setInterval(() => this.checkIncomingVideoCalls(), 5000);
+        }
+
+        async checkIncomingVideoCalls() {
+            const videoAppointments = (this.data.appointments || []).filter((appointment) => {
+                const id = appointment.id || appointment.appointmentId || appointment._id;
+                const status = this.getAppointmentStatus(appointment);
+                const type = this.getAppointmentType(appointment);
+                return id && type === "video" && status === "confirmed";
+            });
+
+            for (const appointment of videoAppointments) {
+                const id = appointment.id || appointment.appointmentId || appointment._id;
+                try {
+                    const response = await API.get(`/video-call/status/${id}`);
+                    const result = response?.data || response;
+                    const callState = result?.data?.callState || result?.callState || null;
+
+                    if (callState?.call_status === "active" && !this.callAlertShownFor.has(String(id))) {
+                        this.callAlertShownFor.add(String(id));
+                        this.showIncomingCallAlert(appointment);
+                    }
+                } catch (error) {
+                    console.warn("Incoming call check failed:", error);
+                }
+            }
+        }
+
+        getAppointmentStatus(appointment = {}) {
+            return String(
+                appointment.appointmentStatus ||
+                appointment.appointment_status ||
+                appointment.status ||
+                ""
+            ).toLowerCase();
+        }
+
+        getAppointmentType(appointment = {}) {
+            return String(
+                appointment.consultationType ||
+                appointment.consultation_type ||
+                appointment.type ||
+                "video"
+            ).toLowerCase().replace("_", "-");
+        }
+
+        showIncomingCallAlert(appointment) {
+            const id = appointment.id || appointment.appointmentId || appointment._id;
+            const doctorName = appointment.doctorName || appointment.doctor?.name || "Doctor";
+            const existing = document.getElementById("incomingVideoCallAlert");
+            if (existing) existing.remove();
+
+            const alert = document.createElement("div");
+            alert.id = "incomingVideoCallAlert";
+            alert.style.cssText = `
+                position: fixed; right: 24px; bottom: 24px; z-index: 10000;
+                background: #0f766e; color: white; padding: 1rem 1.2rem;
+                border-radius: 18px; box-shadow: 0 18px 35px rgba(15, 118, 110, 0.25);
+                max-width: 340px; font-family: inherit;
+            `;
+            alert.innerHTML = `
+                <div style="font-weight:700; margin-bottom:0.25rem;">Incoming video call</div>
+                <div style="font-size:0.9rem; opacity:0.92; margin-bottom:0.85rem;">${doctorName} has started your consultation.</div>
+                <button id="joinIncomingCallBtn" style="border:none; background:white; color:#0f766e; font-weight:700; padding:0.55rem 0.9rem; border-radius:999px; cursor:pointer;">Join Call</button>
+                <button id="dismissIncomingCallBtn" style="border:none; background:transparent; color:white; font-weight:600; padding:0.55rem 0.7rem; cursor:pointer;">Dismiss</button>
+            `;
+            document.body.appendChild(alert);
+            document.getElementById("joinIncomingCallBtn")?.addEventListener("click", () => {
+                window.location.href = `appointment-video-call.html?id=${encodeURIComponent(id)}`;
+            });
+            document.getElementById("dismissIncomingCallBtn")?.addEventListener("click", () => alert.remove());
         }
 
         createRipple(event) {

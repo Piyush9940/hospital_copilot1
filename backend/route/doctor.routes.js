@@ -25,7 +25,6 @@ router.post(
     authMiddleware,
     roleMiddleware("doctor"),
     [
-        body("userId").notEmpty().withMessage("userId is required"),
         body("specialization").trim().notEmpty().withMessage("specialization is required"),
         body("experience").notEmpty().withMessage("experience is required"),
         body("qualification").trim().notEmpty().withMessage("qualification is required"),

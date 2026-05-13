@@ -59,8 +59,10 @@ const normalizePatient = (patient) => {
  */
 export const createProfile = async (req, res, next) => {
     try {
-        const userId = validateId(req.body?.userId, "User ID");
-        const age = Number(req.body?.age);
+        const userId = validateId(req.user?.id || req.body?.userId, "User ID");
+        const age = req.body?.age === undefined || req.body?.age === null || req.body?.age === ""
+            ? null
+            : Number(req.body?.age);
         const gender = sanitize(req.body?.gender);
         const history =
             typeof req.body?.history === "string" ? req.body.history.trim() : "";
@@ -69,12 +71,8 @@ export const createProfile = async (req, res, next) => {
         const medications =
             typeof req.body?.medications === "string" ? req.body.medications.trim() : "";
 
-        if (!Number.isInteger(age) || age <= 0) {
+        if (age !== null && (!Number.isInteger(age) || age <= 0)) {
             throw createError("Valid age is required", 400);
-        }
-
-        if (!gender) {
-            throw createError("Gender is required", 400);
         }
 
         const bloodGroup = sanitize(req.body?.bloodGroup);
@@ -93,7 +91,7 @@ export const createProfile = async (req, res, next) => {
             dateOfBirth
         );
 
-        if (!result || !result.lastInsertRowid) {
+        if (!result || result.changes === 0) {
             throw createError("Failed to create patient profile", 500);
         }
 

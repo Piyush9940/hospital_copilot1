@@ -246,7 +246,9 @@
 
     if (!window.AuthManager) {
         console.error("AuthManager is not loaded. Check ../js/auth.js path.");
-        alert("Auth script failed to load. Check js path.");
+        if (window.Toast?.show) {
+            window.Toast.show("Auth script failed to load. Check js path.", "error");
+        }
     }
 
     // Role Selection with Dynamic Fields
@@ -363,7 +365,11 @@
             await window.AuthManager.register(userData);
         } catch (error) {
             console.error("Register submit error:", error);
-            alert(error.message || "Registration failed before request was sent.");
+            if (window.Toast?.show) {
+                window.Toast.show(error.message || "Registration failed before request was sent.", "error");
+            } else {
+                console.error(error.message || "Registration failed before request was sent.");
+            }
         }
     });
 

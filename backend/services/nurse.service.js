@@ -14,12 +14,17 @@ import {
 } from "../model/nurseNote.model.js";
 
 import { getPatientByUserId } from "../model/patient.model.js";
-import { createError, validateId, sanitize } from "../utils/helper.js";
+import { createError, validateId, validateStringId, sanitize } from "../utils/helper.js";
  
 /**
  * Allowed note types
  */
-const ALLOWED_NOTE_TYPES = ["observation", "instruction", "escalation", "follow_up"];
+const ALLOWED_NOTE_TYPES = ["observation", "medication", "care", "handover", "incident"];
+const NOTE_TYPE_ALIASES = {
+    instruction: "care",
+    escalation: "incident",
+    follow_up: "handover",
+};
 
 /**
  * Normalize nurse object
@@ -70,7 +75,10 @@ const normalizeNurseNote = (note) => {
  * Validate note type
  */
 const validateNoteType = (noteType) => {
-    const normalized = typeof noteType === "string" ? noteType.trim().toLowerCase() : "";
+    const raw = typeof noteType === "string" && noteType.trim()
+        ? noteType.trim().toLowerCase()
+        : "observation";
+    const normalized = NOTE_TYPE_ALIASES[raw] || raw;
 
     if (!ALLOWED_NOTE_TYPES.includes(normalized)) {
         throw createError(
@@ -282,7 +290,7 @@ export const createPatientNurseNote = ({
     attachments = null,
 }) => {
     try {
-        const validPatientId = validateId(patientId, "Patient ID");
+        const validPatientId = validateStringId(patientId, "Patient ID");
         const validNurseId = validateId(nurseId, "Nurse ID");
         const validAppointmentId = appointmentId ? validateId(appointmentId, "Appointment ID") : null;
         const normalizedNote = sanitize(note);
@@ -363,7 +371,7 @@ export const createNurseNoteByPatientUserId = ({
         }
 
         return createPatientNurseNote({
-            patientId: patient.id,
+            patientId: patient.patient_id,
             nurseId,
             appointmentId,
             note,
@@ -388,7 +396,7 @@ export const createNurseNoteByPatientUserId = ({
  */
 export const getPatientNurseNotes = ({ patientId }) => {
     try {
-        const validPatientId = validateId(patientId, "Patient ID");
+        const validPatientId = validateStringId(patientId, "Patient ID");
         const notes = getNotesByPatientId(validPatientId) || [];
 
         return {
