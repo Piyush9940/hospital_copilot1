@@ -107,9 +107,18 @@ class VideoCall {
 
     async initializeMedia() {
         try {
+            // Use optimized video constraints to reduce bandwidth and prevent lag
             this.localStream = await navigator.mediaDevices.getUserMedia({
-                video: true,
-                audio: true
+                video: {
+                    width: { ideal: 640 },
+                    height: { ideal: 480 },
+                    frameRate: { ideal: 15, max: 30 }
+                },
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                }
             });
 
             const localVideo = document.getElementById("localVideo");

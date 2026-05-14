@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS chat_permissions (
 CREATE TABLE IF NOT EXISTS reports (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     patient_id TEXT NOT NULL,
-    doctor_id INTEGER NOT NULL,
+    doctor_id INTEGER DEFAULT NULL,
     appointment_id INTEGER,
     title TEXT NOT NULL,
     diagnosis TEXT NOT NULL,

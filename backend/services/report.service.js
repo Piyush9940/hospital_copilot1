@@ -39,7 +39,7 @@ const normalizeReport = (report) => {
  * @param {string} payload.pdfPath
  * @returns {Object}
  */
-export const createMedicalReport = ({ patientId, title, diagnosis, summary, pdfPath }) => {
+export const createMedicalReport = ({ patientId, title, diagnosis, summary, pdfPath, doctorId = null }) => {
     try {
         const validPatientId = validateStringId(patientId, "Patient ID");
         const normalizedDiagnosis = sanitize(diagnosis);
@@ -64,7 +64,8 @@ export const createMedicalReport = ({ patientId, title, diagnosis, summary, pdfP
             title,
             normalizedDiagnosis,
             normalizedSummary,
-            normalizedPdfPath
+            normalizedPdfPath,
+            doctorId
         );
 
         if (!result || !result.lastInsertRowid) {

@@ -265,6 +265,7 @@ export const createReport = async (req, res, next) => {
             diagnosis,
             summary,
             pdfPath,
+            doctorId: resolveReportDoctorId(req),
         });
 
         return res.status(201).json(result);
