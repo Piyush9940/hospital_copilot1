@@ -107,12 +107,12 @@ class VideoCall {
 
     async initializeMedia() {
         try {
-            // Use optimized video constraints to reduce bandwidth and prevent lag
+            // Use minimal bandwidth video constraints for low connection speeds
             this.localStream = await navigator.mediaDevices.getUserMedia({
                 video: {
-                    width: { ideal: 640 },
-                    height: { ideal: 480 },
-                    frameRate: { ideal: 15, max: 30 }
+                    width: { ideal: 320, max: 480 },
+                    height: { ideal: 240, max: 360 },
+                    frameRate: { ideal: 10, max: 15 }
                 },
                 audio: {
                     echoCancellation: true,
