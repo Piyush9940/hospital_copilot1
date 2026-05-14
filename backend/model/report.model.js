@@ -1,10 +1,9 @@
 import db from "../config/db.js";
 import { createError, validateId, validateStringId } from "../utils/helper.js";
 
-export const createReport = (patientId, doctorId, title, diagnosis, summary, pdfPath) => {
+export const createReport = (patientId, title, diagnosis, summary, pdfPath) => {
     try {
         const validPatientId = validateStringId(patientId, "Patient ID");
-        const validDoctorId = validateId(doctorId, "Doctor ID");
         const normalizedTitle = typeof title === "string" ? title.trim() : "Medical Report";
         const normalizedDiagnosis = typeof diagnosis === "string" ? diagnosis.trim() : "";
         const normalizedSummary = typeof summary === "string" ? summary.trim() : "";
@@ -15,11 +14,11 @@ export const createReport = (patientId, doctorId, title, diagnosis, summary, pdf
         if (!normalizedPdfPath) throw createError("PDF path is required", 400);
 
         const stmt = db.prepare(`
-            INSERT INTO reports (patient_id, doctor_id, title, diagnosis, summary, pdf_url, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            INSERT INTO reports (patient_id, title, diagnosis, summary, pdf_url, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         `);
 
-        return stmt.run(validPatientId, validDoctorId, normalizedTitle, normalizedDiagnosis, normalizedSummary, normalizedPdfPath);
+        return stmt.run(validPatientId, normalizedTitle, normalizedDiagnosis, normalizedSummary, normalizedPdfPath);
     } catch (error) {
         throw createError(error.message || "Failed to create report", error.statusCode || 500);
     }

@@ -190,3 +190,17 @@ export const sleep = (ms) => {
 
     return new Promise((resolve) => setTimeout(resolve, ms));
 };
+
+/**
+ * Resolve doctor ID from request for report generation
+ * Returns the doctor ID if the user is a doctor, otherwise returns null
+ */
+export const resolveReportDoctorId = (req) => {
+    // If user is a doctor, return their ID
+    if (req.user && req.user.role === 'doctor') {
+        return req.user.id || null;
+    }
+    // For other roles (patient, nurse), return null
+    // The report can still be created without a doctor ID
+    return null;
+};

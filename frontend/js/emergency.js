@@ -1,220 +1,427 @@
 document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("emergencyForm");
     const triggerBtn = document.getElementById("triggerEmergencyBtn");
     const statusPanel = document.getElementById("statusPanel");
     const locationStatus = document.getElementById("locationStatus");
     const requestStatus = document.getElementById("requestStatus");
     const hospitalsList = document.getElementById("hospitalsList");
     const hospitalCount = document.getElementById("hospitalCount");
-    const emergencyForm = document.getElementById("emergencyForm");
     const responseSteps = document.getElementById("responseSteps");
-
-    if (!triggerBtn || !statusPanel || !locationStatus || !requestStatus || !hospitalsList) {
-        return;
-    }
+    const connectionLabel = document.getElementById("connectionLabel");
+    const connectionDetail = document.getElementById("connectionDetail");
+    const contextButtons = document.querySelectorAll("[data-context]");
+    const medicalContextInput = document.getElementById("medicalContext");
+    const manualLocationInput = document.getElementById("manualLocation");
+    const voiceInstruction = document.getElementById("voiceInstruction");
+    const dashboardNavBtn = document.getElementById("dashboardNavBtn");
+    const profileNavBtn = document.getElementById("profileNavBtn");
 
     let pollInterval = null;
     let recognition = null;
+    let currentEmergencyId = null;
 
-    const apiBaseUrl = typeof API_BASE_URL !== "undefined"
-        ? API_BASE_URL
-        : (window.CONFIG?.NODE_API || "http://127.0.0.1:5000/api");
-    const API_URL = `${apiBaseUrl}/v2/emergency`;
+    const API_URL = `${window.API_BASE_URL}/v2/emergency`;
+    const AUTH_STORAGE_KEYS = [
+        "hospital_copilot_token",
+        "hospital_copilot_user",
+        "hospital_copilot_role",
+        "token",
+        "auth_token",
+    ];
 
-    document.querySelectorAll(".quick-context button[data-context]").forEach((button) => {
-        button.addEventListener("click", () => {
-            const input = document.getElementById("medicalContext");
-            const context = button.dataset.context || "";
-            if (!input || !context) return;
-            input.value = input.value.trim() ? `${input.value.trim()}\n${context}` : context;
-            input.focus();
-        });
-    });
-
-    const handleEmergencySubmit = async (event) => {
-        event?.preventDefault?.();
-
-        triggerBtn.disabled = true;
-        triggerBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i><span> PROCESSING...</span>`;
-        statusPanel.classList.remove("hidden");
-        requestStatus.textContent = "Acquiring location...";
-        setStep("location");
-
-        const medicalContext = document.getElementById("medicalContext")?.value || "";
-        const manualLoc = document.getElementById("manualLocation")?.value?.trim();
-
-        if (manualLoc) {
-            locationStatus.textContent = `Location: ${manualLoc}`;
-            await sendEmergencyRequest(0, 0, medicalContext, manualLoc);
-            return;
+    const redirectToLogin = (message = "Please login again to continue.") => {
+        if (window.Toast && typeof window.Toast.show === "function") {
+            window.Toast.show(message, "warning");
         }
 
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(
-                async (position) => {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    locationStatus.textContent = `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
-                    await sendEmergencyRequest(lat, lng, medicalContext);
-                },
-                () => {
-                    locationStatus.textContent = "Location access denied. Please enter manual location above.";
-                    resetTriggerButton("TRIGGER EMERGENCY");
-                }
-            );
-        } else {
-            locationStatus.textContent = "Geolocation not supported. Please enter manual location above.";
-            resetTriggerButton("TRIGGER EMERGENCY");
+        AUTH_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
+
+        if (window.Auth && typeof window.Auth.clearSession === "function") {
+            window.Auth.clearSession();
+        }
+
+        setTimeout(() => {
+            window.location.href = "login.html";
+        }, 700);
+    };
+
+    const isTokenShapeValid = (token) => {
+        if (!token || typeof token !== "string") return false;
+        const parts = token.split(".");
+        return parts.length === 3 && parts.every(Boolean);
+    };
+
+    const setButtonState = (state) => {
+        const states = {
+            idle: {
+                disabled: false,
+                html: '<i class="fa-solid fa-triangle-exclamation"></i><span>Trigger Emergency</span>',
+                success: false,
+            },
+            loading: {
+                disabled: true,
+                html: '<i class="fa-solid fa-circle-notch fa-spin"></i><span>Processing</span>',
+                success: false,
+            },
+            sent: {
+                disabled: true,
+                html: '<i class="fa-solid fa-tower-broadcast"></i><span>Request Sent</span>',
+                success: false,
+            },
+            accepted: {
+                disabled: true,
+                html: '<i class="fa-solid fa-check"></i><span>Accepted</span>',
+                success: true,
+            },
+            retry: {
+                disabled: false,
+                html: '<i class="fa-solid fa-rotate-right"></i><span>Trigger Again</span>',
+                success: false,
+            },
+        };
+
+        const config = states[state] || states.idle;
+        triggerBtn.disabled = config.disabled;
+        triggerBtn.innerHTML = config.html;
+        triggerBtn.classList.toggle("btn-success", config.success);
+    };
+
+    const playEmergencySound = () => {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+
+        const audioContext = new AudioContext();
+        const masterGain = audioContext.createGain();
+        masterGain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+        masterGain.gain.exponentialRampToValueAtTime(0.18, audioContext.currentTime + 0.02);
+        masterGain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.72);
+        masterGain.connect(audioContext.destination);
+
+        [0, 0.24, 0.48].forEach((offset) => {
+            const oscillator = audioContext.createOscillator();
+            const toneGain = audioContext.createGain();
+            oscillator.type = "square";
+            oscillator.frequency.setValueAtTime(720, audioContext.currentTime + offset);
+            oscillator.frequency.exponentialRampToValueAtTime(980, audioContext.currentTime + offset + 0.08);
+            toneGain.gain.setValueAtTime(0.0001, audioContext.currentTime + offset);
+            toneGain.gain.exponentialRampToValueAtTime(0.55, audioContext.currentTime + offset + 0.015);
+            toneGain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + offset + 0.16);
+            oscillator.connect(toneGain);
+            toneGain.connect(masterGain);
+            oscillator.start(audioContext.currentTime + offset);
+            oscillator.stop(audioContext.currentTime + offset + 0.18);
+        });
+
+        setTimeout(() => audioContext.close().catch(() => {}), 900);
+    };
+
+    const setupNavigation = () => {
+        const role = window.Auth && typeof window.Auth.getRole === "function"
+            ? window.Auth.getRole()
+            : localStorage.getItem("hospital_copilot_role");
+
+        const dashboardByRole = {
+            doctor: "doctor-dashboard2.html",
+            nurse: "nurse-dashboard.html",
+            patient: "patient-dashboard.html",
+        };
+
+        const profileByRole = {
+            doctor: "doctor-profile.html",
+            nurse: "nurse-dashboard.html",
+            patient: "patient-profile.html",
+        };
+
+        if (dashboardNavBtn) {
+            dashboardNavBtn.href = dashboardByRole[role] || "dashboard-home.html";
+        }
+
+        if (profileNavBtn) {
+            profileNavBtn.href = profileByRole[role] || "dashboard-home.html";
         }
     };
 
-    if (emergencyForm) {
-        emergencyForm.addEventListener("submit", handleEmergencySubmit);
-    } else {
-        triggerBtn.addEventListener("click", handleEmergencySubmit);
-    }
+    const setStep = (activeStep) => {
+        if (!responseSteps) return;
 
-    async function sendEmergencyRequest(lat, lng, medicalContext, address = "Auto-detected Location") {
-        requestStatus.innerHTML = `<span class="text-warning">Sending request to available doctors...</span>`;
-        setStep("dispatch");
+        const order = ["location", "dispatch", "doctor"];
+        const activeIndex = order.indexOf(activeStep);
+
+        responseSteps.querySelectorAll("li").forEach((item) => {
+            const itemIndex = order.indexOf(item.dataset.step);
+            item.classList.toggle("done", activeIndex > itemIndex);
+            item.classList.toggle("active", activeIndex === itemIndex);
+        });
+    };
+
+    const escapeHtml = (value) => String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+    const getToken = () => {
+        if (window.Auth && typeof window.Auth.getToken === "function") {
+            return window.Auth.getToken() || "";
+        }
+
+        return localStorage.getItem("hospital_copilot_token") || "";
+    };
+
+    const fetchJson = async (url, options = {}) => {
+        const response = await fetch(url, options);
+        let data = {};
 
         try {
-            const token = typeof window.Auth !== "undefined"
-                ? window.Auth.getToken()
-                : localStorage.getItem("token") || "";
-            const response = await fetch(`${API_URL}/trigger`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    latitude: lat,
-                    longitude: lng,
-                    address,
-                    medicalContext,
-                }),
-            });
+            data = await response.json();
+        } catch (error) {
+            data = {};
+        }
 
-            const data = await response.json();
-            if (data.success) {
-                requestStatus.innerHTML = `<span class="text-warning">Request pending. Waiting for a doctor to accept...</span>`;
-                setStep("doctor");
-                renderHospitals(data.hospitals || []);
-                pollEmergencyStatus(data.emergencyId);
-                return;
+        if (!response.ok) {
+            const message = data?.message || data?.error || `Request failed with status ${response.status}`;
+
+            if (response.status === 401 || /token|auth/i.test(message)) {
+                redirectToLogin("Your session is invalid or expired. Please login again.");
             }
 
-            requestStatus.innerHTML = `<span class="text-danger">Failed: ${escapeHtml(data.message || "Unknown error")}</span>`;
-            resetTriggerButton("TRIGGER EMERGENCY");
-        } catch (error) {
-            requestStatus.innerHTML = `<span class="text-danger">Network error: ${escapeHtml(error.message)}. Please call local emergency services.</span>`;
-            resetTriggerButton("TRIGGER EMERGENCY");
+            throw new Error(message);
         }
-    }
 
-    function renderHospitals(hospitals) {
-        if (hospitalCount) hospitalCount.textContent = `${hospitals.length} found`;
+        return data;
+    };
 
-        if (!hospitals.length) {
-            hospitalsList.innerHTML = '<li class="empty-state">No hospitals found nearby.</li>';
+    const buildHeaders = () => {
+        const token = getToken();
+
+        if (!isTokenShapeValid(token)) {
+            redirectToLogin("Login session not found. Please login again.");
+            throw new Error("Login session not found. Please login again.");
+        }
+
+        return {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+        };
+    };
+
+    const setConnectionCopy = () => {
+        if (!connectionLabel || !connectionDetail) return;
+        connectionLabel.textContent = "Configured";
+        connectionDetail.textContent = `Using backend endpoint ${API_URL.replace(/^https?:\/\//, "")}`;
+    };
+
+    const formatLocation = (lat, lng) => `Lat: ${Number(lat).toFixed(4)}, Lng: ${Number(lng).toFixed(4)}`;
+
+    const getDeviceLocation = () => new Promise((resolve, reject) => {
+        if (!("geolocation" in navigator)) {
+            reject(new Error("Geolocation is not supported on this device."));
             return;
         }
 
-        hospitalsList.innerHTML = hospitals.map((hospital) => {
+        navigator.geolocation.getCurrentPosition(
+            (position) => resolve({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                accuracy: position.coords.accuracy,
+            }),
+            (error) => reject(error),
+            {
+                enableHighAccuracy: true,
+                timeout: 12000,
+                maximumAge: 30000,
+            }
+        );
+    });
+
+    const renderHospitals = (hospitals = []) => {
+        const safeHospitals = Array.isArray(hospitals) ? hospitals : [];
+
+        hospitalCount.textContent = `${safeHospitals.length} found`;
+
+        if (!safeHospitals.length) {
+            hospitalsList.innerHTML = '<li class="empty-state">No nearby hospitals were returned by the backend.</li>';
+            return;
+        }
+
+        hospitalsList.innerHTML = safeHospitals.map((hospital) => {
             const name = escapeHtml(hospital.name || "Hospital");
             const address = escapeHtml(hospital.address || "Address not available");
             const phone = escapeHtml(hospital.phone || "Not available");
-            const rating = escapeHtml(hospital.rating || "Not rated");
+            const rating = escapeHtml(hospital.rating || "N/A");
             const destination = hospital.lat && hospital.lng
-                ? `${encodeURIComponent(hospital.lat)},${encodeURIComponent(hospital.lng)}`
+                ? `${hospital.lat},${hospital.lng}`
                 : encodeURIComponent(`${hospital.name || ""} ${hospital.address || ""}`.trim());
-            const phoneHref = hospital.phone ? `tel:${String(hospital.phone).replace(/[^\d+]/g, "")}` : "";
+            const phoneHref = hospital.phone && hospital.phone !== "Not available"
+                ? `<a class="phone-link" href="tel:${escapeHtml(hospital.phone)}"><i class="fa-solid fa-phone"></i> Call</a>`
+                : "";
 
             return `
                 <li>
                     <div class="hospital-row">
                         <div class="h-name">${name}</div>
-                        <div class="h-addr"><i class="fa-solid fa-map-pin"></i> ${address}</div>
-                        <div class="h-phone"><i class="fa-solid fa-phone"></i> ${phone}</div>
-                        <div class="h-rating">Rating: ${rating}</div>
+                        <div class="h-addr"><i class="fa-solid fa-map-pin"></i><span>${address}</span></div>
+                        <div class="h-phone"><i class="fa-solid fa-phone"></i><span>${phone}</span></div>
+                        <div class="h-rating"><i class="fa-solid fa-star"></i><span>Rating: ${rating}</span></div>
                         <div class="hospital-actions">
                             <a href="https://www.google.com/maps/dir/?api=1&destination=${destination}" target="_blank" rel="noopener">
-                                <i class="fa-solid fa-directions"></i> Directions
+                                <i class="fa-solid fa-diamond-turn-right"></i> Directions
                             </a>
-                            ${phoneHref ? `<a href="${phoneHref}" class="phone-link"><i class="fa-solid fa-phone"></i> Call</a>` : ""}
+                            ${phoneHref}
                         </div>
                     </div>
                 </li>
             `;
         }).join("");
-    }
+    };
 
-    function pollEmergencyStatus(emergencyId) {
+    const sendEmergencyRequest = async ({ latitude, longitude, address, medicalContext }) => {
+        setStep("dispatch");
+        requestStatus.innerHTML = '<span class="text-warning">Sending request to available doctors...</span>';
+
+        const data = await fetchJson(`${API_URL}/trigger`, {
+            method: "POST",
+            headers: buildHeaders(),
+            body: JSON.stringify({
+                latitude,
+                longitude,
+                address,
+                medicalContext,
+            }),
+        });
+
+        if (!data.success) {
+            throw new Error(data.message || "Emergency request was not accepted by the backend.");
+        }
+
+        currentEmergencyId = data.emergencyId;
+        setButtonState("sent");
+        setStep("doctor");
+        requestStatus.innerHTML = '<span class="text-warning">Request pending. Waiting for a doctor to accept.</span>';
+        renderHospitals(data.hospitals || []);
+        pollEmergencyStatus(data.emergencyId);
+    };
+
+    const resetAfterFailure = (message) => {
+        requestStatus.innerHTML = `<span class="text-danger">${escapeHtml(message)}</span>`;
+        setButtonState("retry");
+    };
+
+    const triggerEmergency = async () => {
+        const token = getToken();
+
+        if (!isTokenShapeValid(token)) {
+            redirectToLogin("Please login before triggering an emergency.");
+            return;
+        }
+
+        playEmergencySound();
+        setButtonState("loading");
+        statusPanel.classList.remove("hidden");
+        setStep("location");
+        renderHospitals([]);
+        requestStatus.textContent = "Preparing emergency request...";
+
+        const medicalContext = medicalContextInput?.value?.trim() || "";
+        const manualLocation = manualLocationInput?.value?.trim() || "";
+
+        try {
+            if (manualLocation) {
+                locationStatus.textContent = `Manual location: ${manualLocation}`;
+                await sendEmergencyRequest({
+                    latitude: 0,
+                    longitude: 0,
+                    address: manualLocation,
+                    medicalContext,
+                });
+                return;
+            }
+
+            locationStatus.textContent = "Detecting high accuracy GPS location...";
+            const location = await getDeviceLocation();
+            locationStatus.textContent = `${formatLocation(location.latitude, location.longitude)} (${Math.round(location.accuracy)}m accuracy)`;
+
+            await sendEmergencyRequest({
+                latitude: location.latitude,
+                longitude: location.longitude,
+                address: "Auto-detected Location",
+                medicalContext,
+            });
+        } catch (error) {
+            console.error("Emergency trigger failed:", error);
+            const locationFailed = error.code || /geolocation|location/i.test(error.message || "");
+
+            if (locationFailed && !manualLocation) {
+                locationStatus.textContent = "GPS is unavailable. Enter your location and try again.";
+                resetAfterFailure("Location is required. Please type your address or landmark, then trigger again.");
+                manualLocationInput?.focus();
+                return;
+            }
+
+            resetAfterFailure(error.message || "Network error. Please contact local emergency services immediately.");
+        }
+    };
+
+    const pollEmergencyStatus = (emergencyId) => {
         if (pollInterval) clearInterval(pollInterval);
 
         pollInterval = setInterval(async () => {
             try {
-                const token = typeof window.Auth !== "undefined"
-                    ? window.Auth.getToken()
-                    : localStorage.getItem("hospital_copilot_token") || "";
-                const response = await fetch(`${API_URL}/status/${emergencyId}`, {
+                const token = getToken();
+
+                if (!isTokenShapeValid(token)) {
+                    clearInterval(pollInterval);
+                    pollInterval = null;
+                    redirectToLogin("Your session is invalid or expired. Please login again.");
+                    return;
+                }
+
+                const data = await fetchJson(`${API_URL}/status/${emergencyId}`, {
                     headers: {
                         "Authorization": `Bearer ${token}`,
                     },
                 });
-                const data = await response.json();
 
                 if (!data.success) return;
 
                 if (data.status === "accepted") {
-                    requestStatus.innerHTML = `<span class="text-success"><i class="fa-solid fa-check-circle"></i> Emergency accepted by Doctor ID: ${escapeHtml(data.doctorId)}. Help is on the way.</span>`;
+                    const doctorLabel = data.doctorId ? ` by Doctor ID: ${escapeHtml(data.doctorId)}` : "";
+                    requestStatus.innerHTML = `<span class="text-success"><i class="fa-solid fa-check-circle"></i> Emergency accepted${doctorLabel}. Help is on the way.</span>`;
                     clearInterval(pollInterval);
+                    pollInterval = null;
+                    setButtonState("accepted");
                     setStep("doctor");
-                    triggerBtn.innerHTML = `<i class="fa-solid fa-check"></i><span> ACCEPTED</span>`;
-                    triggerBtn.classList.add("btn-success");
                 } else if (data.status === "rejected") {
-                    requestStatus.innerHTML = `<span class="text-danger"><i class="fa-solid fa-times-circle"></i> Request rejected. Please trigger again or call local emergency services.</span>`;
+                    requestStatus.innerHTML = '<span class="text-danger"><i class="fa-solid fa-times-circle"></i> Request rejected. You can trigger again.</span>';
                     clearInterval(pollInterval);
-                    resetTriggerButton("TRIGGER AGAIN");
+                    pollInterval = null;
+                    setButtonState("retry");
+                } else if (data.status) {
+                    requestStatus.innerHTML = `<span class="text-warning">Current status: ${escapeHtml(data.status)}. Waiting for doctor response...</span>`;
                 }
-            } catch (err) {
-                console.error("Polling error", err);
+            } catch (error) {
+                console.error("Emergency status polling failed:", error);
             }
         }, 3000);
-    }
+    };
 
-    function setStep(activeStep) {
-        if (!responseSteps) return;
-        const order = ["location", "dispatch", "doctor"];
-        const activeIndex = order.indexOf(activeStep);
-
-        responseSteps.querySelectorAll("li[data-step]").forEach((item) => {
-            const index = order.indexOf(item.dataset.step);
-            item.classList.toggle("done", activeIndex > index);
-            item.classList.toggle("active", activeIndex === index);
+    const initQuickContext = () => {
+        contextButtons.forEach((button) => {
+            button.addEventListener("click", () => {
+                const phrase = button.dataset.context || "";
+                const current = medicalContextInput.value.trim();
+                medicalContextInput.value = current ? `${current} ${phrase}` : phrase;
+                medicalContextInput.focus();
+            });
         });
-    }
+    };
 
-    function resetTriggerButton(label) {
-        triggerBtn.disabled = false;
-        triggerBtn.classList.remove("btn-success");
-        triggerBtn.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i><span> ${label}</span>`;
-    }
-
-    function escapeHtml(value) {
-        return String(value ?? "")
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#39;");
-    }
-
-    function initVoiceTrigger() {
+    const initVoiceTrigger = () => {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
         if (!SpeechRecognition) {
-            const voiceInst = document.getElementById("voiceInstruction");
-            if (voiceInst) voiceInst.style.display = "none";
+            if (voiceInstruction) voiceInstruction.style.display = "none";
             return;
         }
 
@@ -228,20 +435,42 @@ document.addEventListener("DOMContentLoaded", () => {
             const transcript = event.results[last][0].transcript.trim().toLowerCase();
 
             if ((transcript.includes("help me") || transcript.includes("emergency")) && !triggerBtn.disabled) {
-                triggerBtn.click();
+                triggerEmergency();
             }
         };
 
         recognition.onend = () => {
-            if (recognition) recognition.start();
+            if (!recognition) return;
+
+            try {
+                recognition.start();
+            } catch (error) {
+                console.log("Speech recognition restart skipped");
+            }
         };
 
         try {
             recognition.start();
         } catch (error) {
-            console.warn("Speech recognition could not start:", error);
+            console.log("Speech recognition already active");
         }
-    }
+    };
 
+    form?.addEventListener("submit", (event) => {
+        event.preventDefault();
+        triggerEmergency();
+    });
+
+    window.addEventListener("beforeunload", () => {
+        if (pollInterval) clearInterval(pollInterval);
+        if (recognition) {
+            recognition.onend = null;
+            recognition.stop();
+        }
+    });
+
+    setConnectionCopy();
+    setupNavigation();
+    initQuickContext();
     initVoiceTrigger();
 });

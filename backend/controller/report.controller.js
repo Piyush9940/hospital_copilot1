@@ -12,7 +12,6 @@ import {
 
 import { createError, validateId, validateStringId, formatDateTime } from "../utils/helper.js";
 import { getPatientByUserId } from "../model/patient.model.js";
-import { getAllDoctors, getDoctorByUserId } from "../model/doctor.model.js";
 import PDFDocument from "pdfkit";
 import fs from "fs";
 import path from "path";
@@ -33,20 +32,6 @@ const ensureUploadsDir = () => {
         fs.mkdirSync(uploadsDir, { recursive: true });
     }
     return uploadsDir;
-};
-
-const resolveReportDoctorId = (req) => {
-    if (req.body?.doctorId) {
-        return validateId(req.body.doctorId, "Doctor ID");
-    }
-
-    if (req.user?.role === "doctor") {
-        const doctor = getDoctorByUserId(req.user.id);
-        if (doctor?.id) return doctor.id;
-    }
-
-    const [firstDoctor] = getAllDoctors() || [];
-    return firstDoctor?.id || null;
 };
 
 const safeText = (value, fallback = "N/A") => {
@@ -250,7 +235,6 @@ export const createReport = async (req, res, next) => {
         }
 
         const validPatientId = validateStringId(patientId, "Patient ID");
-        const doctorId = resolveReportDoctorId(req);
         const title = typeof req.body?.title === "string" && req.body.title.trim() ? req.body.title.trim() : "Medical Report";
 
         const diagnosis =
@@ -277,7 +261,6 @@ export const createReport = async (req, res, next) => {
 
         const result = await createMedicalReport({
             patientId: validPatientId,
-            doctorId,
             title,
             diagnosis,
             summary,

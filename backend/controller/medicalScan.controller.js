@@ -3,7 +3,6 @@ import fs from "fs";
 import { createMedicalReport } from "../services/report.service.js";
 import { generateMedicalScanReportPdf } from "../services/pdf.service.js";
 import { getPatientByUserId } from "../model/patient.model.js";
-import { getAllDoctors, getDoctorByUserId } from "../model/doctor.model.js";
 import { createError, sanitize, validateId, validateStringId } from "../utils/helper.js";
 
 const PATH_LABS_BASE_URL =
@@ -116,22 +115,6 @@ const resolvePatientId = (req) => {
     throw createError("Patient profile not found for this user", 404);
 };
 
-const resolveDoctorId = (req) => {
-    if (req.body?.doctorId) return validateId(req.body.doctorId, "Doctor ID");
-
-    if (req.user?.role === "doctor") {
-        const doctor = getDoctorByUserId(req.user.id);
-        if (doctor?.id) return doctor.id;
-    }
-
-    const [doctor] = getAllDoctors() || [];
-    if (!doctor?.id) {
-        throw createError("A doctor profile is required before saving scan reports", 400);
-    }
-
-    return doctor.id;
-};
-
 const callPathLabsApi = async (endpoint, file) => {
     const form = new FormData();
     const fileBuffer = fs.readFileSync(file.path);
@@ -179,7 +162,6 @@ export const analyzeMedicalScan = async (req, res, next) => {
         }
 
         const patientId = resolvePatientId(req);
-        const doctorId = resolveDoctorId(req);
 
         const apiResult = await callPathLabsApi(config.endpoint, req.file);
         const prediction = normalizePrediction(config.label, apiResult);
@@ -196,7 +178,6 @@ export const analyzeMedicalScan = async (req, res, next) => {
         const pdfUrl = `/uploads/reports/${pdfResult.data.fileName}`;
         const savedReport = createMedicalReport({
             patientId,
-            doctorId,
             title: `${config.label} AI Detection Report`,
             diagnosis: prediction.condition || config.label,
             summary: prediction.summary,

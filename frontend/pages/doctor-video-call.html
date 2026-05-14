@@ -619,363 +619,57 @@
     </div>
 </div>
 
-<script>
-    // Full dynamic call manager with mandatory permission first
-    class VideoCallManager {
-        constructor() {
-            this.localStream = null;
-            this.isMuted = false;
-            this.isVideoOff = false;
-            this.isRecording = false;
-            this.callSeconds = 0;
-            this.timerInterval = null;
-            this.callActive = false;
-            this.permissionGranted = false;
-        }
-
-        showToast(message, type = 'info') {
-            const toast = document.createElement('div');
-            toast.className = 'toast-message';
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 2200);
-        }
-
-        // Update device status in permission modal
-        updateDeviceStatus(cameraOk, micOk) {
-            const camSpan = document.getElementById('camStatusLabel');
-            const micSpan = document.getElementById('micStatusLabel');
-            if (camSpan) camSpan.innerHTML = cameraOk ? '✅ Granted' : '❌ Required';
-            if (micSpan) micSpan.innerHTML = micOk ? '✅ Granted' : '❌ Required';
-        }
-
-        async requestPermissionsAndStart() {
-            // Show loading indicator on button (optional)
-            const allowBtn = document.getElementById('allowBtn');
-            const originalText = allowBtn.innerText;
-            allowBtn.innerText = 'Requesting...';
-            allowBtn.disabled = true;
-            
-            try {
-                // First get media stream with both video and audio
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                this.localStream = stream;
-                this.permissionGranted = true;
-                this.updateDeviceStatus(true, true);
-                this.showToast('Camera & Microphone access granted! Starting consultation...', 'info');
-                // Hide modal and activate full UI
-                document.getElementById('permissionModal').style.display = 'none';
-                const videoContainer = document.getElementById('videoCallContainer');
-                videoContainer.classList.add('active');
-                videoContainer.style.display = 'flex';
-                
-                // Attach local video stream to PIP element
-                const localVideoElem = document.getElementById('localVideo');
-                localVideoElem.srcObject = stream;
-                localVideoElem.muted = true; // avoid feedback
-                
-                // Legacy fallback only; the real call manager below handles WebRTC signaling.
-                this.simulateRemoteVideo();
-                
-                // Start call timer
-                this.startTimer();
-                this.callActive = true;
-                
-                // Show welcome toast
-                this.showToast('Connected to patient • Virtual waiting room active', 'info');
-                
-            } catch (err) {
-                console.error('Permission error:', err);
-                let errorMsg = 'Unable to access camera/microphone. ';
-                if (err.name === 'NotAllowedError') errorMsg += 'You denied permission. Please allow access.';
-                else if (err.name === 'NotFoundError') errorMsg += 'No camera or microphone found.';
-                else errorMsg += 'Please check your device settings.';
-                this.updateDeviceStatus(false, false);
-                this.showToast(errorMsg, 'error');
-                allowBtn.innerText = originalText;
-                allowBtn.disabled = false;
-                // Reset buttons if needed
-                const denyBtn = document.getElementById('denyBtn');
-                if(denyBtn) denyBtn.innerText = '❌ Close';
-                return;
-            }
-        }
-
-        simulateRemoteVideo() {
-            // Create a dynamic canvas-based remote video effect (simulating patient video stream)
-            const remoteVideo = document.getElementById('remoteVideo');
-            // Since real remote video might require signaling, we generate a nice medical-themed placeholder
-            const canvas = document.createElement('canvas');
-            canvas.width = 1280;
-            canvas.height = 720;
-            const ctx = canvas.getContext('2d');
-            
-            let frameCount = 0;
-            const animateRemote = () => {
-                if (!this.callActive) return;
-                ctx.fillStyle = '#0f172f';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                // gradient background
-                const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-                grad.addColorStop(0, '#1e1b4b');
-                grad.addColorStop(1, '#111827');
-                ctx.fillStyle = grad;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                // medical cross / avatar
-                ctx.font = 'bold 70px "Segoe UI"';
-                ctx.fillStyle = '#cbd5e1';
-                ctx.shadowBlur = 0;
-                ctx.fillText("👤", canvas.width/2 - 45, canvas.height/2);
-                ctx.font = '28px Inter';
-                ctx.fillStyle = '#94a3b8';
-                ctx.fillText("Patient", canvas.width/2 - 55, canvas.height/2 + 90);
-                ctx.font = '18px monospace';
-                ctx.fillStyle = '#60a5fa';
-                ctx.fillText("Secure connection • Ready", canvas.width/2 - 140, canvas.height - 60);
-                // subtle animation
-                frameCount++;
-                if (remoteVideo && remoteVideo.srcObject !== canvas.captureStream()) {
-                    try {
-                        const stream = canvas.captureStream(30);
-                        remoteVideo.srcObject = stream;
-                        remoteVideo.play().catch(e=>console.log);
-                    } catch(e) {}
-                }
-                requestAnimationFrame(animateRemote);
-            };
-            animateRemote();
-        }
-
-        startTimer() {
-            if (this.timerInterval) clearInterval(this.timerInterval);
-            this.timerInterval = setInterval(() => {
-                if (this.callActive) {
-                    this.callSeconds++;
-                    const mins = Math.floor(this.callSeconds / 60);
-                    const secs = this.callSeconds % 60;
-                    const timerElem = document.getElementById('callTimer');
-                    if (timerElem) timerElem.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-                }
-            }, 1000);
-        }
-
-        toggleMic() {
-            if (!this.localStream) return this.showToast("Microphone not available", "error");
-            this.isMuted = !this.isMuted;
-            this.localStream.getAudioTracks().forEach(track => {
-                track.enabled = !this.isMuted;
-            });
-            const micBtn = document.getElementById('micBtn');
-            micBtn.classList.toggle('off', this.isMuted);
-            micBtn.innerHTML = this.isMuted ? '🔇' : '🎤';
-            this.showToast(this.isMuted ? 'Microphone muted' : 'Microphone unmuted', 'info');
-        }
-
-        toggleVideo() {
-            if (!this.localStream) return this.showToast("Camera not accessible", "error");
-            this.isVideoOff = !this.isVideoOff;
-            const videoTrack = this.localStream.getVideoTracks()[0];
-            if (videoTrack) videoTrack.enabled = !this.isVideoOff;
-            const videoBtn = document.getElementById('videoBtn');
-            videoBtn.classList.toggle('off', this.isVideoOff);
-            videoBtn.innerHTML = this.isVideoOff ? '📷' : '📹';
-            this.showToast(this.isVideoOff ? 'Camera turned off' : 'Camera on', 'info');
-        }
-
-        toggleRecording() {
-            this.isRecording = !this.isRecording;
-            const recordBtn = document.getElementById('recordBtn');
-            if (this.isRecording) {
-                recordBtn.style.background = "#ef4444";
-                recordBtn.innerHTML = "⏺ Recording...";
-                this.showToast("Recording started", "warning");
-            } else {
-                recordBtn.style.background = "";
-                recordBtn.innerHTML = "⏹️ Record";
-                this.showToast("Recording stopped", "info");
-            }
-        }
-
-        toggleChat() {
-            const panel = document.getElementById('chatPanel');
-            panel.classList.toggle('open');
-        }
-
-        shareScreen() {
-            if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
-                navigator.mediaDevices.getDisplayMedia({ video: true }).then(screenStream => {
-                    const localVideo = document.getElementById('localVideo');
-                    const oldStream = this.localStream;
-                    if (localVideo.srcObject) {
-                        const videoTrack = screenStream.getVideoTracks()[0];
-                        if (videoTrack) {
-                            const senderStream = new MediaStream();
-                            if (oldStream.getAudioTracks().length) senderStream.addTrack(oldStream.getAudioTracks()[0]);
-                            senderStream.addTrack(videoTrack);
-                            this.localStream = senderStream;
-                            localVideo.srcObject = senderStream;
-                            videoTrack.onended = () => {
-                                this.restoreCameraAfterShare();
-                            };
-                            this.showToast("Screen sharing active", "info");
-                        }
-                    }
-                }).catch(() => this.showToast("Screen share cancelled", "error"));
-            } else {
-                this.showToast("Screen sharing not supported", "error");
-            }
-        }
-
-        restoreCameraAfterShare() {
-            if (navigator.mediaDevices) {
-                navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
-                    if (this.localStream) {
-                        const audioTrack = this.localStream.getAudioTracks()[0];
-                        if (audioTrack && stream.getAudioTracks().length === 0) stream.addTrack(audioTrack);
-                    }
-                    this.localStream = stream;
-                    document.getElementById('localVideo').srcObject = stream;
-                    this.showToast("Camera restored", "info");
-                }).catch(()=>this.showToast("Unable to restore camera"));
-            }
-        }
-
-        openPatientRecord() {
-            window.location.href = 'doctor-patient-view.html';
-            this.showToast("Opening patient record", "info");
-        }
-
-        sendChatMsg() {
-            const input = document.getElementById('chatInput');
-            const msg = input.value.trim();
-            if (msg === '') return;
-            const messagesDiv = document.getElementById('chatMessages');
-            const ownMsgDiv = document.createElement('div');
-            ownMsgDiv.className = 'message-bubble own';
-            ownMsgDiv.innerHTML = `<strong>You:</strong> ${escapeHtml(msg)}`;
-            messagesDiv.appendChild(ownMsgDiv);
-            input.value = '';
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            // Local chat echo for this page.
-            setTimeout(() => {
-                const replyDiv = document.createElement('div');
-                replyDiv.className = 'message-bubble';
-                replyDiv.innerHTML = `<strong>System:</strong> Message noted.`;
-                messagesDiv.appendChild(replyDiv);
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            }, 900);
-        }
-
-        endCall() {
-            if (confirm("Are you sure you want to end this consultation?")) {
-                this.callActive = false;
-                if (this.localStream) {
-                    this.localStream.getTracks().forEach(track => track.stop());
-                }
-                if (this.timerInterval) clearInterval(this.timerInterval);
-                this.showToast("Call ended. Thank you for using HealthCare Plus.", "info");
-                setTimeout(() => {
-                    window.location.href = 'doctor-appointments.html';
-                }, 1800);
-            }
-        }
-    }
-
-    // Helper
-    function escapeHtml(str) {
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
-    }
-
-    const videoCallHandler = new VideoCallManager();
-    // Bind global events
-    document.getElementById('allowBtn')?.addEventListener('click', () => videoCallHandler.requestPermissionsAndStart());
-    document.getElementById('denyBtn')?.addEventListener('click', () => {
-        videoCallHandler.showToast("Permission denied. Cannot start call.", "error");
-        setTimeout(() => {
-            if(confirm("Without media permissions, call won't start. Go back to appointments?")) window.location.href = 'doctor-appointments.html';
-        }, 100);
-    });
-    
-    // Make sure the timer and UI are ready only after permission.
-    // attach fallback for ending call from external functions
-    window.videoCallHandler = videoCallHandler;
-</script>
 <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.1/simplepeer.min.js"></script>
 <script src="../js/config.js"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/video-call.js"></script>
 <script>
+    // Helper function to show toast messages
+    function showToast(message, duration = 2200) {
+        const toast = document.createElement('div');
+        toast.className = 'toast-message';
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293bdd;
+            backdrop-filter: blur(12px);
+            color: white;
+            padding: 0.75rem 1.8rem;
+            border-radius: 60px;
+            font-size: 0.9rem;
+            z-index: 3000;
+            pointer-events: none;
+            animation: fadeUpOut 2s ease forwards;
+            font-weight: 500;
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), duration);
+    }
+
+    // Helper to escape HTML
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&';
+            if (m === '<') return '<';
+            if (m === '>') return '>';
+            return m;
+        });
+    }
+
+    // Unified video call handler that works with the external videoCall object
     document.addEventListener("DOMContentLoaded", () => {
+        // Check role requirement
         if (window.requireRole && !requireRole(["doctor"])) return;
 
         const allowBtn = document.getElementById("allowBtn");
         const denyBtn = document.getElementById("denyBtn");
+        const permissionModal = document.getElementById("permissionModal");
+        const videoContainer = document.getElementById("videoCallContainer");
 
-        if (allowBtn) {
-            const cleanAllowBtn = allowBtn.cloneNode(true);
-            allowBtn.parentNode.replaceChild(cleanAllowBtn, allowBtn);
-
-            cleanAllowBtn.addEventListener("click", async () => {
-                cleanAllowBtn.disabled = true;
-                cleanAllowBtn.textContent = "Connecting...";
-
-                try {
-                    await loadPatientInfo();
-                    document.getElementById("permissionModal").style.display = "none";
-                    const container = document.getElementById("videoCallContainer");
-                    container.classList.add("active");
-                    container.style.display = "flex";
-
-                    await window.videoCall.initialize();
-                } catch (error) {
-                    cleanAllowBtn.disabled = false;
-                    cleanAllowBtn.textContent = "Allow Access";
-                    document.getElementById("permissionModal").style.display = "flex";
-                }
-            });
-        }
-
-        if (denyBtn) {
-            const cleanDenyBtn = denyBtn.cloneNode(true);
-            denyBtn.parentNode.replaceChild(cleanDenyBtn, denyBtn);
-            cleanDenyBtn.addEventListener("click", () => {
-                window.location.href = "doctor-appointments.html";
-            });
-        }
-
-        window.videoCallHandler = {
-            toggleMic: () => window.videoCall.toggleMic(),
-            toggleVideo: () => window.videoCall.toggleVideo(),
-            shareScreen: () => window.videoCall.shareScreen(),
-            endCall: () => window.videoCall.endCall(),
-            toggleChat: () => document.getElementById("chatPanel")?.classList.toggle("open"),
-            sendChatMsg: () => {
-                const input = document.getElementById("chatInput");
-                const message = input?.value?.trim();
-                if (!message) return;
-
-                const messages = document.getElementById("chatMessages");
-                const item = document.createElement("div");
-                item.className = "message-bubble own";
-                item.textContent = message;
-                messages.appendChild(item);
-                input.value = "";
-                messages.scrollTop = messages.scrollHeight;
-            },
-            toggleRecording: () => window.videoCall.addChatMessage?.("System", "Recording is not enabled for this call.", "system"),
-            openPatientRecord: () => {
-                const appointmentId = new URLSearchParams(window.location.search).get("appointmentId");
-                window.location.href = appointmentId
-                    ? `doctor-patient-view.html?appointment=${appointmentId}`
-                    : "doctor-patient-view.html";
-            },
-        };
-
+        // Load patient info for display
         async function loadPatientInfo() {
             const appointmentId = new URLSearchParams(window.location.search).get("appointmentId");
             if (!appointmentId || !window.API) return;
@@ -999,8 +693,144 @@
                     appointment?.symptoms || appointment?.reason || "Video consultation";
             } catch (error) {
                 console.error("Could not load patient info for video call:", error);
+                // Continue anyway with default values
             }
         }
+
+        // Update device status in permission modal
+        function updateDeviceStatus(cameraOk, micOk) {
+            const camSpan = document.getElementById('camStatusLabel');
+            const micSpan = document.getElementById('micStatusLabel');
+            if (camSpan) camSpan.innerHTML = cameraOk ? '✅ Granted' : '❌ Required';
+            if (micSpan) micSpan.innerHTML = micOk ? '✅ Granted' : '❌ Required';
+        }
+
+        // Handle allow button click
+        if (allowBtn) {
+            allowBtn.addEventListener("click", async () => {
+                allowBtn.disabled = true;
+                allowBtn.textContent = "Connecting...";
+
+                try {
+                    // Load patient info first
+                    await loadPatientInfo();
+                    
+                    // Request camera/mic permissions
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                        updateDeviceStatus(true, true);
+                        showToast('Camera & Microphone access granted! Starting consultation...');
+                        
+                        // Stop the stream - videoCall.initialize() will get its own stream
+                        stream.getTracks().forEach(track => track.stop());
+                    } catch (permError) {
+                        console.error('Permission error:', permError);
+                        let errorMsg = 'Unable to access camera/microphone. ';
+                        if (permError.name === 'NotAllowedError') {
+                            errorMsg += 'You denied permission. Please allow access.';
+                        } else if (permError.name === 'NotFoundError') {
+                            errorMsg += 'No camera or microphone found.';
+                        } else {
+                            errorMsg += 'Please check your device settings.';
+                        }
+                        updateDeviceStatus(false, false);
+                        showToast(errorMsg);
+                        allowBtn.disabled = false;
+                        allowBtn.textContent = "Allow Access";
+                        return;
+                    }
+
+                    // Hide permission modal and show video container
+                    permissionModal.style.display = "none";
+                    videoContainer.classList.add("active");
+                    videoContainer.style.display = "flex";
+
+                    // Initialize the video call
+                    if (window.videoCall) {
+                        await window.videoCall.initialize();
+                    } else {
+                        throw new Error("Video call module not loaded");
+                    }
+                } catch (error) {
+                    console.error("Video call initialization error:", error);
+                    showToast(error.message || "Unable to start video call");
+                    allowBtn.disabled = false;
+                    allowBtn.textContent = "Allow Access";
+                }
+            });
+        }
+
+        // Handle deny button click
+        if (denyBtn) {
+            denyBtn.addEventListener("click", () => {
+                window.location.href = "doctor-appointments.html";
+            });
+        }
+
+        // Set up the unified video call handler
+        window.videoCallHandler = {
+            toggleMic: () => {
+                if (window.videoCall) {
+                    window.videoCall.toggleMic();
+                } else {
+                    showToast("Video call not initialized", "error");
+                }
+            },
+            toggleVideo: () => {
+                if (window.videoCall) {
+                    window.videoCall.toggleVideo();
+                } else {
+                    showToast("Video call not initialized", "error");
+                }
+            },
+            shareScreen: () => {
+                if (window.videoCall) {
+                    window.videoCall.shareScreen();
+                } else {
+                    showToast("Video call not initialized", "error");
+                }
+            },
+            endCall: () => {
+                if (confirm("Are you sure you want to end this consultation?")) {
+                    if (window.videoCall) {
+                        window.videoCall.endCall();
+                    } else {
+                        showToast("Call ended. Thank you for using HealthCare Plus.");
+                        setTimeout(() => {
+                            window.location.href = 'doctor-appointments.html';
+                        }, 1800);
+                    }
+                }
+            },
+            toggleChat: () => {
+                const panel = document.getElementById("chatPanel");
+                if (panel) {
+                    panel.classList.toggle("open");
+                }
+            },
+            sendChatMsg: () => {
+                const input = document.getElementById("chatInput");
+                const message = input?.value?.trim();
+                if (!message) return;
+
+                const messages = document.getElementById("chatMessages");
+                const item = document.createElement("div");
+                item.className = "message-bubble own";
+                item.textContent = message;
+                messages.appendChild(item);
+                input.value = "";
+                messages.scrollTop = messages.scrollHeight;
+            },
+            toggleRecording: () => {
+                showToast("Recording feature is not available for this call", "warning");
+            },
+            openPatientRecord: () => {
+                const appointmentId = new URLSearchParams(window.location.search).get("appointmentId");
+                window.location.href = appointmentId
+                    ? `doctor-patient-view.html?appointment=${appointmentId}`
+                    : "doctor-patient-view.html";
+            },
+        };
     });
 </script>
 </body>
